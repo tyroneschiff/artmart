@@ -175,13 +175,7 @@ export default function PieceScreen() {
   
     function handlePurchase(orderType: 'digital' | 'print') {
       setModalOrderType(orderType)
-      if (orderType === 'digital' && session) {
-        // Logged in digital purchase - direct to payment
-        executePurchase('digital')
-      } else {
-        // Guest digital OR any print (guest/auth) - needs modal
-        setGiftingModalVisible(true)
-      }
+      setGiftingModalVisible(true)
     }
   if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
   

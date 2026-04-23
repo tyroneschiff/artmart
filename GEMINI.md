@@ -1,37 +1,32 @@
 ## Strategic Backlog
 
-1. **[REVENUE] Transform Tips (Conversion)**
-    *   **The Micro-Task:** Implement a `useEffect` interval in `create.tsx` during `transforming === true` to cycle through 3-4 tips (e.g., "Analyzing brushstrokes...", "Rendering lighting...") every 5s.
-    *   **Why:** Reduces bounce rates during the 30-second AI generation wait by making the process feel intentional and "magical".
-
-2. **[POLISH] Success UI Celebration**
+1. **[POLISH] Success UI Celebration**
     *   **The Micro-Task:** Install `react-native-confetti-cannon` and trigger it when `step === 'success'` in `app/app/(tabs)/create.tsx`.
     *   **Why:** Amplifies the "wow" moment of publishing, making the user feel like they've truly achieved something special.
 
-3. **[NOTIFICATIONS] Post-Vote Push (Infrastructure)**
-    *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
-    *   **Why:** Builds the foundation for the most important emotional retention loop: notifying parents when someone loves their child's art.
-
-4. **[DESIGN] Theme Token Adoption - Profile**
+2. **[DESIGN] Theme Token Adoption - Profile**
     *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to strictly use `type.h1`, `type.label`, `btn.primary`, and `card` tokens from `lib/theme.ts`.
     *   **Why:** Ensures the most "functional" screen in the app still feels premium and aligned with the brand's warmth.
 
-5. **[DESIGN] Theme Token Adoption - Create**
+3. **[DESIGN] Theme Token Adoption - Create**
     *   **The Micro-Task:** Refactor `app/app/(tabs)/create.tsx` to replace manual `header`, `bigBtn`, and `button` styles with theme tokens.
     *   **Why:** Removes design debt in the most critical conversion screen and ensures visual consistency.
 
-6. **[PLATFORM] Android Layout Pass**
+4. **[NOTIFICATIONS] Post-Vote Push (Infrastructure)**
+    *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
+    *   **Why:** Builds the foundation for the most important emotional retention loop: notifying parents when someone loves their child's art.
+
+5. **[PLATFORM] Android Layout Pass**
     *   **The Micro-Task:** Audit `GiftingModal.tsx` and `PieceScreen.tsx` for Android-specific overlap issues; specifically, test `KeyboardAvoidingView` behavior on physical Android devices.
     *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
 
-7. **[QUALITY] E2E Smoke Test**
-    *   **The Micro-Task:** Implement a core smoke test (Playwright or Detox) that covers the "Happy Path": Login -> Photograph -> Transform -> Publish -> Purchase.
-    *   **Why:** Protects the primary revenue-generating funnel from regressions during rapid iteration.
-
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Gifting UI for All (Friction) — Enabled the gifting modal for authenticated digital purchases. Users can now easily send digital gifts to family members with a custom message directly from the piece screen.
+- [2026-04-23 — CRON B] Digital Gifting Delivery (Backend) — Updated `stripe-webhook/index.ts` to support digital gifting. Recipient now receives a branded gift email with a high-res signed download URL. 
+- [2026-04-23 — CRON B] Transform Tips (Conversion) — Implemented cycling tips during the 30-second transformation wait in `create.tsx`. This reduces perceived wait time and reinforces the "magic" of the AI process.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Performed 360-degree audit. Identified "Digital Gifting" as a major missed revenue opportunity for authenticated users. Prioritized backend delivery for digital gifts and UI flexibility to allow gifting for all. Maintained focus on "Transform Tips" and "Success Confetti" as high-impact UX magic items.
 - [2026-04-23 — CRON B] Low Credits Upsell (Contextual) — Added a conditional "Buy Credits" banner in `mystores.tsx` that appears only for new users (0 credits, 0 stores). Uses `danger` tokens for visibility and directs to the credit purchase screen.
-- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Performed 360-degree audit. Identified that while we have 'Buy Credits' buttons, we lack contextual triggers for new users. Prioritized 'Low Credits Upsell' for `mystores.tsx`. Elevated 'Transform Tips' and 'Success Confetti' to critical UX magic items. Commenced multi-screen Theme Token Adoption pass to remove design debt in Profile and Create screens.
 - [2026-04-23 — CRON B] Instagram Stories Export — Implemented `app/lib/export.ts` using `expo-image-manipulator` to generate 9:16 branded cards. Integrated "Story" export into Create Success screen and global ShareSheet. This enables high-fidelity social acquisition.
 - [2026-04-23 CR B] Buyer Gifting Receipts — Updated `stripe-webhook` to send confirmation emails to buyers for both print and digital orders. Integrated `auth.admin.getUserById` to fetch emails for authenticated buyers. Essential for trust and closing the post-purchase loop.
 - [2026-04-23 — CRON B] Pack Variations — Implemented "Taste Pack" ($2.99/3 credits) and updated UI/Backend to handle multiple credit tiers. Lowers barrier to entry for new creators.

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, Image, StyleSheet, Alert,
   TextInput, ScrollView, ActivityIndicator, Modal, FlatList, Platform
@@ -21,6 +21,13 @@ const isWeb = Platform.OS === 'web'
 
 const PRICE_DIGITAL_CENTS = 500
 const PRICE_PRINT_CENTS = 3000
+
+const TRANSFORM_TIPS = [
+  "Analyzing every brushstroke...",
+  "Building a world from this imagination...",
+  "Rendering magical lighting...",
+  "Preparing your portal...",
+]
 
 type Store = { id: string; child_name: string; slug: string }
 
@@ -53,7 +60,19 @@ export default function CreateScreen() {
   const [storePickerVisible, setStorePickerVisible] = useState(false)
   const [step, setStep] = useState<'pick' | 'transform' | 'publish' | 'success'>('pick')
   const [transforming, setTransforming] = useState(false)
+  const [tipIndex, setTipIndex] = useState(0)
   const [transformError, setTransformError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let interval: any
+    if (transforming) {
+      setTipIndex(0)
+      interval = setInterval(() => {
+        setTipIndex((prev) => (prev + 1) % TRANSFORM_TIPS.length)
+      }, 5000)
+    }
+    return () => clearInterval(interval)
+  }, [transforming])
   const [showCreditsUpsell, setShowCreditsUpsell] = useState(false)
   const [aiDescription, setAiDescription] = useState('')
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
@@ -321,7 +340,8 @@ export default function CreateScreen() {
                 : transforming
                   ? <View style={styles.center}>
                       <ActivityIndicator size="large" color={colors.gold} />
-                      <Text style={styles.transformingText}>Stepping inside the drawing… (~30 sec)</Text>
+                      <Text style={styles.transformingText}>{TRANSFORM_TIPS[tipIndex]}</Text>
+                      <Text style={styles.transformingSubtext}>This takes about 30 seconds</Text>
                     </View>
                   : transformError
                     ? <View style={styles.errorBox}>
@@ -444,7 +464,8 @@ const styles = StyleSheet.create({
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
   cancel: { color: colors.muted, textAlign: 'center', fontSize: 14, marginTop: 8, marginBottom: 8 },
   center: { alignItems: 'center', gap: 12, marginVertical: 16 },
-  transformingText: { color: colors.mid, fontSize: 14 },
+  transformingText: { color: colors.dark, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  transformingSubtext: { color: colors.mid, fontSize: 13, textAlign: 'center' },
   upsellCard: {
     backgroundColor: colors.dangerBg,
     borderRadius: 16,
