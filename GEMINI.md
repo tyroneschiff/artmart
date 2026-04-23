@@ -1,8 +1,8 @@
 ## Strategic Backlog
 
-1. **[POLISH] Success UI Celebration**
-    *   **The Micro-Task:** Install `react-native-confetti-cannon` and trigger it when `step === 'success'` in `app/app/(tabs)/create.tsx`.
-    *   **Why:** Amplifies the "wow" moment of publishing, making the user feel like they've truly achieved something special.
+1. **[REVENUE] Print Conversion: "View in Room"**
+    *   **The Micro-Task:** Add a "Preview in Room" button to `app/app/piece/[id].tsx` that opens a modal showing the piece framed on a generic living room wall.
+    *   **Why:** Helps grandparents and parents visualize the physical product, significantly increasing print conversion rates.
 
 2. **[DESIGN] Theme Token Adoption - Profile**
     *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to strictly use `type.h1`, `type.label`, `btn.primary`, and `card` tokens from `lib/theme.ts`.
@@ -16,12 +16,26 @@
     *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
     *   **Why:** Builds the foundation for the most important emotional retention loop: notifying parents when someone loves their child's art.
 
-5. **[PLATFORM] Android Layout Pass**
+5. **[REVENUE] High-Value Gift Message**
+    *   **The Micro-Task:** Polish `app/components/GiftingModal.tsx` by adding a character counter to the message field and a "Gift Card Preview" that updates live as they type.
+    *   **Why:** Increases the perceived value of the gifting service, making it feel more like a premium concierge gift.
+
+6. **[PLATFORM] Android Layout Pass**
     *   **The Micro-Task:** Audit `GiftingModal.tsx` and `PieceScreen.tsx` for Android-specific overlap issues; specifically, test `KeyboardAvoidingView` behavior on physical Android devices.
     *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
 
+7. **[UX] Post-Publish Viral Loop**
+    *   **The Micro-Task:** After successful creation in `create.tsx`, add a specific "Thank my family" button that pre-fills a WhatsApp message with the new artwork link.
+    *   **Why:** Leverages the user's high-emotion state immediately after creation to drive organic traffic back to the child's store.
+
+## Done
+
+- **[POLISH] Success UI Celebration** — Installed `react-native-confetti-cannon` and triggered it on successful publishing in `create.tsx`. Amplifies the "wow" moment for creators.
+
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Success UI Celebration (Polish) — Integrated `react-native-confetti-cannon` into the creation flow. Users are now greeted with a burst of celebration upon publishing, reinforcing the emotional reward of creating.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Performed 360-degree audit. Identified "View in Room" as the next major lever for print conversion, helping buyers bridge the gap between digital magic and physical product. Pivoted creation flow focus to include a proactive "Thank my family" viral loop. Maintained high priority for Success Confetti and Design System alignment to ensure a premium feel throughout.
 - [2026-04-23 — CRON B] Gifting UI for All (Friction) — Enabled the gifting modal for authenticated digital purchases. Users can now easily send digital gifts to family members with a custom message directly from the piece screen.
 - [2026-04-23 — CRON B] Digital Gifting Delivery (Backend) — Updated `stripe-webhook/index.ts` to support digital gifting. Recipient now receives a branded gift email with a high-res signed download URL. 
 - [2026-04-23 — CRON B] Transform Tips (Conversion) — Implemented cycling tips during the 30-second transformation wait in `create.tsx`. This reduces perceived wait time and reinforces the "magic" of the AI process.

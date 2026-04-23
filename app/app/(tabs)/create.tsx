@@ -4,6 +4,7 @@ import {
   TextInput, ScrollView, ActivityIndicator, Modal, FlatList, Platform
 } from 'react-native'
 import { useRouter } from 'expo-router'
+import ConfettiCannon from 'react-native-confetti-cannon'
 import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -264,6 +265,7 @@ export default function CreateScreen() {
   if (step === 'success' && sharePayload) {
     return (
       <View style={[styles.container, styles.successContainer]}>
+        <ConfettiCannon count={200} origin={{x: -10, y: 0}} fadeOut={true} />
         <ScrollView contentContainerStyle={styles.successContent}>
           <View style={styles.successCard}>
             <Image source={{ uri: transformedUri! }} style={styles.successImage} />
