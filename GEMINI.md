@@ -221,18 +221,19 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
-- ✅ Digital Retirement & Creator Ownership — Retired per-piece digital pricing from creator flow; hidden digital download option for non-owners; granted free digital access to owners.
+- ✅ Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table.
+- ✅ Digital Retirement & Creator Ownership — Retired per-piece digital pricing; hidden digital downloads for non-owners; granted free digital access to owners.
 - ✅ "Step Inside" Narrative Polish — Reframed purchase section to "Bring this world home"; renamed digital product to "Keep the high-res vision"; added "✨ Step inside... imagination" magic label.
 - ✅ Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message.
-- ✅ Prepare for iOS Release (v1.1.0) — audited codebase for "Step Inside" theme alignment; performed TypeScript sanity check; removed unused Anthropic SDK; bumped app version to 1.1.0 and build number to 10.
-- ✅ Global ES256 JWT fix — applied manual `jose` JWT verification to all authenticated edge functions (`create-payment-intent`, `download-piece`, `purchase-credits`, `moderate-comment`); bypasses default gateway 401 error on asymmetric JWT projects.
-- ✅ Moderated comments — added `comments` and `reports` tables; implemented `moderate-comment` edge function with Gemini 2.0 Flash moderation and 5-min rate limiting; added comments section to `piece/[id].tsx` with real-time updates and report flow.
-- ✅ Credits system & paywall — added `credits` and `credit_transactions` to schema; implemented `purchase-credits` edge function; added `CreditsScreen` modal and `ProfileScreen` integration; `transform-artwork` now handles atomic credit deduction and 402 out-of-credits state.
-- ✅ Anonymous vote conversion — `discover.tsx` and `piece/[id].tsx` now redirect unauthenticated voters to login instead of silently no-oping; `disabled` state updated so button remains clickable for guests.
+- ✅ Prepare for iOS Release (v1.1.0) — audited codebase for "Step Inside" theme alignment; performed TypeScript sanity check; removed unused Anthropic SDK; bumped app version to 1.1.0.
+- ✅ Global ES256 JWT fix — applied manual `jose` JWT verification to all authenticated edge functions.
+- ✅ Moderated comments — added `comments` and `reports` tables; implemented `moderate-comment` edge function with Gemini 2.0 Flash moderation.
+- ✅ Credits system & paywall — implemented `purchase-credits` edge function; added `CreditsScreen` modal; `transform-artwork` now handles credit deduction.
 
-**Pending (reframe + monetization pivot — see Recent Session Notes 2026-04-23):**
-- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 1: Add gift columns to `orders` table.
-- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: persistent "Out of Credits" card.
+**Pending (reframe + monetization pivot):**
+- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 2: Update UI in `GuestPrintInfoModal.tsx`.
+- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: Persistent "Out of Credits" card.
+- [ ] Narrative Consistency — Micro-Task 1: Update Login tagline.
 - [ ] Android compatibility audit — test all core flows on Android.
 - [ ] OG meta tags for piece/store public URLs
 
@@ -282,34 +283,36 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 ## Strategic Backlog
 
-*(Rewritten each run by CRON A — Implementer reads this to pick next task)*
-
 1. **[REVENUE] EPIC: "Send Print as Gift" Email Flow**
-    *   **Micro-Task 1 (Database):** Add `gift_recipient_email` and `gift_message` columns to the `orders` table in a new migration to support gift-specific metadata.
-    *   **Micro-Task 2 (Edge Function):** Update `supabase/functions/stripe-webhook/index.ts` to extract `gift_recipient_email` and `gift_message` from the Stripe metadata and save them to the `orders` table.
-    *   **Micro-Task 3 (Integration):** Integrate an email service (e.g., Resend) in the webhook to send a "A gift is coming!" email to the recipient with the parent's message upon successful payment.
+    *   **Micro-Task 1 (Database):** ✅ Done. Added `gift_recipient_email` column.
+    *   **Micro-Task 2 (UI):** Update `app/components/GuestPrintInfoModal.tsx` to include an "Email of the Recipient" field and pass it to `onConfirm`.
+    *   **Micro-Task 3 (Edge Function):** Update `supabase/functions/create-payment-intent/index.ts` to extract `gift_recipient_email` and save it to the `orders` table.
+    *   **Micro-Task 4 (Integration):** Integrate Resend in `supabase/functions/stripe-webhook/index.ts` to send "A gift is coming!" email to the recipient.
 
 2. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
-    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card in the UI that includes a "Buy Credits" button.
-    *   **Micro-Task 2 (UI/UX):** Add a "Buy Credits" pill/button to the `CreditsScreen` header or balance card if balance is 0, ensuring the path to purchase is always one tap away.
+    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card that includes a "Buy Credits" button.
+    *   **Micro-Task 2 (UI/UX):** Add a "Buy Credits" button to the `CreditsScreen` balance card if balance is 0, ensuring the purchase path is always one tap away.
 
-3. **[UX] Android Full Compatibility Audit & Fixes**
-    *   **Micro-Task 1 (Audit):** Test the full camera → transform → publish flow on an Android emulator or device, specifically checking if `FileSystem.readAsStringAsync` and `ImageManipulator` behave as expected with `file://` URIs.
-    *   **Micro-Task 2 (Fixes):** Apply Android-specific fixes identified in the audit to `app/lib/transformArtwork.ts` and `app/app/(tabs)/create.tsx`.
+3. **[UX] Narrative Consistency Pass**
+    *   **Micro-Task 1 (UI):** Update the tagline in `app/app/(auth)/login.tsx` to "Step inside your child's imagination" to align with the "Step Inside" brand voice.
+    *   **Micro-Task 2 (UI):** Update the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` with warmer, "Step Inside" themed copy if no pieces are found.
 
-4. **[UX] Public Store & Piece OG Meta Tags**
-    *   **Micro-Task 1 (Edge Function):** Create a simple Edge Function or update the landing page to serve dynamic OG tags (image, title) for piece URLs so they look stunning when shared on WhatsApp/Instagram.
+4. **[UX] Android Full Compatibility Audit & Fixes**
+    *   **Micro-Task 1 (Audit):** Test camera → transform → publish flow on Android, specifically checking `FileSystem.readAsStringAsync` behavior with `file://` URIs.
 
-5. **[RETENTION] Post-Publish Share Prompts**
-    *   **Micro-Task 1 (UI/UX):** After a successful publish in `app/app/(tabs)/create.tsx`, show a specific "Share to Family WhatsApp" button with a pre-filled emotional message ("Look at the world [Name] imagined!").
+5. **[UX] Public Store & Piece OG Meta Tags**
+    *   **Micro-Task 1 (Edge Function):** Create an Edge Function to serve dynamic OG tags (image, title) for piece URLs for high-impact social shares.
+
+6. **[RETENTION] Post-Publish Share Prompts**
+    *   **Micro-Task 1 (UI):** After successful publish in `app/app/(tabs)/create.tsx`, add a specific "Share to Family WhatsApp" button with a pre-filled emotional message.
 
 ## Improvement Log
 
-*(One line per run, newest first)*
-
+- [2026-04-23 CRON B] Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table in a new migration to support recipient notifications. File: `supabase/migrations/007_gift_recipient_email.sql`.
+- [2026-04-23 CRON A] Performed 360-degree audit; identified "Send Print as Gift" as the next high-impact revenue lever; refined gifting micro-tasks to include recipient email collection; prioritized persistent "Out of Credits" UI to replace jarring alerts in the transform flow; aligned login tagline with "Step Inside" brand voice.
 - [2026-04-23 CRON B] Digital Retirement & "Step Inside" Polish — Removed creator-facing prices from `create.tsx`; retired per-piece pricing in `store/[slug].tsx`; hidden digital downloads for non-owners and granted free creator access in `piece/[id].tsx`; reframed UI to "Bring this world home" and added "✨ Step inside... imagination" label.
 - [2026-04-23 CRON A] Performed 360-degree audit; identified legacy digital pricing as a "leaky bucket" for the new "Step Inside" value prop; prioritized retirement of per-piece digital sales and granting ownership to creators; refined gifting and credits tasks for tighter execution.
-- [2026-04-22 CRON A] Performed a comprehensive audit of the product backlog against the recent business model pivot, refining existing micro-tasks to be more surgical and prioritizing them for maximum revenue and UX impact, particularly focusing on credit purchase flow and Android compatibility.
+- [2026-04-22 CRON A] Performed a comprehensive audit of the product backlog against the recent business model pivot, refining existing micro-tasks to be more surgical and prioritizing them for maximum revenue and UX impact.
 - [2026-04-22 CRON B] Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message. Files: `app/app/piece/[id].tsx`, `app/lib/checkout.ts`, `app/components/GuestPrintInfoModal.tsx`, `supabase/functions/create-payment-intent/index.ts`.
 - [2026-04-22 CRON B] Version bump & Sanity Check — bumped to v1.1.0; removed Anthropic SDK; updated Credits UI logic to navigate to modal. Files: `app.json`, `package.json`, `create.tsx`.
 - [2026-04-22 CRON A] Strategic Backlog rewritten to align with "Step Inside" reframing and credit-based monetization; prioritized Grandparent Guest Checkout and Gifting, Prominent "Buy Credits" UX, Android Compatibility, OG Meta Tags, "Step Inside" UI Consistency, and Notifications/Share Prompts.
