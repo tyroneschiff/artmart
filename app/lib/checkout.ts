@@ -60,7 +60,8 @@ export async function purchasePiece(
   shippingAddress?: ShippingAddress,
   guestEmail?: string,
   recipientEmail?: string,
-  giftMessage?: string
+  giftMessage?: string,
+  quantity: number = 1
 ): Promise<void> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -81,6 +82,7 @@ export async function purchasePiece(
         guest_email: guestEmail ?? null,
         recipient_email: recipientEmail ?? null,
         gift_message: giftMessage ?? null,
+        quantity,
       }),
     }
   )

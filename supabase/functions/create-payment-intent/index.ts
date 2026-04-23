@@ -86,7 +86,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    const totalAmount = amount * quantity
+    let totalAmount = amount * quantity
+
+    // Apply 15% discount for bulk print orders (2 or more)
+    if (order_type === 'print' && quantity >= 2) {
+      totalAmount = Math.round(totalAmount * 0.85)
+    }
 
     const paymentIntent = await stripe.paymentIntents.create(
       {

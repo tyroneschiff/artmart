@@ -6,8 +6,12 @@ const APP_STORE_URL = 'https://apps.apple.com/app/id6762963488'
 export async function purchasePiece(
   _pieceId: string,
   _orderType: 'digital' | 'print',
-  _userToken: string,
-  _shippingAddress?: ShippingAddress
+  _userToken?: string,
+  _shippingAddress?: ShippingAddress,
+  _guestEmail?: string,
+  _recipientEmail?: string,
+  _giftMessage?: string,
+  _quantity: number = 1
 ): Promise<void> {
   Alert.alert(
     'Get the Draw Up app',

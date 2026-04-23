@@ -43,6 +43,22 @@ describe('checkout lib', () => {
     expect(presentPaymentSheet).toHaveBeenCalled()
   })
 
+  it('purchasePiece passes quantity parameter', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ client_secret: 'pi_123_secret' }),
+    })
+
+    await purchasePiece('piece_1', 'print', 'token_123', undefined, undefined, undefined, undefined, 2)
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.stringContaining('"quantity":2'),
+      })
+    )
+  })
+
   it('purchasePiece handles server failure', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
