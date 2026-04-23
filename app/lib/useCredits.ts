@@ -1,9 +1,27 @@
+import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../hooks/useAuthStore'
 import { supabase } from './supabase'
 
 export function useCredits() {
   const userId = useAuthStore((s) => s.session?.user.id)
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        () => queryClient.invalidateQueries({ queryKey: ['credits', userId] })
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [userId, queryClient])
+
   return useQuery({
     queryKey: ['credits', userId],
     enabled: !!userId,
@@ -21,5 +39,5 @@ export function useCredits() {
 
 export function useInvalidateCredits() {
   const qc = useQueryClient()
-  return () => qc.invalidateQueries({ queryKey: ['credits'] })
+  return (userId: string) => qc.invalidateQueries({ queryKey: ['credits', userId] })
 }
