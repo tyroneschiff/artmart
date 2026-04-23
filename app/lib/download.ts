@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 import { Share, Alert, Platform } from 'react-native'
 
 export async function downloadPiece(pieceId: string): Promise<void> {
