@@ -226,23 +226,17 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ [REVENUE] Gifting UI Polish — Refactored `GuestPrintInfoModal.tsx` and `ShippingAddressModal.tsx` for premium aesthetic.
 - ✅ [REVENUE] Public Store & Piece OG Meta Tags — Edge function `serve-og-tags`.
 - ✅ [UX] Narrative Consistency Pass — Update Login tagline & Empty States
 - ✅ [POLISH] Theme Token Adoption — `discover.tsx` and `store/[slug].tsx` refactored
 - ✅ [REVENUE] Prominent "Buy Credits" CTA & UX Polish
-- ✅ [REVENUE] Send Print as Gift (Full Flow & DB)
-- ✅ [REVENUE] Guest Checkout for Prints
-- ✅ [UX] Narrative Polish: "Step Inside" reframing in prompts & labels
-- ✅ [QUALITY] Upload & Download timeouts added
 
 **Pending (strategic priority):**
 - [ ] [REVENUE] Public Store & Piece OG Meta Tags — Micro-Task 2: Configure URL rewrites in landing page.
-- [ ] [POLISH] Theme Token Adoption — Micro-Task 1: Refactor `piece/[id].tsx` to use tokens.
-- [ ] [POLISH] Theme Token Adoption — Micro-Task 2: Refactor `mystores.tsx` and `profile.tsx`.
 - [ ] [RETENTION] Post-Publish Share Prompts — Micro-Task 1: Prominent WhatsApp button in `create.tsx`.
-- [ ] [REVENUE] Gifting UI Polish — Micro-Task 1: Premium polish for `GuestPrintInfoModal.tsx`.
-- [ ] [QUALITY] Backend Validation Suite — Micro-Task 1: Unit tests for `moderate-comment`.
 - [ ] [UX] Narrative Consistency Pass — Micro-Task 1: Polish `ListEmptyComponent` in `mystores.tsx`.
+- [ ] [POLISH] Theme Token Adoption: Piece Detail Screen
 
 ---
 
@@ -301,40 +295,38 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 ## Strategic Backlog
 
-1. **[REVENUE] Public Store & Piece OG Meta Tags**
-    *   **The Micro-Task:** Create `supabase/functions/serve-og-tags/index.ts` to generate dynamic HTML with OG meta tags (image, title, description) for piece and store URLs, ensuring high-impact social sharing. [DONE]
-    *   **Why:** Public URLs are our #1 acquisition channel. A beautiful preview in WhatsApp = more visitors.
+1. **[REVENUE] Public Store & Piece OG Meta Tags - Part 2**
+    *   **The Micro-Task:** In `web/index.html`, add client-side script or Netlify/Vercel rewrite rules to ensure `/store/*` and `/piece/*` routes resolve to the Edge Function `serve-og-tags`.
+    *   **Why:** The Edge Function is built, but without the front-end routing pointing to it, WhatsApp won't fetch the dynamic previews. This completes the most critical organic growth loop.
 
-2. **[REVENUE] Checkout UI Polish: Premium Aesthetic**
-    *   **The Micro-Task:** Refactor `app/components/GuestPrintInfoModal.tsx` and `app/components/ShippingAddressModal.tsx` to use `type` tokens for typography, add consistent padding (24px), and use `btn.primary` for CTAs.
-    *   **Why:** Grandparents are the primary buyers; the checkout experience must feel trustworthy and high-end to convert.
-
-3. **[POLISH] Theme Token Adoption: Piece Detail Screen**
-    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` to replace all raw `colors` and inline styles with `type`, `btn`, and `card` tokens from `lib/theme.ts`.
-    *   **Why:** Removes design debt on the most important screen in the app, ensuring it feels premium and intentional.
-
-4. **[POLISH] Theme Token Adoption: My Stores & Profile**
-    *   **The Micro-Task:** Refactor `app/app/(tabs)/mystores.tsx` and `app/app/(tabs)/profile.tsx` for full design system token compliance (`type`, `btn`, `card`).
-    *   **Why:** Consistency in design reinforces the emotional value and professional quality of the platform.
-
-5. **[UX] Narrative Consistency: My Stores Empty State**
-    *   **The Micro-Task:** Update the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` to use `type.h2` for the title and `btn.primary` for the "Create first store" button.
-    *   **Why:** The first-run experience for parents should be warm, inviting, and clearly on-brand.
-
-6. **[RETENTION] Post-Publish Share Prompt in Create Flow**
+2. **[RETENTION] Post-Publish Share Prompt in Create Flow**
     *   **The Micro-Task:** In `app/app/(tabs)/create.tsx`, replace the automatic `ShareSheet` popup with a dedicated success card featuring a prominent, gold "Share to Family WhatsApp" button.
     *   **Why:** Encourages immediate sharing while the emotional "wow" of the transformation is still fresh.
 
-7. **[QUALITY] Backend Validation: Moderate Comment Tests**
+3. **[UX] Narrative Consistency: My Stores Empty State**
+    *   **The Micro-Task:** Update the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` to use `type.h2` for the title and `btn.primary` for the "Create first store" button.
+    *   **Why:** The first-run experience for parents should be warm, inviting, and clearly on-brand.
+
+4. **[POLISH] Theme Token Adoption: Piece Detail Screen**
+    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` to replace all raw `colors` and inline styles with `type`, `btn`, and `card` tokens from `lib/theme.ts`.
+    *   **Why:** Removes design debt on the most important screen in the app, ensuring it feels premium and intentional.
+
+5. **[POLISH] Theme Token Adoption: My Stores & Profile**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/mystores.tsx` and `app/app/(tabs)/profile.tsx` for full design system token compliance (`type`, `btn`, `card`).
+    *   **Why:** Consistency in design reinforces the emotional value and professional quality of the platform.
+
+6. **[QUALITY] Backend Validation: Moderate Comment Tests**
     *   **The Micro-Task:** Replace the stub in `supabase/functions/tests/moderate-comment_test.ts` with real tests mocking Gemini and verifying DB persistence.
     *   **Why:** Kid safety is critical; we need automated assurance that moderation works as intended.
 
-8. **[QUALITY] App Validation: Download Library Coverage**
+7. **[QUALITY] App Validation: Download Library Coverage**
     *   **The Micro-Task:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library, mocking `FileSystem` and signed URL logic.
     *   **Why:** Paid features must be bulletproof to avoid customer support overhead.
 
 ## Improvement Log
 
+- [2026-04-23 CRON B] Gifting UI Polish — Refactored `GuestPrintInfoModal.tsx` and `ShippingAddressModal.tsx` to use `type` and `btn` tokens, 24px consistent padding, and premium typography. Checkout now feels trustworthy for grandparent buyers.
+- [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Prioritized Gifting UI Polish as #1 to capture the grandparent buyer segment and URL rewrites for OG tags as #2 to complete the organic growth loop. Elevated 'Post-Publish Share Prompts' to #3 to capture the post-transform 'wow' moment.
 - [2026-04-23 CRON B] Public Store & Piece OG Tags — Created `serve-og-tags` Edge Function to generate dynamic HTML with OG tags for piece and store URLs. This enables high-impact social sharing on platforms like WhatsApp and Instagram. File: `supabase/functions/serve-og-tags/index.ts`.
 - [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Prioritized OG Meta Tags for growth, Narrative Consistency for brand alignment, and a multi-screen Theme Token Adoption pass to remove design debt. Shifted focus to Gifting UI polish for higher conversion on the grandparent buyer segment.
 - [2026-04-23 CRON B] Narrative Pass & Token Adoption — Updated Login tagline to "Step inside your child's imagination"; polished empty states in Discover and Store screens with "portal" themed copy; refactored Discover and Store screens for full design system token compliance. Files: `login.tsx`, `discover.tsx`, `store/[slug].tsx`.

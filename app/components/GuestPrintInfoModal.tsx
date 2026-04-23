@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
-import { colors } from '../lib/theme'
+import { colors, type, btn } from '../lib/theme'
 
 interface GuestPrintInfoModalProps {
   visible: boolean
@@ -71,58 +71,69 @@ export default function GuestPrintInfoModal({ visible, onConfirm, onCancel }: Gu
             <Text style={styles.modalTitle}>Order Print as Guest</Text>
             <Text style={styles.modalText}>Enter your details and where we should send the gift notification.</Text>
 
-            <TextInput
-              style={[styles.input, emailError && styles.inputError]}
-              placeholder="Your Email (for updates)"
-              placeholderTextColor={colors.muted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text)
-                setEmailError('')
-              }}
-            />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Your Email</Text>
+              <TextInput
+                style={[styles.input, emailError && styles.inputError]}
+                placeholder="Updates on your order"
+                placeholderTextColor={colors.muted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text)
+                  setEmailError('')
+                }}
+              />
+              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            </View>
 
-            <TextInput
-              style={[styles.input, recipientEmailError && styles.inputError]}
-              placeholder="Recipient Email (for gift notification)"
-              placeholderTextColor={colors.muted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={recipientEmail}
-              onChangeText={(text) => {
-                setRecipientEmail(text)
-                setRecipientEmailError('')
-              }}
-            />
-            {recipientEmailError ? <Text style={styles.errorText}>{recipientEmailError}</Text> : null}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Recipient Email</Text>
+              <TextInput
+                style={[styles.input, recipientEmailError && styles.inputError]}
+                placeholder="For gift notification"
+                placeholderTextColor={colors.muted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={recipientEmail}
+                onChangeText={(text) => {
+                  setRecipientEmail(text)
+                  setRecipientEmailError('')
+                }}
+              />
+              {recipientEmailError ? <Text style={styles.errorText}>{recipientEmailError}</Text> : null}
+            </View>
 
-            <TextInput
-              style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
-              placeholder="Gift Message (optional)"
-              placeholderTextColor={colors.muted}
-              multiline
-              maxLength={200}
-              value={giftMessage}
-              onChangeText={setGiftMessage}
-            />
-            <Text style={styles.charCount}>{giftMessage.length}/200</Text>
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Gift Message (optional)</Text>
+                <Text style={styles.charCount}>{giftMessage.length}/200</Text>
+              </View>
+              <TextInput
+                style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+                placeholder="Write a little something..."
+                placeholderTextColor={colors.muted}
+                multiline
+                maxLength={200}
+                value={giftMessage}
+                onChangeText={setGiftMessage}
+              />
+            </View>
 
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={[styles.button, styles.buttonCancel]}
+                style={[btn.ghost, { flex: 1, marginHorizontal: 6 }]}
                 onPress={handleCancel}
               >
-                <Text style={styles.buttonText}>Cancel</Text>
+                <Text style={btn.ghostText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.button, styles.buttonConfirm]}
+                style={[btn.primary, { flex: 1, marginHorizontal: 6 }, !email.trim() && { opacity: 0.5 }]}
                 onPress={handleConfirm}
                 disabled={!email.trim()}
               >
-                <Text style={styles.buttonText}>Confirm</Text>
+                <Text style={btn.primaryText}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -143,92 +154,77 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   modalView: {
     margin: 20,
     backgroundColor: colors.cream,
-    borderRadius: 20,
-    padding: 35,
-    alignItems: 'center',
+    borderRadius: 24,
+    padding: 24,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 10,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 5,
     width: '90%',
     maxWidth: 400,
   },
   modalTitle: {
-    marginBottom: 15,
+    ...type.h2,
+    marginBottom: 8,
     textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.dark,
-    letterSpacing: -0.5,
   },
   modalText: {
-    marginBottom: 20,
+    ...type.body,
+    marginBottom: 24,
     textAlign: 'center',
-    color: colors.mid,
-    fontSize: 14,
-    lineHeight: 20,
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  label: {
+    ...type.label,
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   input: {
     width: '100%',
     backgroundColor: colors.white,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
+    padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
     fontSize: 16,
     color: colors.dark,
   },
   inputError: {
-    borderColor: 'red',
+    borderColor: colors.danger,
   },
   errorText: {
-    color: 'red',
-    alignSelf: 'flex-start',
-    marginBottom: 10,
+    color: colors.danger,
+    marginTop: 4,
     fontSize: 12,
+    marginLeft: 4,
   },
   charCount: {
-    alignSelf: 'flex-end',
-    fontSize: 12,
-    color: colors.muted,
-    marginBottom: 15,
-    marginTop: -5,
+    ...type.label,
+    fontSize: 10,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: 10,
-  },
-  button: {
-    borderRadius: 100,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonCancel: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  buttonConfirm: {
-    backgroundColor: colors.gold,
-  },
-  buttonText: {
-    color: colors.dark,
-    fontWeight: '700',
-    fontSize: 16,
+    marginTop: 8,
   },
 });
+

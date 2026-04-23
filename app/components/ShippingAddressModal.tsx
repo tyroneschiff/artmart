@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from 'react-native'
-import { colors } from '../lib/theme'
+import { colors, type, btn } from '../lib/theme'
 
 export type ShippingAddress = {
   name: string
@@ -38,57 +38,128 @@ export default function ShippingAddressModal({ visible, onConfirm, onCancel }: P
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Shipping Address</Text>
-        <Text style={styles.subtitle}>Your print will be shipped here.</Text>
+      <View style={{ flex: 1, backgroundColor: colors.cream }}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Shipping Address</Text>
+          <Text style={styles.subtitle}>Where should we send your print?</Text>
 
-        <Text style={styles.label}>Full name</Text>
-        <TextInput style={styles.input} value={addr.name} onChangeText={(v) => set('name', v)} placeholder="Jane Smith" />
-
-        <Text style={styles.label}>Address line 1</Text>
-        <TextInput style={styles.input} value={addr.address1} onChangeText={(v) => set('address1', v)} placeholder="123 Main St" />
-
-        <Text style={styles.label}>Address line 2 (optional)</Text>
-        <TextInput style={styles.input} value={addr.address2} onChangeText={(v) => set('address2', v)} placeholder="Apt 4B" />
-
-        <Text style={styles.label}>City</Text>
-        <TextInput style={styles.input} value={addr.city} onChangeText={(v) => set('city', v)} placeholder="New York" />
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>State / Province</Text>
-            <TextInput style={styles.input} value={addr.state_code} onChangeText={(v) => set('state_code', v)} placeholder="NY" autoCapitalize="characters" />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput 
+              style={styles.input} 
+              value={addr.name} 
+              onChangeText={(v) => set('name', v)} 
+              placeholder="Jane Smith"
+              placeholderTextColor={colors.muted}
+            />
           </View>
-          <View style={styles.half}>
-            <Text style={styles.label}>ZIP / Postcode</Text>
-            <TextInput style={styles.input} value={addr.zip} onChangeText={(v) => set('zip', v)} placeholder="10001" keyboardType="numeric" />
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address Line 1</Text>
+            <TextInput 
+              style={styles.input} 
+              value={addr.address1} 
+              onChangeText={(v) => set('address1', v)} 
+              placeholder="123 Main St"
+              placeholderTextColor={colors.muted}
+            />
           </View>
-        </View>
 
-        <Text style={styles.label}>Country code</Text>
-        <TextInput style={styles.input} value={addr.country_code} onChangeText={(v) => set('country_code', v.toUpperCase())} placeholder="US" autoCapitalize="characters" maxLength={2} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Address Line 2 (optional)</Text>
+            <TextInput 
+              style={styles.input} 
+              value={addr.address2} 
+              onChangeText={(v) => set('address2', v)} 
+              placeholder="Apt 4B"
+              placeholderTextColor={colors.muted}
+            />
+          </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-          <Text style={styles.buttonText}>Continue to Payment</Text>
-        </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>City</Text>
+            <TextInput 
+              style={styles.input} 
+              value={addr.city} 
+              onChangeText={(v) => set('city', v)} 
+              placeholder="New York"
+              placeholderTextColor={colors.muted}
+            />
+          </View>
 
-        <TouchableOpacity onPress={onCancel}>
-          <Text style={styles.cancel}>Cancel</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.row}>
+            <View style={[styles.half, styles.inputGroup]}>
+              <Text style={styles.label}>State / Prov</Text>
+              <TextInput 
+                style={styles.input} 
+                value={addr.state_code} 
+                onChangeText={(v) => set('state_code', v)} 
+                placeholder="NY" 
+                autoCapitalize="characters"
+                placeholderTextColor={colors.muted}
+              />
+            </View>
+            <View style={[styles.half, styles.inputGroup]}>
+              <Text style={styles.label}>ZIP / Postcode</Text>
+              <TextInput 
+                style={styles.input} 
+                value={addr.zip} 
+                onChangeText={(v) => set('zip', v)} 
+                placeholder="10001" 
+                keyboardType="numeric"
+                placeholderTextColor={colors.muted}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Country Code</Text>
+            <TextInput 
+              style={styles.input} 
+              value={addr.country_code} 
+              onChangeText={(v) => set('country_code', v.toUpperCase())} 
+              placeholder="US" 
+              autoCapitalize="characters" 
+              maxLength={2}
+              placeholderTextColor={colors.muted}
+            />
+          </View>
+
+          <TouchableOpacity style={[btn.primary, { marginTop: 12 }]} onPress={handleConfirm}>
+            <Text style={btn.primaryText}>Continue to Payment</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onCancel} style={{ marginTop: 16 }}>
+            <Text style={styles.cancel}>Cancel</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 32, paddingTop: 56 },
-  title: { fontSize: 26, fontWeight: '800', color: colors.dark, marginBottom: 6 },
-  subtitle: { fontSize: 14, color: colors.muted, marginBottom: 28 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.mid, marginBottom: 6, marginTop: 12 },
-  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, fontSize: 16, backgroundColor: colors.white },
+  container: { padding: 24, paddingTop: 40 },
+  title: { ...type.h2, marginBottom: 8 },
+  subtitle: { ...type.body, marginBottom: 32 },
+  inputGroup: { marginBottom: 16 },
+  label: { ...type.label, marginBottom: 6, marginLeft: 4 },
+  input: { 
+    borderWidth: 1, 
+    borderColor: colors.border, 
+    borderRadius: 12, 
+    padding: 16, 
+    fontSize: 16, 
+    backgroundColor: colors.white,
+    color: colors.dark,
+  },
   row: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
-  button: { backgroundColor: colors.dark, borderRadius: 100, padding: 16, alignItems: 'center', marginTop: 32, marginBottom: 12 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  cancel: { color: colors.muted, textAlign: 'center', fontSize: 15 },
+  cancel: { 
+    ...type.body,
+    color: colors.muted, 
+    textAlign: 'center', 
+    textDecorationLine: 'underline' 
+  },
 })
+
