@@ -102,11 +102,9 @@ jobs:
           
           # Only commit if there are changes
           if ! git diff-index --quiet HEAD; then
-            git commit -m "🤖 Automated implementation by Gemini Engineering Team
-
-            - Updated GEMINI.md Knowledge Base
-            - Implemented #1 micro-task from Strategic Backlog"
-            git push
+            git commit -m "🤖 Automated implementation by Gemini Engineering Team"
+            git pull --rebase origin main
+            git push origin main
           else
             echo "No changes to commit this cycle."
           fi
