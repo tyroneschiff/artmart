@@ -104,7 +104,7 @@ jobs:
           if ! git diff-index --quiet HEAD; then
             git commit -m "🤖 Automated implementation by Gemini Engineering Team"
             git pull --rebase origin main
-            git push origin main
+            git push --force-with-lease origin main
           else
             echo "No changes to commit this cycle."
           fi
