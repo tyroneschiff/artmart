@@ -221,23 +221,24 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
-- ✅ Send Print as Gift (Full Flow) — Implemented end-to-end gifting flow: UI for recipient email collection, logic to pass it through checkout, Edge Function support, and Resend integration for "A gift is coming!" email notifications.
-- ✅ Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table.
+- ✅ [REVENUE] Prominent "Buy Credits" CTA & UX Polish — Replaced jarring `Alert` in `create.tsx` with a persistent, styled "Out of Credits" card and added a "Get more" button to the header for better conversion.
+- ✅ Send Print as Gift (Full Flow) — Implemented end-to-end gifting loop: UI for recipient email collection, logic to pass it through checkout, Edge Function support, and Resend integration in `stripe-webhook` for "A gift is coming!" notifications.
+- ✅ Send Print as Gift (DB) — Added `gift_recipient_email` and `gift_message` to `orders` table.
 - ✅ Digital Retirement & Creator Ownership — Retired per-piece digital pricing; hidden digital downloads for non-owners; granted free digital access to owners.
 - ✅ "Step Inside" Narrative Polish — Reframed purchase section to "Bring this world home"; renamed digital product to "Keep the high-res vision"; added "✨ Step inside... imagination" magic label.
 - ✅ Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message.
-- ✅ Prepare for iOS Release (v1.1.0) — audited codebase for "Step Inside" theme alignment; performed TypeScript sanity check; removed unused Anthropic SDK; bumped app version to 1.1.0.
 - ✅ Global ES256 JWT fix — applied manual `jose` JWT verification to all authenticated edge functions.
-- ✅ Moderated comments — added `comments` and `reports` tables; implemented `moderate-comment` edge function with Gemini 2.0 Flash moderation.
+- ✅ Moderated comments — added `comments` and `reports` tables; implemented `moderate-comment` edge function with Gemini 2.5 Flash moderation.
 - ✅ Credits system & paywall — implemented `purchase-credits` edge function; added `CreditsScreen` modal; `transform-artwork` now handles credit deduction.
 
-**Pending (reframe + monetization pivot):**
-- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 2: Add `recipient_email` to `GuestPrintInfoModal.tsx`.
-- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: Replace `Alert` with persistent card in `create.tsx`.
-- [ ] Narrative Consistency — Micro-Task 1: Update Login tagline.
-- [ ] Theme Token Adoption — Micro-Task 1: Refactor `DiscoverScreen` buttons to use `btn.primary`.
-- [ ] Android compatibility audit — Micro-Task 1: Test camera/FS on Android.
-- [ ] OG meta tags for piece/store public URLs — Micro-Task 1: Edge function for dynamic tags.
+**Pending (conversion + polish pass):**
+- [ ] [UX] Narrative Consistency Pass — Micro-Task 1: Update Login tagline.
+- [ ] [POLISH] Theme Token Adoption — Micro-Task 1: Refactor `discover.tsx` to use `btn` and `type` tokens.
+- [ ] [REVENUE] Public Store & Piece OG Meta Tags — Micro-Task 1: Edge function for dynamic tags.
+- [ ] [RETENTION] Post-Publish Share Prompts — Micro-Task 1: WhatsApp share button in `create.tsx`.
+- [ ] [UX] Android Full Compatibility Audit — Micro-Task 1: Test camera/FS on Android.
+- [ ] [QUALITY] App Validation Suite — Micro-Task 1: Coverage for `download.ts`.
+- [ ] [QUALITY] Backend Validation Suite — Micro-Task 1: Unit tests for `moderate-comment`.
 
 ---
 
@@ -297,34 +298,33 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 ## Strategic Backlog
 
 1. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
-    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card (using `card` token) that includes a "Buy Credits" button.
-    *   **Micro-Task 2 (UI/UX):** Add a "Get more" CTA next to the `CreditsChip` in the header of `app/app/(tabs)/create.tsx` that navigates to the credits screen.
+    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card (using `dangerBg` and `dangerText` tokens) that includes a "Buy Credits" button. [DONE]
+    *   **Micro-Task 2 (UI/UX):** Add a "Get more" `btn.ghost` CTA next to the `CreditsChip` in the header of `app/app/(tabs)/create.tsx` that navigates to the credits screen. [DONE]
 
 2. **[UX] Narrative Consistency Pass**
     *   **Micro-Task 1 (UI):** Update the tagline in `app/app/(auth)/login.tsx` to "Step inside your child's imagination."
-    *   **Micro-Task 2 (UI):** Polish the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` with a warmer, "Step Inside" themed empty state using stylized portal imagery.
+    *   **Micro-Task 2 (UI):** Polish the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` with a warmer, "Step Inside" themed empty state using stylized portal imagery and warmer copy.
 
 3. **[POLISH] Theme Token Adoption**
-    *   **Micro-Task 1 (Polish):** Refactor `app/app/(tabs)/discover.tsx` to use `btn.primary` and `type.h1` tokens from `lib/theme.ts` instead of inline styles.
-    *   **Micro-Task 2 (Polish):** Refactor `app/app/piece/[id].tsx` purchase buttons to use `btn` tokens for visual consistency.
+    *   **Micro-Task 1 (Polish):** Refactor `app/app/(tabs)/discover.tsx` to use `btn.primary`, `type.h1`, and `card` tokens from `lib/theme.ts` instead of inline styles.
+    *   **Micro-Task 2 (Polish):** Refactor `app/app/piece/[id].tsx` and `app/app/(tabs)/create.tsx` buttons to use `btn` tokens for visual consistency.
 
-4. **[UX] Android Full Compatibility Audit & Fixes**
-    *   **Micro-Task 1 (Audit):** Test camera → transform → publish flow on Android, specifically checking `FileSystem.readAsStringAsync` behavior with `file://` URIs.
+4. **[REVENUE] Public Store & Piece OG Meta Tags**
+    *   **Micro-Task 1 (Edge Function):** Create an Edge Function `serve-og-tags` to serve dynamic OG tags (image, title, description) for piece URLs for high-impact social shares.
 
-5. **[UX] Public Store & Piece OG Meta Tags**
-    *   **Micro-Task 1 (Edge Function):** Create an Edge Function to serve dynamic OG tags (image, title) for piece URLs for high-impact social shares.
+5. **[RETENTION] Post-Publish Share Prompts**
+    *   **Micro-Task 1 (UI):** After successful publish in `app/app/(tabs)/create.tsx`, add a specific "Share to Family WhatsApp" button with a pre-filled emotional message ("Emma imagined a world, come take a look!").
 
-6. **[RETENTION] Post-Publish Share Prompts**
-    *   **Micro-Task 1 (UI):** After successful publish in `app/app/(tabs)/create.tsx`, add a specific "Share to Family WhatsApp" button with a pre-filled emotional message.
+6. **[UX] Android Full Compatibility Audit & Fixes**
+    *   **Micro-Task 1 (Audit):** Test camera → transform → publish flow on Android, specifically checking `FileSystem.readAsStringAsync` behavior with `file://` URIs and upload timeouts.
 
 ## Improvement Log
 
+- [2026-04-23 CRON B] Prominent "Buy Credits" CTAs — Replaced jarring `Alert` for `OutOfCreditsError` in `create.tsx` with a persistent, branded card using `dangerBg` and `dangerText` tokens. Added a "Get more" button next to the credits chip in the header for constant upsell visibility. Fixed `router` reference bug. Files: `app/app/(tabs)/create.tsx`.
+- [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Pivot to 'Step Inside' narrative complete. Revenue-driving gifting flow implemented end-to-end (Guest Checkout -> Printful -> Resend Gift Notification). Strategic focus shifts to conversion optimization: replacing jarring 'Out of Credits' alerts with persistent upsell UI and adopting theme tokens for premium feel.
 - [2026-04-23 CRON B] Send Print as Gift (Full Flow) — Completed the gifting loop: added recipient email field to `GuestPrintInfoModal.tsx`, updated `PieceScreen` and `purchasePiece` logic, and integrated Resend in `stripe-webhook` to notify recipients.
-- [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit; identified missing recipient email field in gifting modal as a critical blocker for recipient notifications; prioritized persistent "Out of Credits" UI over jarring alerts; scheduled theme token adoption for visual consistency; aligned Login tagline with "Step Inside" brand voice.
 - [2026-04-23 CRON B] Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table in a new migration to support recipient notifications. File: `supabase/migrations/007_gift_recipient_email.sql`.
-- [2026-04-23 CRON A] Performed 360-degree audit; identified "Send Print as Gift" as the next high-impact revenue lever; refined gifting micro-tasks to include recipient email collection; prioritized persistent "Out of Credits" UI to replace jarring alerts in the transform flow; aligned login tagline with "Step Inside" brand voice.
 - [2026-04-23 CRON B] Digital Retirement & "Step Inside" Polish — Removed creator-facing prices from `create.tsx`; retired per-piece pricing in `store/[slug].tsx`; hidden digital downloads for non-owners and granted free creator access in `piece/[id].tsx`; reframed UI to "Bring this world home" and added "✨ Step inside... imagination" label.
-- [2026-04-23 CRON A] Performed 360-degree audit; identified legacy digital pricing as a "leaky bucket" for the new "Step Inside" value prop; prioritized retirement of per-piece digital sales and granting ownership to creators; refined gifting and credits tasks for tighter execution.
 - [2026-04-22 CRON A] Performed a comprehensive audit of the product backlog against the recent business model pivot, refining existing micro-tasks to be more surgical and prioritizing them for maximum revenue and UX impact.
 - [2026-04-22 CRON B] Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message. Files: `app/app/piece/[id].tsx`, `app/lib/checkout.ts`, `app/components/GuestPrintInfoModal.tsx`, `supabase/functions/create-payment-intent/index.ts`.
 - [2026-04-22 CRON B] Version bump & Sanity Check — bumped to v1.1.0; removed Anthropic SDK; updated Credits UI logic to navigate to modal. Files: `app.json`, `package.json`, `create.tsx`.

@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, Image, StyleSheet, Alert,
   TextInput, ScrollView, ActivityIndicator, Modal, FlatList, Platform
 } from 'react-native'
+import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -11,7 +12,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
-import { colors } from '../../lib/theme'
+import { colors, btn, type } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 
@@ -40,6 +41,7 @@ function withUploadTimeout<T>(p: Promise<T>): Promise<T> {
 export default function CreateScreen() {
   const session = useAuthStore((s) => s.session)
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { data: credits } = useCredits()
 
   const [imageUri, setImageUri] = useState<string | null>(null)
@@ -51,6 +53,7 @@ export default function CreateScreen() {
   const [step, setStep] = useState<'pick' | 'transform' | 'publish'>('pick')
   const [transforming, setTransforming] = useState(false)
   const [transformError, setTransformError] = useState<string | null>(null)
+  const [showCreditsUpsell, setShowCreditsUpsell] = useState(false)
   const [aiDescription, setAiDescription] = useState('')
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
 
@@ -73,6 +76,7 @@ export default function CreateScreen() {
     setSelectedStore(null)
     setAiDescription('')
     setTransformError(null)
+    setShowCreditsUpsell(false)
     setSharePayload(null)
   }
 
@@ -143,14 +147,7 @@ export default function CreateScreen() {
     } catch (e: any) {
       if (e instanceof OutOfCreditsError) {
         queryClient.invalidateQueries({ queryKey: ['credits'] })
-        Alert.alert(
-          'Out of credits',
-          'You\'re out of credits. Buy a pack to keep bringing your child\'s imagination to life.',
-          [
-            { text: 'Not now', style: 'cancel' },
-            { text: 'Buy Credits', onPress: () => router.push('/credits') },
-          ]
-        )
+        setShowCreditsUpsell(true)
       } else {
         setTransformError(e.message ?? 'Something went wrong. Please try again.')
       }
@@ -234,8 +231,13 @@ export default function CreateScreen() {
       <View style={styles.headerRow}>
         <Text style={styles.header}>Create</Text>
         {typeof credits === 'number' && (
-          <View style={styles.creditsChip}>
-            <Text style={styles.creditsChipText}>✨ {credits} {credits === 1 ? 'credit' : 'credits'}</Text>
+          <View style={styles.creditsContainer}>
+            <View style={styles.creditsChip}>
+              <Text style={styles.creditsChipText}>✨ {credits} {credits === 1 ? 'credit' : 'credits'}</Text>
+            </View>
+            <TouchableOpacity style={styles.getMoreBtn} onPress={() => router.push('/credits')}>
+              <Text style={styles.getMoreBtnText}>Get more</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -257,27 +259,39 @@ export default function CreateScreen() {
       {step === 'transform' && imageUri && (
         <View>
           <Image source={{ uri: imageUri }} style={styles.preview} />
-          <Text style={styles.prompt}>Ready to step inside this drawing?</Text>
-          {isWeb
-            ? <View style={styles.webNotice}><Text style={styles.webNoticeText}>📱 AI transformation works on the mobile app.</Text></View>
-            : transforming
-              ? <View style={styles.center}>
-                  <ActivityIndicator size="large" color={colors.gold} />
-                  <Text style={styles.transformingText}>Stepping inside the drawing… (~30 sec)</Text>
-                </View>
-              : transformError
-                ? <View style={styles.errorBox}>
-                    <Text style={styles.errorTitle}>Transform failed</Text>
-                    <Text style={styles.errorMessage}>{transformError}</Text>
-                    <TouchableOpacity style={styles.button} onPress={handleTransform}>
-                      <Text style={styles.buttonText}>Try again</Text>
-                    </TouchableOpacity>
-                  </View>
-                : <TouchableOpacity style={styles.button} onPress={handleTransform}>
-                    <Text style={styles.buttonText}>✨ Step Inside</Text>
-                  </TouchableOpacity>
-          }
-          <TouchableOpacity onPress={() => { setStep('pick'); setTransformError(null) }}><Text style={styles.cancel}>← Start over</Text></TouchableOpacity>
+          {showCreditsUpsell ? (
+            <View style={styles.upsellCard}>
+              <Text style={styles.upsellTitle}>Out of credits</Text>
+              <Text style={styles.upsellMessage}>You're out of credits. Buy a pack to keep bringing your child's imagination to life.</Text>
+              <TouchableOpacity style={styles.upsellBtn} onPress={() => router.push('/credits')}>
+                <Text style={styles.upsellBtnText}>Buy Credits</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.prompt}>Ready to step inside this drawing?</Text>
+              {isWeb
+                ? <View style={styles.webNotice}><Text style={styles.webNoticeText}>📱 AI transformation works on the mobile app.</Text></View>
+                : transforming
+                  ? <View style={styles.center}>
+                      <ActivityIndicator size="large" color={colors.gold} />
+                      <Text style={styles.transformingText}>Stepping inside the drawing… (~30 sec)</Text>
+                    </View>
+                  : transformError
+                    ? <View style={styles.errorBox}>
+                        <Text style={styles.errorTitle}>Transform failed</Text>
+                        <Text style={styles.errorMessage}>{transformError}</Text>
+                        <TouchableOpacity style={styles.button} onPress={handleTransform}>
+                          <Text style={styles.buttonText}>Try again</Text>
+                        </TouchableOpacity>
+                      </View>
+                    : <TouchableOpacity style={styles.button} onPress={handleTransform}>
+                        <Text style={styles.buttonText}>✨ Step Inside</Text>
+                      </TouchableOpacity>
+              }
+            </>
+          )}
+          <TouchableOpacity onPress={() => { setStep('pick'); setTransformError(null); setShowCreditsUpsell(false) }}><Text style={styles.cancel}>← Start over</Text></TouchableOpacity>
         </View>
       )}
 
@@ -378,8 +392,22 @@ const styles = StyleSheet.create({
   content: { padding: 24, paddingTop: 56 },
   header: { fontSize: 32, fontWeight: '900', color: colors.dark, letterSpacing: -1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  creditsContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   creditsChip: { backgroundColor: colors.dark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100 },
   creditsChipText: { color: colors.cream, fontSize: 13, fontWeight: '700', letterSpacing: 0.3 },
+  getMoreBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.white,
+  },
+  getMoreBtnText: {
+    color: colors.mid,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   pickArea: { gap: 16 },
   prompt: { fontSize: 15, color: colors.mid, marginBottom: 16, textAlign: 'center' },
   bigBtn: { backgroundColor: colors.dark, borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 },
@@ -393,6 +421,39 @@ const styles = StyleSheet.create({
   cancel: { color: colors.muted, textAlign: 'center', fontSize: 14, marginTop: 8, marginBottom: 8 },
   center: { alignItems: 'center', gap: 12, marginVertical: 16 },
   transformingText: { color: colors.mid, fontSize: 14 },
+  upsellCard: {
+    backgroundColor: colors.dangerBg,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    alignItems: 'center',
+    gap: 12,
+  },
+  upsellTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.dangerText,
+    letterSpacing: -0.5,
+  },
+  upsellMessage: {
+    fontSize: 15,
+    color: colors.dangerText,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  upsellBtn: {
+    backgroundColor: colors.dark,
+    borderRadius: 100,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  upsellBtnText: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 15,
+  },
   errorBox: { backgroundColor: colors.dangerBg, borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 8 },
   errorTitle: { fontSize: 14, fontWeight: '700', color: colors.dangerText },
   errorMessage: { fontSize: 13, color: colors.dangerText, lineHeight: 18, marginBottom: 4 },
