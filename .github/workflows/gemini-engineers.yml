@@ -1,0 +1,57 @@
+name: Gemini Autonomous Engineering Team
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  engineering-cycle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push commits
+      pull-requests: write # Needed if you want to open PRs instead of direct commits
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Gemini CLI
+        run: npm install -g @google/gemini-cli
+
+      - name: CRON A - Strategic Product Lead
+        env:
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+        run: |
+          chmod +x ./scripts/cron-review.sh
+          ./scripts/cron-review.sh
+
+      - name: CRON B - Principal Product Engineer
+        env:
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+        run: |
+          chmod +x ./scripts/cron-implement.sh
+          ./scripts/cron-implement.sh
+
+      - name: Commit & Push Changes
+        run: |
+          git config --global user.name "Gemini Engineering Team"
+          git config --global user.email "bot@geminicli.com"
+          git add .
+          
+          # Only commit if there are changes
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "🤖 Automated implementation by Gemini Engineering Team
+
+            - Updated GEMINI.md Knowledge Base
+            - Implemented #1 micro-task from Strategic Backlog"
+            git push
+          else
+            echo "No changes to commit this cycle."
+          fi

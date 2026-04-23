@@ -1,8 +1,13 @@
 #!/bin/bash
-export PATH="/opt/homebrew/bin:/Users/tyschiff/.local/bin:/usr/local/bin:/usr/bin:/bin"
-export HOME="/Users/tyschiff"
-export GOOGLE_GENERATIVE_AI_API_KEY="AIzaSyBUY5IVcEX2GqWAaPgm2hmwNeJaMLiAPjA"
-cd /Users/tyschiff/artmart
+# Move to the root directory of the project
+cd "$(dirname "$0")/.."
+
+# Ensure the API key is available
+if [ -z "$GOOGLE_GENERATIVE_AI_API_KEY" ]; then
+  echo "Error: GOOGLE_GENERATIVE_AI_API_KEY environment variable is required."
+  exit 1
+fi
+
 gemini -p "You are CRON A, the Strategic Product Lead for Draw Up. Your mission is to evolve this app into a high-conversion, premium family gifting experience. 
 
 Your goal is to take a full 360-degree view of the application and continually vet how to make it better, more profitable, and visually stunning.

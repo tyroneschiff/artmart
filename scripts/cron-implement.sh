@@ -1,8 +1,13 @@
 #!/bin/bash
-export PATH="/opt/homebrew/bin:/Users/tyschiff/.local/bin:/usr/local/bin:/usr/bin:/bin"
-export HOME="/Users/tyschiff"
-export GOOGLE_GENERATIVE_AI_API_KEY="AIzaSyBUY5IVcEX2GqWAaPgm2hmwNeJaMLiAPjA"
-cd /Users/tyschiff/artmart
+# Move to the root directory of the project
+cd "$(dirname "$0")/.."
+
+# Ensure the API key is available
+if [ -z "$GOOGLE_GENERATIVE_AI_API_KEY" ]; then
+  echo "Error: GOOGLE_GENERATIVE_AI_API_KEY environment variable is required."
+  exit 1
+fi
+
 gemini -p "You are CRON B, the Principal Product Engineer for Draw Up. Your job is to ship high-polish, revenue-driving code by biting off manageable chunks toward an overall holistic vision.
 
 ## Step 1: Quality Mandates
