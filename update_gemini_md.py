@@ -1,70 +1,55 @@
 import re
-from datetime import datetime
 
 with open('GEMINI.md', 'r') as f:
     content = f.read()
 
-# Replace Strategic Backlog
 new_backlog = """## Strategic Backlog
 
-1. **[REVENUE] Public Store & Piece OG Meta Tags - Part 2**
-    *   **The Micro-Task:** In `web/index.html`, add client-side script or Netlify/Vercel rewrite rules to ensure `/store/*` and `/piece/*` routes resolve to the Edge Function `serve-og-tags`.
-    *   **Why:** The Edge Function is built, but without the front-end routing pointing to it, WhatsApp won't fetch the dynamic previews. This completes the most critical organic growth loop.
+1. **[REVENUE] High-Value Gift Message**
+    *   **The Micro-Task:** Polish `app/components/GiftingModal.tsx` by updating the character counter to a 300 limit and adding a live "Gift Card Preview" that updates as they type. Replace `StyleSheet.create` instances with `type` and `btn` tokens.
+    *   **Why:** Increases the perceived value of the gifting service, making it feel more like a premium concierge gift for grandparent buyers.
 
-2. **[REVENUE] Checkout UI Polish: Premium Aesthetic**
-    *   **The Micro-Task:** Refactor `app/components/GuestPrintInfoModal.tsx` and `app/components/ShippingAddressModal.tsx` to use `type` tokens for typography, add consistent padding (24px), and use `btn.primary` for CTAs.
-    *   **Why:** Grandparents are the primary buyers; the checkout experience must feel trustworthy and high-end to convert.
+2. **[REVENUE] Reliable Checkout Network Resilience**
+    *   **The Micro-Task:** Wrap the `fetch` calls in `app/lib/checkout.ts` with a 30-second `AbortController` timeout and implement user-friendly error boundaries for offline states.
+    *   **Why:** Prevents the checkout UI from hanging indefinitely during cellular drops, securing revenue conversions and preventing buyer frustration.
 
-3. **[RETENTION] Post-Publish Share Prompt in Create Flow**
-    *   **The Micro-Task:** In `app/app/(tabs)/create.tsx`, replace the automatic `ShareSheet` popup with a dedicated success card featuring a prominent, gold "Share to Family WhatsApp" button.
-    *   **Why:** Encourages immediate sharing while the emotional "wow" of the transformation is still fresh.
+3. **[RETENTION] Push Token Collection (DB)**
+    *   **The Micro-Task:** Create migration `supabase/migrations/009_push_tokens.sql` to add a nullable `expo_push_token` (text) column to the `profiles` table.
+    *   **Why:** Foundation for the retention loop; we can't notify parents about votes/comments without a token.
 
-4. **[UX] Narrative Consistency: My Stores Empty State**
-    *   **The Micro-Task:** Update the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` to use `type.h2` for the title and `btn.primary` for the "Create first store" button.
-    *   **Why:** The first-run experience for parents should be warm, inviting, and clearly on-brand.
+4. **[RETENTION] Push Token Collection (App)**
+    *   **The Micro-Task:** In `app/app/_layout.tsx`, use `expo-notifications` to request permission and `upsert` the token to the user's profile if authenticated.
+    *   **Why:** Enables the most important emotional retention loop: notifying parents when someone loves their child's art.
 
-5. **[POLISH] Theme Token Adoption: Piece Detail Screen**
-    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` to replace all raw `colors` and inline styles with `type`, `btn`, and `card` tokens from `lib/theme.ts`.
-    *   **Why:** Removes design debt on the most important screen in the app, ensuring it feels premium and intentional.
+5. **[GROWTH] Post-Publish Viral Loop**
+    *   **The Micro-Task:** In `app/app/(tabs)/create.tsx` (success state), add a prominent "Send to Grandma" WhatsApp shortcut button with a custom pre-filled message.
+    *   **Why:** Leverages the parent's high-emotion state immediately after creation to drive organic traffic back to the child's store.
 
-6. **[POLISH] Theme Token Adoption: My Stores & Profile**
-    *   **The Micro-Task:** Refactor `app/app/(tabs)/mystores.tsx` and `app/app/(tabs)/profile.tsx` for full design system token compliance (`type`, `btn`, `card`).
-    *   **Why:** Consistency in design reinforces the emotional value and professional quality of the platform.
+6. **[POLISH] Theme Token Adoption - Create**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/create.tsx` to replace manual `header`, `bigBtn`, and `button` styles with `type` and `btn` theme tokens from `app/lib/theme.ts`.
+    *   **Why:** Removes design debt in the most critical conversion screen and ensures visual consistency.
 
-7. **[QUALITY] Backend Validation: Moderate Comment Tests**
-    *   **The Micro-Task:** Replace the stub in `supabase/functions/tests/moderate-comment_test.ts` with real tests mocking Gemini and verifying DB persistence.
-    *   **Why:** Kid safety is critical; we need automated assurance that moderation works as intended.
+7. **[POLISH] Theme Token Adoption - Profile**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to replace `styles.header`, `styles.sectionLabel`, and `styles.buyBtn` with `type.h1`, `type.label`, and `btn.primary` tokens.
+    *   **Why:** Ensures the most "functional" screen in the app still feels premium and aligned with the brand's warmth.
 
-8. **[QUALITY] App Validation: Download Library Coverage**
-    *   **The Micro-Task:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library, mocking `FileSystem` and signed URL logic.
-    *   **Why:** Paid features must be bulletproof to avoid customer support overhead.
+8. **[POLISH] Theme Token Adoption - My Stores**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/mystores.tsx` empty states and buttons to utilize `type` and `btn` theme tokens instead of `StyleSheet.create`.
+    *   **Why:** Eradicates the last remnants of raw styles in top-level tabs to solidify our "Step Inside" premium design system.
 
-## Improvement Log"""
+## Known gotchas
 
-content = re.sub(r'## Strategic Backlog.*?## Improvement Log', new_backlog, content, flags=re.DOTALL)
+- **React Native `fetch` Timeouts:** Raw `fetch` calls in React Native do not inherently timeout if the cellular network drops mid-request; they can hang indefinitely. Always wrap `fetch` calls with an `AbortController` and a `setTimeout` (e.g., 30s) to gracefully handle offline or poor connectivity states.
+"""
 
-# Add improvement log entry
-today = datetime.now().strftime("%Y-%m-%d")
-new_log = f"- [{today} CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Prioritized URL rewrites for OG tags as #1 to complete the organic growth loop. Elevated 'Post-Publish Share Prompts' to #3 to capture the post-transform 'wow' moment. Adjusted backlog to ensure 1-8 are strictly achievable micro-tasks ranked by impact."
-content = content.replace('## Improvement Log\n\n', f'## Improvement Log\n\n{new_log}\n')
+new_improvement_log_entry = """- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Conducted a 360-degree audit across Revenue, UX, Design, and Reliability. Uncovered a critical silent failure risk: checkout flows using raw `fetch` lack timeout handling and can hang indefinitely on cellular drops. Prioritized Network Resilience alongside Gifting UI Polish to solidify the revenue engine. Elevated Theme Token Adoption across top-level tabs to eradicate remaining design debt and unify the "Step Inside" premium feel.
+"""
 
-# Update Current task queue
-new_queue = """## Current task queue
+# Replace Backlog until ## Done
+content = re.sub(r'## Strategic Backlog\n.*?(?=## Done)', new_backlog + '\n', content, flags=re.DOTALL)
 
-**Done (recent):**
-- ✅ [REVENUE] Public Store & Piece OG Meta Tags — Edge function `serve-og-tags`.
-- ✅ [UX] Narrative Consistency Pass — Update Login tagline & Empty States
-- ✅ [POLISH] Theme Token Adoption — `discover.tsx` and `store/[slug].tsx` refactored
-- ✅ [REVENUE] Prominent "Buy Credits" CTA & UX Polish
-
-**Pending (strategic priority):**
-- [ ] [REVENUE] Public Store & Piece OG Meta Tags — Micro-Task 2: Configure URL rewrites in landing page.
-- [ ] [REVENUE] Checkout UI Polish — Micro-Task 1: Premium polish for `GuestPrintInfoModal.tsx`.
-- [ ] [RETENTION] Post-Publish Share Prompts — Micro-Task 1: Prominent WhatsApp button in `create.tsx`.
-- [ ] [UX] Narrative Consistency Pass — Micro-Task 1: Polish `ListEmptyComponent` in `mystores.tsx`."""
-
-content = re.sub(r'## Current task queue.*?---', new_queue + '\n\n---', content, flags=re.DOTALL)
+# Insert the improvement log entry
+content = content.replace('## Improvement Log\n\n', '## Improvement Log\n\n' + new_improvement_log_entry)
 
 with open('GEMINI.md', 'w') as f:
     f.write(content)
-
