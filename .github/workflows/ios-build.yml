@@ -73,9 +73,11 @@ jobs:
 
       - name: Commit build number bump
         if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "Gemini Build Bot"
           git config --global user.email "bot@geminicli.com"
           git add app/app.json
           git commit -m "chore: bump ios build number [skip ci]"
-          git push
+          git push origin main
