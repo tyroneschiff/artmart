@@ -1,39 +1,38 @@
 ## Strategic Backlog
 
-1. **[REVENUE] Print Conversion: "View in Room"**
-    *   **The Micro-Task:** Add a "Preview in Room" button to `app/app/piece/[id].tsx` that opens a modal showing the piece framed on a generic living room wall.
-    *   **Why:** Helps grandparents and parents visualize the physical product, significantly increasing print conversion rates.
+1. **[NOTIFICATIONS] Push Token Collection (DB)**
+    *   **The Micro-Task:** Create migration `supabase/migrations/009_push_tokens.sql` to add a nullable `expo_push_token` (text) column to the `profiles` table.
+    *   **Why:** Foundation for the retention loop; we can't notify parents about votes/comments without a token.
 
-2. **[DESIGN] Theme Token Adoption - Profile**
-    *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to strictly use `type.h1`, `type.label`, `btn.primary`, and `card` tokens from `lib/theme.ts`.
+2. **[NOTIFICATIONS] Push Token Collection (App)**
+    *   **The Micro-Task:** In `app/app/_layout.tsx`, use `expo-notifications` to request permission and `upsert` the token to the user's profile if authenticated.
+    *   **Why:** Enables the most important emotional retention loop: notifying parents when someone loves their child's art.
+
+3. **[DESIGN] Theme Token Adoption - Profile**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to replace `styles.header`, `styles.sectionLabel`, and `styles.buyBtn` with `type.h1`, `type.label`, and `btn.primary` tokens.
     *   **Why:** Ensures the most "functional" screen in the app still feels premium and aligned with the brand's warmth.
 
-3. **[DESIGN] Theme Token Adoption - Create**
+4. **[REVENUE] High-Value Gift Message**
+    *   **The Micro-Task:** Polish `app/components/GiftingModal.tsx` by adding a live character counter (300 limit) and a "Gift Card Preview" that updates as they type.
+    *   **Why:** Increases the perceived value of the gifting service, making it feel more like a premium concierge gift.
+
+5. **[DESIGN] Theme Token Adoption - Create**
     *   **The Micro-Task:** Refactor `app/app/(tabs)/create.tsx` to replace manual `header`, `bigBtn`, and `button` styles with theme tokens.
     *   **Why:** Removes design debt in the most critical conversion screen and ensures visual consistency.
 
-4. **[NOTIFICATIONS] Post-Vote Push (Infrastructure)**
-    *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
-    *   **Why:** Builds the foundation for the most important emotional retention loop: notifying parents when someone loves their child's art.
-
-5. **[REVENUE] High-Value Gift Message**
-    *   **The Micro-Task:** Polish `app/components/GiftingModal.tsx` by adding a character counter to the message field and a "Gift Card Preview" that updates live as they type.
-    *   **Why:** Increases the perceived value of the gifting service, making it feel more like a premium concierge gift.
-
-6. **[PLATFORM] Android Layout Pass**
-    *   **The Micro-Task:** Audit `GiftingModal.tsx` and `PieceScreen.tsx` for Android-specific overlap issues; specifically, test `KeyboardAvoidingView` behavior on physical Android devices.
-    *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
-
-7. **[UX] Post-Publish Viral Loop**
-    *   **The Micro-Task:** After successful creation in `create.tsx`, add a specific "Thank my family" button that pre-fills a WhatsApp message with the new artwork link.
-    *   **Why:** Leverages the user's high-emotion state immediately after creation to drive organic traffic back to the child's store.
+6. **[UX] Post-Publish Viral Loop**
+    *   **The Micro-Task:** In `app/app/(tabs)/create.tsx` (success state), add a prominent "Send to Grandma" WhatsApp shortcut button with a custom pre-filled message.
+    *   **Why:** Leverages the parent's high-emotion state immediately after creation to drive organic traffic back to the child's store.
 
 ## Done
 
+- **[REVENUE] "View in Room" Visualization** — Implemented `RoomPreviewModal` with a warm living room background and dynamic artwork overlay. Added "View in Room" CTA to the Piece Detail screen. This helps buyers (especially grandparents) visualize the physical product in their home, driving print conversion.
 - **[POLISH] Success UI Celebration** — Installed `react-native-confetti-cannon` and triggered it on successful publishing in `create.tsx`. Amplifies the "wow" moment for creators.
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] "View in Room" Visualization — Implemented a premium room visualization feature. Users can now see their child's artwork in a realistic living room setting directly from the piece detail screen. Uses theme tokens and a high-quality background to maintain the "Step Inside" brand warmth.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to visualization as the primary revenue lever. Identified "View in Room" as the #1 priority to convert the grandparent buyer segment. Prioritized Push Notification infrastructure to close the emotional loop between buyers and creators. Refined design debt tasks to be more surgical, targeting Profile and Create screens for theme token compliance.
 - [2026-04-23 — CRON B] Success UI Celebration (Polish) — Integrated `react-native-confetti-cannon` into the creation flow. Users are now greeted with a burst of celebration upon publishing, reinforcing the emotional reward of creating.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Performed 360-degree audit. Identified "View in Room" as the next major lever for print conversion, helping buyers bridge the gap between digital magic and physical product. Pivoted creation flow focus to include a proactive "Thank my family" viral loop. Maintained high priority for Success Confetti and Design System alignment to ensure a premium feel throughout.
 - [2026-04-23 — CRON B] Gifting UI for All (Friction) — Enabled the gifting modal for authenticated digital purchases. Users can now easily send digital gifts to family members with a custom message directly from the piece screen.
