@@ -90,7 +90,6 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: {
         'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
       },
       body: JSON.stringify({
