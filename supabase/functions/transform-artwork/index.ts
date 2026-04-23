@@ -95,37 +95,33 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: `You are an expert visual collaborator and master art director stepping inside a child's imagination. The drawing is a window into a world they invented — your job is to walk through that window and show what that world actually looks like in breathtaking, vivid detail. You are NOT fixing, improving, or elevating the drawing. The original drawing IS the vision. You are the door.
-
+        max_tokens: 512,
+        system: [{
+          type: 'text',
+          text: `You are an art director preparing a child's drawing for a premium gallery print.
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
 
-The "description" is shown to the child and their family on the artwork's page. Write it as a warm witness who truly saw what the child was going for. 2–3 sentences. Reflect the child's intent back to them — name the characters, describe what's happening in the scene, name the feeling in the air of this world. Do NOT praise technique, skill, composition, or "confident brushwork." Do NOT call it special or gallery-worthy. Do NOT treat the drawing as raw material. Celebrate the WORLD the child imagined, not the drawing itself. Sound like a grandparent reading it aloud while beaming at the kid. Begin with "In [child's or artist's] world..." if a name is obvious, otherwise "In this world..." — frame it as a place the child built.
+The "description" is shown to family on the artwork's page — write it like a warm gallery curator who genuinely loves children's art. Celebrate the imagination and energy in the piece. 2–3 sentences. Focus on what makes it special and alive, not just what objects are depicted. Sound like something a proud parent would read aloud to a grandparent.
 
-The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original photo as input, so push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, the composition, the color choices are the source of truth. Your job is to show what it looks like to stand inside that place.
-
-Your prompt MUST:
-1. Be extremely descriptive, evocative, and visually rich (at least 60-100 words). Use strong adjectives and explicitly specify lighting, texture, camera angle, and atmosphere.
-2. Describe the scene as a living world, not a drawing being redone. What's happening right now? Who's there? What time of day, what's the light like, what's the feeling in the air?
-3. Pick ONE specific warm illustration style that fits the scene's spirit (e.g. "soft dreamlike watercolor with glowing light and atmospheric haze", "warm storybook illustration with confident ink outlines and rich gouache fills", "twilight pastel palette with soft painterly texture", "bright saturated picture-book spread with crisp shapes and luminous color"). Commit to it. Never say "in the style of the drawing."
-4. Keep the child's key choices central and recognizable — the characters they drew stay in the same places, the colors they chose stay as the dominant palette, the sun or moon or landmarks they placed stay where they placed them.
-5. Full bleed edge-to-edge composition filling the frame, no paper edges, no borders, no scan artifacts, creases removed, smooth clean surface.
-6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
+The "prompt" will be used by an AI image model to transform the photo into gallery art. Every prompt MUST include:
+- Full bleed composition: artwork fills the entire frame edge-to-edge, no background, no borders, no visible paper edges
+- Imperfections removed: no paper creases, folds, wrinkles, shadows, or scan artifacts — pristine smooth surface
+- Print-ready: gallery quality, professional art reproduction, rich colors, high detail, suitable for 11x14 inch print
 
 Example output:
-{"description":"In Emma's world, a friendly dragon keeps watch over a cottage while the sun smiles from the corner like an old neighbor. Flowers stretch toward the sky because everyone in this place is happy to be awake. You can feel how safe and sunny it is here.","prompt":"Step inside Emma's imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}
-
-Step inside this child's drawing. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.`,
+{"description":"There's a joyful confidence to the way Emma planted that bright yellow sun in the corner — like she knew exactly where the warmth should come from. The house sits bold and happy at the centre, surrounded by flowers that reach upward with real optimism. This one belongs on a wall.","prompt":"A charming country cottage with blooming flower garden and bright sun, full bleed edge-to-edge composition filling the entire frame, no background or borders, paper creases and imperfections removed, pristine smooth surface, watercolor style, soft pastel colors, gallery quality, professional art print ready for large format printing, vibrant colors, high detail"}`,
+          cache_control: { type: 'ephemeral' },
+        }],
         messages: [{
           role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mimeType, data: imageBase64 }
-            },
-            { type: 'text', text: 'Step inside this drawing.' }
-          ]
+          content: [{
+            type: 'image',
+            source: { type: 'base64', media_type: mimeType, data: imageBase64 }
+          }, {
+            type: 'text',
+            text: 'Describe this child\'s drawing and write a transformation prompt. Reply with only the JSON object.'
+          }]
         }]
       }),
     })
@@ -147,8 +143,18 @@ Step inside this child's drawing. Write a witness description of the world you s
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt,
-        image_url: `data:${mimeType};base64,${imageBase64}`,
+        prompt: `You are an art director reimagining a child's drawing as a museum-quality fine art print. Your job is to ELEVATE the piece, not just clean it up.
+
+Your prompt MUST:
+1. Pick ONE specific fine-art medium that suits the piece and commit to it fully (e.g. "lush watercolor with visible brushwork and pigment bloom", "thick impasto oil painting on linen canvas with palette-knife texture", "rich gouache illustration with soft paper grain", "screen-printed poster with bold flat color fields and halftone texture", "mixed-media collage with torn paper edges and ink outlines"). Never say "in the style of the drawing" — reinvent the surface.
+2. Preserve the child's composition, subjects, and spirit — the shapes they drew stay in the same places — but upgrade every stroke: refined line quality, richer saturated color palette with depth and shadow, painterly light, atmospheric background treatment, professional color grading.
+3. Add sensory detail the original lacks: texture of the medium, play of light, subtle gradients, ambient depth, a hint of artistic interpretation that makes this feel intentional and gallery-worthy.
+4. Full bleed edge-to-edge composition filling the entire frame, no paper edges, no borders, no scan artifacts, creases removed, pristine smooth surface.
+5. End with: "gallery quality fine art print, museum reproduction, 11x14 inch premium print, vivid color, crisp detail".
+
+Do NOT just describe what's in the drawing. Describe the transformed artwork as a curator would describe a framed piece hanging in a boutique gallery.
+Original drawing prompt: ${prompt}`,
+        image_url: 'data:' + mimeType + ';base64,' + imageBase64,
         guidance_scale: 6.0,
       }),
     })
