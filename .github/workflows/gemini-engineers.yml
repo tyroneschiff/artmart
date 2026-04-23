@@ -25,9 +25,10 @@ jobs:
       - name: Install Gemini CLI
         run: npm install -g @google/gemini-cli
 
-      - name: Install Supabase CLI
-        run: |
-          sh -c "$(curl -fsSL https://raw.githubusercontent.com/supabase/cli/main/install.sh)"
+      - name: Setup Supabase CLI
+        uses: supabase/setup-supabase-cli@v1
+        with:
+          version: latest
 
       - name: CRON A - Strategic Product Lead
         env:
