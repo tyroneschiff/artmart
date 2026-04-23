@@ -8,6 +8,7 @@ import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 import CreditsChip from '../../components/CreditsChip'
+import { useCredits } from '../../lib/useCredits'
 
 type Store = { id: string; child_name: string; slug: string; created_at: string }
 
@@ -34,6 +35,9 @@ export default function MyStoresScreen() {
     queryFn: () => fetchMyStores(session!.user.id),
     enabled: !!session,
   })
+
+  const { data: credits } = useCredits()
+  const showUpsell = credits === 0 && (stores?.length === 0)
 
   const createStore = useMutation({
     mutationFn: async () => {
@@ -80,6 +84,18 @@ export default function MyStoresScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {showUpsell && (
+        <View style={styles.upsellCard}>
+          <View style={styles.upsellInfo}>
+            <Text style={styles.upsellTitle}>Ready to step inside?</Text>
+            <Text style={styles.upsellMessage}>You'll need credits to transform drawings into magical worlds.</Text>
+          </View>
+          <TouchableOpacity style={styles.upsellBtn} onPress={() => router.push('/credits')}>
+            <Text style={styles.upsellBtnText}>Get Credits</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={stores}
@@ -167,6 +183,43 @@ const styles = StyleSheet.create({
   storeName: { fontSize: 17, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   storeArrow: { fontSize: 20, color: colors.muted },
+  upsellCard: {
+    backgroundColor: colors.dangerBg,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  upsellInfo: { flex: 1 },
+  upsellTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.dangerText,
+    marginBottom: 2,
+    letterSpacing: -0.3,
+  },
+  upsellMessage: {
+    fontSize: 13,
+    color: colors.dangerText,
+    opacity: 0.8,
+    lineHeight: 18,
+  },
+  upsellBtn: {
+    backgroundColor: colors.dark,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+  },
+  upsellBtnText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '700',
+  },
   emptyWrap: { alignItems: 'center', paddingTop: 100, paddingHorizontal: 40 },
   emptyPortal: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.border, shadowColor: colors.dark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   emptyIcon: { fontSize: 32 },
