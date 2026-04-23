@@ -77,7 +77,6 @@ export default function StoreScreen() {
             <Image source={{ uri: item.transformed_image_url }} style={styles.image} />
             <View style={styles.cardBody}>
               <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-              <Text style={styles.price}>From ${(item.price_digital / 100).toFixed(2)}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -118,7 +117,6 @@ const styles = StyleSheet.create({
   image: { width: '100%', aspectRatio: 1 },
   cardBody: { padding: 12 },
   title: { fontSize: 13, fontWeight: '700', color: colors.dark },
-  price: { fontSize: 12, color: colors.gold, marginTop: 3, fontWeight: '700' },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.dark, marginBottom: 8 },

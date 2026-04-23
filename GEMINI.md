@@ -216,20 +216,19 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ Digital Retirement & Creator Ownership — Retired per-piece digital pricing from creator flow; hidden digital download option for non-owners; granted free digital access to owners.
+- ✅ "Step Inside" Narrative Polish — Reframed purchase section to "Bring this world home"; renamed digital product to "Keep the high-res vision"; added "✨ Step inside... imagination" magic label.
 - ✅ Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message.
 - ✅ Prepare for iOS Release (v1.1.0) — audited codebase for "Step Inside" theme alignment; performed TypeScript sanity check; removed unused Anthropic SDK; bumped app version to 1.1.0 and build number to 10.
 - ✅ Global ES256 JWT fix — applied manual `jose` JWT verification to all authenticated edge functions (`create-payment-intent`, `download-piece`, `purchase-credits`, `moderate-comment`); bypasses default gateway 401 error on asymmetric JWT projects.
 - ✅ Moderated comments — added `comments` and `reports` tables; implemented `moderate-comment` edge function with Gemini 2.0 Flash moderation and 5-min rate limiting; added comments section to `piece/[id].tsx` with real-time updates and report flow.
 - ✅ Credits system & paywall — added `credits` and `credit_transactions` to schema; implemented `purchase-credits` edge function; added `CreditsScreen` modal and `ProfileScreen` integration; `transform-artwork` now handles atomic credit deduction and 402 out-of-credits state.
 - ✅ Anonymous vote conversion — `discover.tsx` and `piece/[id].tsx` now redirect unauthenticated voters to login instead of silently no-oping; `disabled` state updated so button remains clickable for guests.
-- ✅ Login redirect (returnTo) — `login.tsx` now handles a `returnTo` parameter, ensuring users land back on their original piece or store after signing up; applied to vote and purchase actions.
-- ✅ Refactor to Gemini — `transform-artwork` edge function refactored from Claude to `gemini-2.0-flash`; crons updated to use `gemini` CLI; documentation updated to reflect Gemini-first stack.
-- ✅ Reframe pass 2 — updated `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, and `piece/[id].tsx` to match "step inside" framing; replaced "gallery / piece / art" with "world" where appropriate; updated empty states and icons.
-- ✅ Profile display name fix — `profile.tsx` now fetches and pre-fills the display name via `useQuery`; no longer write-only and doesn't clear on save.
-- ✅ Error handling with retry — added `isError`/`refetch` with a "Try again" pill to `store/[slug].tsx`, `discover.tsx`, `mystores.tsx`, and `piece/[id].tsx` to handle transient network failures.
 
 **Pending (reframe + monetization pivot — see Recent Session Notes 2026-04-23):**
-- [ ] Android compatibility audit — test all core flows (camera, transform, Stripe) on Android; ensure FileSystem and ImageManipulator consistency.
+- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 1: Add gift columns to `orders` table.
+- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: persistent "Out of Credits" card.
+- [ ] Android compatibility audit — test all core flows on Android.
 - [ ] OG meta tags for piece/store public URLs
 
 
@@ -281,47 +280,30 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 *(Rewritten each run by CRON A — Implementer reads this to pick next task)*
 
 1. **[REVENUE] EPIC: "Send Print as Gift" Email Flow**
-    *   **The Epic:** While guest checkout for prints is implemented, there's no automated "send as gift" email flow providing order status or a personalized message to the gift recipient.
-    *   **Micro-Task 1 (Database):** Create an email templates table or define the required metadata fields in the `orders` table to support gift emails, such as `gift_recipient_email` and `gift_message`.
-    *   **Micro-Task 2 (Edge Function):** Modify `supabase/functions/stripe-webhook/index.ts` to detect `gift_recipient_email` and `gift_message` in the Stripe metadata after a successful print order.
-    *   **Micro-Task 3 (Integration):** Integrate an email service (e.g., Resend or SendGrid) within `supabase/functions/stripe-webhook/index.ts` to dispatch a "A gift is coming!" email to the `gift_recipient_email` upon successful payment, including the `gift_message`.
+    *   **Micro-Task 1 (Database):** Add `gift_recipient_email` and `gift_message` columns to the `orders` table in a new migration to support gift-specific metadata.
+    *   **Micro-Task 2 (Edge Function):** Update `supabase/functions/stripe-webhook/index.ts` to extract `gift_recipient_email` and `gift_message` from the Stripe metadata and save them to the `orders` table.
+    *   **Micro-Task 3 (Integration):** Integrate an email service (e.g., Resend) in the webhook to send a "A gift is coming!" email to the recipient with the parent's message upon successful payment.
 
 2. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
-    *   **The Problem:** The monetization pivot relies on credit pack purchases, but the visibility and user experience of buying credits might not be optimized for conversion, especially for parents eager to create.
-    *   **Micro-Task 1 (UI/UX):** Implement a prominent "Buy Credits" Call to Action (CTA) in `app/app/(tabs)/create.tsx` when a user runs out of credits, clearly guiding them to purchase more credits.
-    *   **Micro-Task 2 (UI/UX):** Streamline the `app/app/credits.tsx` modal, ensuring visual consistency with `lib/theme.ts` and optimizing the purchase flow for intuitiveness and clarity.
-    *   **Micro-Task 3 (UI/UX):** Enhance the integration of `app/app/credits.tsx` within `app/app/(tabs)/profile.tsx` to make credit management and purchase options easily accessible and visually appealing.
-    *   **The 'Why':** A clear and frictionless credit purchase path is essential for the new hybrid monetization model, directly increasing credit pack sales and enabling more "magic" moments for parents.
+    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card in the UI that includes a "Buy Credits" button.
+    *   **Micro-Task 2 (UI/UX):** Add a "Buy Credits" pill/button to the `CreditsScreen` header or balance card if balance is 0, ensuring the path to purchase is always one tap away.
 
 3. **[UX] Android Full Compatibility Audit & Fixes**
-    *   **The Problem:** Core user flows (camera, transform, Stripe) may have subtle or critical bugs on Android due to platform differences in `expo-image-manipulator` and `FileSystem`, alienating a significant user base.
-    *   **Micro-Task 1 (Audit):** Conduct a comprehensive audit of all critical user paths (image capture, AI transform, image publishing, and Stripe payment flows) on an Android device, documenting any inconsistencies or bugs related to `expo-image-manipulator` and `FileSystem` behavior.
-    *   **Micro-Task 2 (Fixes):** Implement necessary code adjustments in `app/lib/transformArtwork.ts`, `app/app/(tabs)/create.tsx`, and `app/lib/checkout.ts` to resolve identified Android inconsistencies in image handling (base64, file URIs) and payment flows, ensuring feature parity with iOS.
-    *   **The 'Why'::** Expanding to Android is crucial for market reach. A broken or inconsistent experience for Android users creates significant friction, leading to churn and negative word-of-mouth.
+    *   **Micro-Task 1 (Audit):** Test the full camera → transform → publish flow on an Android emulator or device, specifically checking if `FileSystem.readAsStringAsync` and `ImageManipulator` behave as expected with `file://` URIs.
+    *   **Micro-Task 2 (Fixes):** Apply Android-specific fixes identified in the audit to `app/lib/transformArtwork.ts` and `app/app/(tabs)/create.tsx`.
 
 4. **[UX] Public Store & Piece OG Meta Tags**
-    *   **The Problem:** Shared links to stores (`/store/[slug]`) and individual pieces (`/piece/[id]`) lack rich previews on social media (WhatsApp, Instagram), reducing engagement and viral acquisition potential.
-    *   **Micro-Task 1 (Frontend/Routing):** Implement dynamic Open Graph (OG) meta tag generation for the `app/app/store/[slug].tsx` route to display compelling titles, descriptions, and images when shared on social media.
-    *   **Micro-Task 2 (Frontend/Routing):** Implement dynamic Open Graph (OG) meta tag generation for the `app/app/piece/[id].tsx` route to display compelling titles, descriptions, and images when shared on social media.
-    *   **The 'Why':** Rich social previews are a vital, free acquisition channel. Improving them will drive more clicks, shares, and ultimately, new users to the platform by making shared content more appealing.
+    *   **Micro-Task 1 (Edge Function):** Create a simple Edge Function or update the landing page to serve dynamic OG tags (image, title) for piece URLs so they look stunning when shared on WhatsApp/Instagram.
 
-5. **[POLISH] "Step Inside" Copy & UI Consistency Audit**
-    *   **The Problem:** While a "Reframe pass 2" occurred, inconsistencies in terminology (e.g., "gallery," "piece," "art" vs. "world") and visual cues may still exist, diluting the new "Step inside your child's drawing" product narrative.
-    *   **Micro-Task 1 (UI/UX Audit):** Perform a comprehensive audit of all user-facing copy and UI elements across `app/app/(tabs)/create.tsx`, `app/app/(tabs)/discover.tsx`, `app/app/store/[slug].tsx`, and `app/app/piece/[id].tsx` to ensure strict adherence to the "Step Inside" narrative and `lib/theme.ts` tokens.
-    *   **Micro-Task 2 (UI/UX Fixes):** Implement identified copy changes and UI adjustments in the audited files to eliminate inconsistencies and reinforce the "Step Inside" product framing, ensuring all UI elements adhere strictly to `lib/theme.ts` design tokens.
-    *   **The 'Why':** Consistent narrative and polished UI are critical for communicating the "magic" of the product and creating a premium, trustworthy brand experience that resonates with emotionally invested parents.
-
-6. **[RETENTION] Post-Publish / Post-Vote Notifications & Share Prompts**
-    *   **The Problem:** Parents are not explicitly encouraged or prompted to share their creations or notified when their child's art receives love (votes), missing opportunities for engagement and viral sharing.
-    *   **Micro-Task 1 (UI/UX):** Implement a "Post-publish prompt" within `app/app/(tabs)/create.tsx` after a piece is successfully published, suggesting a pre-written message for family WhatsApp groups.
-    *   **Micro-Task 2 (Backend/Notifications):** Develop a "Post-vote notification" system within `supabase/functions/` to inform parents when their child's art receives votes, with a corresponding in-app UI component for display.
-    *   **Micro-Task 3 (UI/UX):** Enhance in-app share sheet options in `app/components/ShareSheet.tsx` and integrate with native sharing functionalities to maximize ease of sharing for both pieces and stores.
-    *   **The 'Why':** These features increase parent engagement, leverage existing sharing behaviors for organic growth, and reinforce the emotional reward of using the app, driving retention.
+5. **[RETENTION] Post-Publish Share Prompts**
+    *   **Micro-Task 1 (UI/UX):** After a successful publish in `app/app/(tabs)/create.tsx`, show a specific "Share to Family WhatsApp" button with a pre-filled emotional message ("Look at the world [Name] imagined!").
 
 ## Improvement Log
 
 *(One line per run, newest first)*
 
+- [2026-04-23 CRON B] Digital Retirement & "Step Inside" Polish — Removed creator-facing prices from `create.tsx`; retired per-piece pricing in `store/[slug].tsx`; hidden digital downloads for non-owners and granted free creator access in `piece/[id].tsx`; reframed UI to "Bring this world home" and added "✨ Step inside... imagination" label.
+- [2026-04-23 CRON A] Performed 360-degree audit; identified legacy digital pricing as a "leaky bucket" for the new "Step Inside" value prop; prioritized retirement of per-piece digital sales and granting ownership to creators; refined gifting and credits tasks for tighter execution.
 - [2026-04-22 CRON A] Performed a comprehensive audit of the product backlog against the recent business model pivot, refining existing micro-tasks to be more surgical and prioritizing them for maximum revenue and UX impact, particularly focusing on credit purchase flow and Android compatibility.
 - [2026-04-22 CRON B] Guest Checkout for Prints — Implemented seamless guest checkout for print orders, allowing unauthenticated users to purchase physical prints and include a gift message. Files: `app/app/piece/[id].tsx`, `app/lib/checkout.ts`, `app/components/GuestPrintInfoModal.tsx`, `supabase/functions/create-payment-intent/index.ts`.
 - [2026-04-22 CRON B] Version bump & Sanity Check — bumped to v1.1.0; removed Anthropic SDK; updated Credits UI logic to navigate to modal. Files: `app.json`, `package.json`, `create.tsx`.

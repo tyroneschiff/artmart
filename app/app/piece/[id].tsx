@@ -15,7 +15,7 @@ import GuestPrintInfoModal from '../../components/GuestPrintInfoModal'
 type Piece = {
   id: string; title: string; transformed_image_url: string; original_image_url: string
   vote_count: number; price_digital: number; price_print: number; ai_description: string
-  stores: { child_name: string; slug: string }
+  stores: { child_name: string; slug: string; owner_id: string }
 }
 
 type Comment = {
@@ -29,7 +29,7 @@ type Comment = {
 async function fetchPiece(id: string): Promise<Piece> {
   const { data, error } = await supabase
     .from('pieces')
-    .select('*, stores(child_name, slug)')
+    .select('*, stores(child_name, slug, owner_id)')
     .eq('id', id)
     .single()
   if (error) throw error
@@ -73,6 +73,8 @@ export default function PieceScreen() {
   
     const { data: piece, isLoading, error, refetch } = useQuery({ queryKey: ['piece', id], queryFn: () => fetchPiece(id) })
   
+    const isOwner = !!session && !!piece && session.user.id === piece.stores?.owner_id
+
     const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
   
     const { data: myDigitalOrder } = useQuery({
@@ -211,6 +213,9 @@ export default function PieceScreen() {
         </View>
 
         <Image source={{ uri: piece.transformed_image_url }} style={styles.mainImage} />
+        <View style={styles.magicLabel}>
+          <Text style={styles.magicLabelText}>✨ Step inside {piece.stores?.child_name}'s imagination</Text>
+        </View>
 
         <Text style={styles.title}>{piece.title}</Text>
         {piece.ai_description ? <Text style={styles.description}>{piece.ai_description}</Text> : null}
@@ -230,35 +235,23 @@ export default function PieceScreen() {
         </TouchableOpacity>
 
         <View style={styles.purchaseSection}>
-          <Text style={styles.purchaseTitle}>Purchase</Text>
+          <Text style={styles.purchaseTitle}>Bring this world home</Text>
 
-          {myDigitalOrder ? (
+          {(isOwner || myDigitalOrder) && (
             <TouchableOpacity
               style={styles.purchaseCard}
               onPress={handleRedownload}
               disabled={downloading || purchasing !== null}
             >
               <View>
-                <Text style={styles.purchaseType}>Digital Download</Text>
-                <Text style={styles.purchaseDetail}>You own this · Download again</Text>
+                <Text style={styles.purchaseType}>Keep the high-res vision</Text>
+                <Text style={styles.purchaseDetail}>
+                  {isOwner ? "Free for you as the creator" : "You own this · Download again"}
+                </Text>
               </View>
               {downloading
                 ? <ActivityIndicator color={colors.gold} />
-                : <Text style={styles.redownloadLabel}>Re-download</Text>}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.purchaseCard}
-              onPress={() => handlePurchase('digital')}
-              disabled={purchasing !== null}
-            >
-              <View>
-                <Text style={styles.purchaseType}>Digital Download</Text>
-                <Text style={styles.purchaseDetail}>High-res file, print at home</Text>
-              </View>
-              {purchasing === 'digital'
-                ? <ActivityIndicator color={colors.gold} />
-                : <Text style={styles.purchasePrice}>${(piece.price_digital / 100).toFixed(2)}</Text>}
+                : <Text style={styles.redownloadLabel}>{isOwner ? 'Download' : 'Re-download'}</Text>}
             </TouchableOpacity>
           )}
 
@@ -375,6 +368,8 @@ const styles = StyleSheet.create({
   shareBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7 },
   shareBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
   mainImage: { width: '100%', aspectRatio: 1 },
+  magicLabel: { paddingHorizontal: 16, paddingTop: 12 },
+  magicLabelText: { fontSize: 13, fontWeight: '700', color: colors.gold, fontStyle: 'italic' },
   title: { fontSize: 26, fontWeight: '800', color: colors.dark, padding: 16, paddingBottom: 8, letterSpacing: -0.5 },
   description: { fontSize: 14, color: colors.mid, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 },
   voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },

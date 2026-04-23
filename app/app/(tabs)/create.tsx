@@ -336,18 +336,6 @@ export default function CreateScreen() {
             </View>
           )}
 
-          <View style={styles.priceBox}>
-            <Text style={styles.priceBoxLabel}>Family will see these prices</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceRowLabel}>Digital download</Text>
-              <Text style={styles.priceRowValue}>${(PRICE_DIGITAL_CENTS / 100).toFixed(2)}</Text>
-            </View>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceRowLabel}>Physical print (11×14")</Text>
-              <Text style={styles.priceRowValue}>${(PRICE_PRINT_CENTS / 100).toFixed(2)}</Text>
-            </View>
-          </View>
-
           <TouchableOpacity
             style={[styles.button, (!title || !selectedStore) && styles.buttonDisabled]}
             onPress={() => publishMutation.mutate()}
@@ -424,11 +412,6 @@ const styles = StyleSheet.create({
   inlineStoreBtn: { backgroundColor: colors.dark, borderRadius: 10, paddingHorizontal: 16, justifyContent: 'center' },
   inlineStoreBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   inlineStoreSuccess: { color: colors.goldDark, fontSize: 13, fontWeight: '600', marginTop: 8 },
-  priceBox: { backgroundColor: colors.white, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.border },
-  priceBoxLabel: { fontSize: 12, fontWeight: '700', color: colors.muted, letterSpacing: 0.5, marginBottom: 10, textTransform: 'uppercase' },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  priceRowLabel: { fontSize: 14, color: colors.mid },
-  priceRowValue: { fontSize: 15, fontWeight: '800', color: colors.dark },
   modal: { flex: 1, padding: 32, paddingTop: 60, backgroundColor: colors.cream },
   modalTitle: { fontSize: 26, fontWeight: '900', marginBottom: 24, color: colors.dark },
   storeOption: { padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
