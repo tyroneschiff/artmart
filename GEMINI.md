@@ -288,8 +288,8 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
     *   **Micro-Task 2:** Create `app/hooks/useCredits.test.ts` to verify React Query logic for credit fetching and invalidation.
 
 2. **[QUALITY] Backend Validation Suite**
-    *   **Micro-Task 1:** Replace stub in `supabase/functions/tests/moderate-comment_test.ts` with a real unit test (mock Gemini + DB select/insert).
-    *   **Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify credit check and fal.ai integration logic.
+    *   **Micro-Task 1:** Create `supabase/functions/tests/moderate-comment_test.ts` with real unit tests (mocking Gemini/Claude + DB interactions).
+    *   **Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify the new Claude transformation pipeline and fal.ai integration.
 
 ---
 
