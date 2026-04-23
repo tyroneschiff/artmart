@@ -66,8 +66,9 @@ export default function PieceScreen() {
     const [downloading, setDownloading] = useState(false)
     const [shippingModalVisible, setShippingModalVisible] = useState(false)
     const [guestPrintInfoModalVisible, setGuestPrintInfoModalVisible] = useState(false) // New state for guest print modal
-    const [guestEmail, setGuestEmail] = useState('') // New state for guest email
-    const [giftMessage, setGiftMessage] = useState('') // New state for gift message
+    const [guestEmail, setGuestEmail] = useState('')
+    const [recipientEmail, setRecipientEmail] = useState('')
+    const [giftMessage, setGiftMessage] = useState('')
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
   
@@ -132,12 +133,12 @@ export default function PieceScreen() {
       onError: (e: any) => Alert.alert('Error', e.message),
     })
   
-    async function executePurchase(orderType: 'digital' | 'print', shippingAddress?: ShippingAddress, guestEmail?: string, giftMessage?: string) {
+    async function executePurchase(orderType: 'digital' | 'print', shippingAddress?: ShippingAddress, guestEmail?: string, recipientEmail?: string, giftMessage?: string) {
       // Session check is now more nuanced, handled in handlePurchase
       setPurchasing(orderType)
       try {
         const userToken = session?.access_token || undefined // Pass token if session exists, else undefined
-        await purchasePiece(id, orderType, userToken, shippingAddress, guestEmail, giftMessage)
+        await purchasePiece(id, orderType, userToken, shippingAddress, guestEmail, recipientEmail, giftMessage)
         if (orderType === 'digital') {
           Alert.alert('Purchase complete!', 'Your file is ready to download.', [
             { text: 'Download now', onPress: () => downloadPiece(id) },
@@ -332,16 +333,18 @@ export default function PieceScreen() {
         visible={shippingModalVisible}
         onConfirm={(addr) => {
           setShippingModalVisible(false)
-          executePurchase('print', addr, guestEmail, giftMessage) // Pass guestEmail and giftMessage
-          setGuestEmail('') // Clear guest email
-          setGiftMessage('') // Clear gift message
+          executePurchase('print', addr, guestEmail, recipientEmail, giftMessage)
+          setGuestEmail('')
+          setRecipientEmail('')
+          setGiftMessage('')
         }}
         onCancel={() => setShippingModalVisible(false)}
       />
       <GuestPrintInfoModal
         visible={guestPrintInfoModalVisible}
-        onConfirm={(email, message) => {
+        onConfirm={(email, rEmail, message) => {
           setGuestEmail(email)
+          setRecipientEmail(rEmail)
           setGiftMessage(message)
           setGuestPrintInfoModalVisible(false)
           setShippingModalVisible(true) // Now open shipping address modal

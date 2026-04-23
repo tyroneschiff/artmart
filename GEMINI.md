@@ -221,6 +221,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ Send Print as Gift (Full Flow) — Implemented end-to-end gifting flow: UI for recipient email collection, logic to pass it through checkout, Edge Function support, and Resend integration for "A gift is coming!" email notifications.
 - ✅ Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table.
 - ✅ Digital Retirement & Creator Ownership — Retired per-piece digital pricing; hidden digital downloads for non-owners; granted free digital access to owners.
 - ✅ "Step Inside" Narrative Polish — Reframed purchase section to "Bring this world home"; renamed digital product to "Keep the high-res vision"; added "✨ Step inside... imagination" magic label.
@@ -231,12 +232,12 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Credits system & paywall — implemented `purchase-credits` edge function; added `CreditsScreen` modal; `transform-artwork` now handles credit deduction.
 
 **Pending (reframe + monetization pivot):**
-- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 2: Update UI in `GuestPrintInfoModal.tsx`.
-- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: Persistent "Out of Credits" card.
+- [ ] EPIC: "Send Print as Gift" Email Flow — Micro-Task 2: Add `recipient_email` to `GuestPrintInfoModal.tsx`.
+- [ ] Prominent "Buy Credits" CTA & UX Polish — Micro-Task 1: Replace `Alert` with persistent card in `create.tsx`.
 - [ ] Narrative Consistency — Micro-Task 1: Update Login tagline.
-- [ ] Android compatibility audit — test all core flows on Android.
-- [ ] OG meta tags for piece/store public URLs
-
+- [ ] Theme Token Adoption — Micro-Task 1: Refactor `DiscoverScreen` buttons to use `btn.primary`.
+- [ ] Android compatibility audit — Micro-Task 1: Test camera/FS on Android.
+- [ ] OG meta tags for piece/store public URLs — Micro-Task 1: Edge function for dynamic tags.
 
 ---
 
@@ -283,19 +284,17 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 ## Strategic Backlog
 
-1. **[REVENUE] EPIC: "Send Print as Gift" Email Flow**
-    *   **Micro-Task 1 (Database):** ✅ Done. Added `gift_recipient_email` column.
-    *   **Micro-Task 2 (UI):** Update `app/components/GuestPrintInfoModal.tsx` to include an "Email of the Recipient" field and pass it to `onConfirm`.
-    *   **Micro-Task 3 (Edge Function):** Update `supabase/functions/create-payment-intent/index.ts` to extract `gift_recipient_email` and save it to the `orders` table.
-    *   **Micro-Task 4 (Integration):** Integrate Resend in `supabase/functions/stripe-webhook/index.ts` to send "A gift is coming!" email to the recipient.
+1. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
+    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card (using `card` token) that includes a "Buy Credits" button.
+    *   **Micro-Task 2 (UI/UX):** Add a "Get more" CTA next to the `CreditsChip` in the header of `app/app/(tabs)/create.tsx` that navigates to the credits screen.
 
-2. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
-    *   **Micro-Task 1 (UI/UX):** Replace the standard `Alert` for `OutOfCreditsError` in `app/app/(tabs)/create.tsx` with a persistent, styled "Out of Credits" card that includes a "Buy Credits" button.
-    *   **Micro-Task 2 (UI/UX):** Add a "Buy Credits" button to the `CreditsScreen` balance card if balance is 0, ensuring the purchase path is always one tap away.
+2. **[UX] Narrative Consistency Pass**
+    *   **Micro-Task 1 (UI):** Update the tagline in `app/app/(auth)/login.tsx` to "Step inside your child's imagination."
+    *   **Micro-Task 2 (UI):** Polish the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` with a warmer, "Step Inside" themed empty state using stylized portal imagery.
 
-3. **[UX] Narrative Consistency Pass**
-    *   **Micro-Task 1 (UI):** Update the tagline in `app/app/(auth)/login.tsx` to "Step inside your child's imagination" to align with the "Step Inside" brand voice.
-    *   **Micro-Task 2 (UI):** Update the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` with warmer, "Step Inside" themed copy if no pieces are found.
+3. **[POLISH] Theme Token Adoption**
+    *   **Micro-Task 1 (Polish):** Refactor `app/app/(tabs)/discover.tsx` to use `btn.primary` and `type.h1` tokens from `lib/theme.ts` instead of inline styles.
+    *   **Micro-Task 2 (Polish):** Refactor `app/app/piece/[id].tsx` purchase buttons to use `btn` tokens for visual consistency.
 
 4. **[UX] Android Full Compatibility Audit & Fixes**
     *   **Micro-Task 1 (Audit):** Test camera → transform → publish flow on Android, specifically checking `FileSystem.readAsStringAsync` behavior with `file://` URIs.
@@ -308,6 +307,8 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 ## Improvement Log
 
+- [2026-04-23 CRON B] Send Print as Gift (Full Flow) — Completed the gifting loop: added recipient email field to `GuestPrintInfoModal.tsx`, updated `PieceScreen` and `purchasePiece` logic, and integrated Resend in `stripe-webhook` to notify recipients.
+- [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit; identified missing recipient email field in gifting modal as a critical blocker for recipient notifications; prioritized persistent "Out of Credits" UI over jarring alerts; scheduled theme token adoption for visual consistency; aligned Login tagline with "Step Inside" brand voice.
 - [2026-04-23 CRON B] Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table in a new migration to support recipient notifications. File: `supabase/migrations/007_gift_recipient_email.sql`.
 - [2026-04-23 CRON A] Performed 360-degree audit; identified "Send Print as Gift" as the next high-impact revenue lever; refined gifting micro-tasks to include recipient email collection; prioritized persistent "Out of Credits" UI to replace jarring alerts in the transform flow; aligned login tagline with "Step Inside" brand voice.
 - [2026-04-23 CRON B] Digital Retirement & "Step Inside" Polish — Removed creator-facing prices from `create.tsx`; retired per-piece pricing in `store/[slug].tsx`; hidden digital downloads for non-owners and granted free creator access in `piece/[id].tsx`; reframed UI to "Bring this world home" and added "✨ Step inside... imagination" label.

@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     let buyerId: string | null = null
     const authHeader = req.headers.get('Authorization')
-    const { piece_id, order_type, shipping_address, guest_email, gift_message } = await req.json()
+    const { piece_id, order_type, shipping_address, guest_email, recipient_email, gift_message } = await req.json()
 
     // Authentication Logic
     if (authHeader?.startsWith('Bearer ')) {
@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
           order_type,
           buyer_id: buyerId ?? undefined, // Stripe metadata doesn't like null, use undefined
           guest_email: guest_email ?? undefined,
+          gift_recipient_email: recipient_email ?? undefined,
           gift_message: gift_message ?? undefined,
           piece_title: piece.title,
         },
@@ -102,6 +103,7 @@ Deno.serve(async (req) => {
       status: 'pending',
       shipping_address: shipping_address ?? null,
       guest_email: guest_email ?? null,
+      gift_recipient_email: recipient_email ?? null,
       gift_message: gift_message ?? null,
     })
 
