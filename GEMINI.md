@@ -188,6 +188,11 @@ The most dangerous bugs look like success but do nothing:
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
+**2026-04-23 — PUBLIC OG TAGS:**
+- Created `serve-og-tags` Edge Function to serve dynamic HTML with OG tags for piece and store URLs.
+- Supports both piece IDs and store slugs via query params or path segments.
+- Uses design system tokens for a warm, branded "Step Inside" preview.
+
 **2026-04-23 — GEMINI MODEL UPGRADE:**
 - Upgraded Gemini model from `gemini-2.0-flash` to `gemini-2.5-flash` in `moderate-comment` and `transform-artwork` edge functions.
 - Root cause: `gemini-2.0-flash` was returning 404/400 errors via v1beta API; `gemini-2.5-flash` is the current stable version.
@@ -221,6 +226,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ [REVENUE] Public Store & Piece OG Meta Tags — Edge function `serve-og-tags`.
 - ✅ [UX] Narrative Consistency Pass — Update Login tagline & Empty States
 - ✅ [POLISH] Theme Token Adoption — `discover.tsx` and `store/[slug].tsx` refactored
 - ✅ [REVENUE] Prominent "Buy Credits" CTA & UX Polish
@@ -230,7 +236,7 @@ The most dangerous bugs look like success but do nothing:
 - ✅ [QUALITY] Upload & Download timeouts added
 
 **Pending (strategic priority):**
-- [ ] [REVENUE] Public Store & Piece OG Meta Tags — Micro-Task 1: Edge function `serve-og-tags`.
+- [ ] [REVENUE] Public Store & Piece OG Meta Tags — Micro-Task 2: Configure URL rewrites in landing page.
 - [ ] [POLISH] Theme Token Adoption — Micro-Task 1: Refactor `piece/[id].tsx` to use tokens.
 - [ ] [POLISH] Theme Token Adoption — Micro-Task 2: Refactor `mystores.tsx` and `profile.tsx`.
 - [ ] [RETENTION] Post-Publish Share Prompts — Micro-Task 1: Prominent WhatsApp button in `create.tsx`.
@@ -289,49 +295,49 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 2. **[QUALITY] Backend Validation Suite**
     *   **Micro-Task 1:** Create `supabase/functions/tests/moderate-comment_test.ts` with real unit tests (mocking Gemini/Claude + DB interactions).
-    *   **Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify the new Claude transformation pipeline and fal.ai integration.
+    *   *Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify the new Claude transformation pipeline and fal.ai integration.
 
 ---
 
 ## Strategic Backlog
 
 1. **[REVENUE] Public Store & Piece OG Meta Tags**
-    *   **Micro-Task 1 (Edge Function):** Create an Edge Function `serve-og-tags` that generates dynamic HTML with OG meta tags (image, title, description) for piece and store URLs to ensure high-impact social sharing.
+    *   **The Micro-Task:** Create `supabase/functions/serve-og-tags/index.ts` to generate dynamic HTML with OG meta tags (image, title, description) for piece and store URLs, ensuring high-impact social sharing. [DONE]
     *   **Why:** Public URLs are our #1 acquisition channel. A beautiful preview in WhatsApp = more visitors.
 
-2. **[UX] Narrative Consistency Pass**
-    *   **Micro-Task 1 (UI):** Update the tagline in `app/app/(auth)/login.tsx` to "Step inside your child's imagination." [DONE]
-    *   **Micro-Task 2 (UI):** Polish the `ListEmptyComponent` in `app/app/(tabs)/discover.tsx` and `app/app/store/[slug].tsx` with warmer, "portal" themed copy. [DONE]
-    *   **Micro-Task 3 (UI):** Polish the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` for consistency.
-    *   **Why:** Consistency in copy reinforces the emotional value of the "Step Inside" magic.
+2. **[REVENUE] Checkout UI Polish: Premium Aesthetic**
+    *   **The Micro-Task:** Refactor `app/components/GuestPrintInfoModal.tsx` and `app/components/ShippingAddressModal.tsx` to use `type` tokens for typography, add consistent padding (24px), and use `btn.primary` for CTAs.
+    *   **Why:** Grandparents are the primary buyers; the checkout experience must feel trustworthy and high-end to convert.
 
-3. **[POLISH] Theme Token Adoption**
-    *   **Micro-Task 1 (Polish):** Refactor `app/app/(tabs)/discover.tsx` to use `btn.primary`, `type.h1`, and `card` tokens from `lib/theme.ts`. [DONE]
-    *   **Micro-Task 2 (Polish):** Refactor `app/app/piece/[id].tsx` to use `btn`, `type`, and `card` tokens for all buttons, headings, and containers.
-    *   **Micro-Task 3 (Polish):** Refactor `app/app/store/[slug].tsx` [DONE], `app/app/(tabs)/mystores.tsx`, and `app/app/(tabs)/profile.tsx` for full token compliance.
-    *   **Why:** Removes design debt and ensures the app feels premium and intentional.
+3. **[POLISH] Theme Token Adoption: Piece Detail Screen**
+    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` to replace all raw `colors` and inline styles with `type`, `btn`, and `card` tokens from `lib/theme.ts`.
+    *   **Why:** Removes design debt on the most important screen in the app, ensuring it feels premium and intentional.
 
-4. **[RETENTION] Post-Publish Share Prompts**
-    *   **Micro-Task 1 (UI):** After successful publish in `app/app/(tabs)/create.tsx`, add a prominent "Share to Family WhatsApp" button (perhaps next to the "Reset" button) with the pre-filled emotional message.
-    *   **Why:** Strike while the iron is hot. If the parent just made something amazing, get them to share it immediately.
+4. **[POLISH] Theme Token Adoption: My Stores & Profile**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/mystores.tsx` and `app/app/(tabs)/profile.tsx` for full design system token compliance (`type`, `btn`, `card`).
+    *   **Why:** Consistency in design reinforces the emotional value and professional quality of the platform.
 
-5. **[REVENUE] Gifting UI Polish**
-    *   **Micro-Task 1 (UI):** Polish `app/components/GuestPrintInfoModal.tsx` and `app/components/ShippingAddressModal.tsx` with better spacing, typography (using `type` tokens), and a "Premium Gift" aesthetic.
-    *   **Why:** Grandparents are the primary buyers; the checkout experience must feel trustworthy and high-end.
+5. **[UX] Narrative Consistency: My Stores Empty State**
+    *   **The Micro-Task:** Update the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` to use `type.h2` for the title and `btn.primary` for the "Create first store" button.
+    *   **Why:** The first-run experience for parents should be warm, inviting, and clearly on-brand.
 
-6. **[QUALITY] Backend Validation Suite**
-    *   **Micro-Task 1 (Tests):** Implement real unit tests in `supabase/functions/tests/moderate-comment_test.ts` (mocking Gemini and DB).
-    *   **Micro-Task 2 (Tests):** Create `supabase/functions/tests/transform-artwork_test.ts` to verify credit deduction and error handling.
-    *   **Why:** Prevents breaking the monetization or safety guardrails as the codebase grows.
+6. **[RETENTION] Post-Publish Share Prompt in Create Flow**
+    *   **The Micro-Task:** In `app/app/(tabs)/create.tsx`, replace the automatic `ShareSheet` popup with a dedicated success card featuring a prominent, gold "Share to Family WhatsApp" button.
+    *   **Why:** Encourages immediate sharing while the emotional "wow" of the transformation is still fresh.
 
-7. **[UX] Android Full Compatibility Audit & Fixes**
-    *   **Micro-Task 1 (Audit):** Test the full create flow on Android (camera → transform → storage) to verify `FileSystem` and timeout behavior.
-    *   **Why:** Ensures the MVP is truly multi-platform ready.
+7. **[QUALITY] Backend Validation: Moderate Comment Tests**
+    *   **The Micro-Task:** Replace the stub in `supabase/functions/tests/moderate-comment_test.ts` with real tests mocking Gemini and verifying DB persistence.
+    *   **Why:** Kid safety is critical; we need automated assurance that moderation works as intended.
+
+8. **[QUALITY] App Validation: Download Library Coverage**
+    *   **The Micro-Task:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library, mocking `FileSystem` and signed URL logic.
+    *   **Why:** Paid features must be bulletproof to avoid customer support overhead.
 
 ## Improvement Log
 
-- [2026-04-23 CRON B] Narrative Pass & Token Adoption — Updated Login tagline to "Step inside your child's imagination"; polished empty states in Discover and Store screens with "portal" themed copy; refactored Discover and Store screens for full design system token compliance. Files: `login.tsx`, `discover.tsx`, `store/[slug].tsx`.
+- [2026-04-23 CRON B] Public Store & Piece OG Tags — Created `serve-og-tags` Edge Function to generate dynamic HTML with OG tags for piece and store URLs. This enables high-impact social sharing on platforms like WhatsApp and Instagram. File: `supabase/functions/serve-og-tags/index.ts`.
 - [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Prioritized OG Meta Tags for growth, Narrative Consistency for brand alignment, and a multi-screen Theme Token Adoption pass to remove design debt. Shifted focus to Gifting UI polish for higher conversion on the grandparent buyer segment.
+- [2026-04-23 CRON B] Narrative Pass & Token Adoption — Updated Login tagline to "Step inside your child's imagination"; polished empty states in Discover and Store screens with "portal" themed copy; refactored Discover and Store screens for full design system token compliance. Files: `login.tsx`, `discover.tsx`, `store/[slug].tsx`.
 - [2026-04-23 CRON B] Prominent "Buy Credits" CTAs — Replaced jarring `Alert` for `OutOfCreditsError` in `create.tsx` with a persistent, branded card using `dangerBg` and `dangerText` tokens. Added a "Get more" button next to the credits chip in the header for constant upsell visibility. Fixed `router` reference bug. Files: `app/app/(tabs)/create.tsx`.
 - [2026-04-23 CRON B] Send Print as Gift (Full Flow) — Completed the gifting loop: added recipient email field to `GuestPrintInfoModal.tsx`, updated `PieceScreen` and `purchasePiece` logic, and integrated Resend in `stripe-webhook` to notify recipients.
 - [2026-04-23 CRON B] Send Print as Gift (DB) — Added `gift_recipient_email` to `orders` table in a new migration to support recipient notifications. File: `supabase/migrations/007_gift_recipient_email.sql`.

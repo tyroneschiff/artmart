@@ -1,0 +1,16 @@
+{
+  "scriptId": "311",
+  "url": "file:///home/runner/work/artmart/artmart/supabase/functions/tests/moderate-comment_test.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 342, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 107, "endOffset": 155, "count": 1 }],
+      "isBlockCoverage": true
+    }
+  ]
+}
