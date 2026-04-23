@@ -117,8 +117,7 @@ export default function CreateScreen() {
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
       )
       const { transformedUrl, description } = await transformArtwork(imageUri, compressed.base64 ?? undefined)
-      queryClient.invalidateQueries({ queryKey: ['credits'] })
-      // Fetch and write locally — fal.ai URLs expire quickly, downloadAsync unreliable on iOS CDN redirects
+      // Credits will be updated via Realtime listener
       const localPath = FileSystem.documentDirectory + `transformed_${Date.now()}.jpg`
       const dlController = new AbortController()
       const dlTimeout = setTimeout(() => dlController.abort(), 30_000)
