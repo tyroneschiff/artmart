@@ -82,21 +82,21 @@ Deno.serve(async (req) => {
 
     try {
 
-    // Step 1: Gemini vision → description + transform prompt
-    const geminiKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY')
-    if (!geminiKey) throw new Error('Missing GOOGLE_GENERATIVE_AI_API_KEY')
+    // Step 1: Claude 3.5 Sonnet → description + transform prompt
+    const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
+    if (!anthropicKey) throw new Error('Missing ANTHROPIC_API_KEY')
 
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          role: 'user',
-          parts: [
-            {
-              text: `You are an expert visual collaborator and master art director stepping inside a child's imagination. The drawing is a window into a world they invented — your job is to walk through that window and show what that world actually looks like in breathtaking, vivid detail. You are NOT fixing, improving, or elevating the drawing. The original drawing IS the vision. You are the door.
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        system: `You are an expert visual collaborator and master art director stepping inside a child's imagination. The drawing is a window into a world they invented — your job is to walk through that window and show what that world actually looks like in breathtaking, vivid detail. You are NOT fixing, improving, or elevating the drawing. The original drawing IS the vision. You are the door.
 
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
@@ -116,29 +116,27 @@ Your prompt MUST:
 Example output:
 {"description":"In Emma's world, a friendly dragon keeps watch over a cottage while the sun smiles from the corner like an old neighbor. Flowers stretch toward the sky because everyone in this place is happy to be awake. You can feel how safe and sunny it is here.","prompt":"Step inside Emma's imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}
 
-Step inside this child's drawing. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.`
-            },
+Step inside this child's drawing. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.`,
+        messages: [{
+          role: 'user',
+          content: [
             {
-              inlineData: {
-                mimeType: mimeType,
-                data: imageBase64
-              }
-            }
+              type: 'image',
+              source: { type: 'base64', media_type: mimeType, data: imageBase64 }
+            },
+            { type: 'text', text: 'Step inside this drawing.' }
           ]
-        }],
-        generationConfig: {
-          responseMimeType: "application/json",
-        }
+        }]
       }),
     })
 
-    if (!geminiRes.ok) {
-      const err = await geminiRes.text()
-      throw new Error(`Gemini API error: ${err}`)
+    if (!claudeRes.ok) {
+      const err = await claudeRes.text()
+      throw new Error(`Claude API error: ${err}`)
     }
 
-    const geminiData = await geminiRes.json()
-    const rawText = geminiData.candidates[0].content.parts[0].text
+    const claudeData = await claudeRes.json()
+    const rawText = claudeData.content[0].text
     const { description, prompt } = extractJson(rawText)
 
     // Step 2: fal.ai Flux Kontext → transformed image (synchronous)
