@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import * as FileSystem from 'expo-file-system/legacy'
+import * as FileSystem from 'expo-file-system'
 import { Share, Alert, Platform } from 'react-native'
 
 export async function downloadPiece(pieceId: string): Promise<void> {
@@ -28,7 +28,12 @@ export async function downloadPiece(pieceId: string): Promise<void> {
   }
 
   // On native, download to device and share
-  const fileUri = (FileSystem as any).documentDirectory + `drawup_${pieceId}.jpg`
-  const { uri } = await (FileSystem as any).downloadAsync(download_url, fileUri)
-  await Share.share({ url: uri, title: 'Your Draw Up download' })
+  try {
+    const fileUri = (FileSystem as any).documentDirectory + `drawup_${pieceId}.jpg`
+    const { uri } = await (FileSystem as any).downloadAsync(download_url, fileUri)
+    await Share.share({ url: uri, title: 'Your Draw Up download' })
+  } catch (e: any) {
+    console.error('Download error:', e)
+    Alert.alert('Download Error', e.message || 'Failed to download image')
+  }
 }

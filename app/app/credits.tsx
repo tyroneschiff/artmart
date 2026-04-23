@@ -18,7 +18,10 @@ export default function CreditsScreen() {
     try {
       const { data: { session: currentSession } } = await (await import('../lib/supabase')).supabase.auth.getSession()
       await purchaseCredits(currentSession!.access_token)
-      invalidateCredits()
+      // Small delay to allow webhook to process before refresh
+      setTimeout(() => {
+        invalidateCredits()
+      }, 2000)
       Alert.alert('Success!', '12 credits have been added to your account.')
       router.back()
     } catch (e: any) {

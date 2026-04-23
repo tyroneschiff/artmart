@@ -36,29 +36,33 @@ Deno.serve(async (req) => {
     const { piece_id } = await req.json()
     if (!piece_id) return new Response(JSON.stringify({ error: 'Missing piece_id' }), { status: 400, headers: corsHeaders })
 
-    // Verify buyer has a paid digital order for this piece
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .select('id, status, piece_id')
-      .eq('buyer_id', userId)
-      .eq('piece_id', piece_id)
-      .eq('order_type', 'digital')
-      .eq('status', 'paid')
-      .single()
-
-    if (orderError || !order) {
-      return new Response(JSON.stringify({ error: 'No paid order found for this piece' }), { status: 403, headers: corsHeaders })
-    }
-
-    // Fetch the piece to get the stored transformed image path
+    // Fetch the piece and store owner
     const { data: piece, error: pieceError } = await supabase
       .from('pieces')
-      .select('transformed_image_url')
+      .select('transformed_image_url, stores(owner_id)')
       .eq('id', piece_id)
       .single()
 
     if (pieceError || !piece) {
       return new Response(JSON.stringify({ error: 'Piece not found' }), { status: 404, headers: corsHeaders })
+    }
+
+    const isOwner = (piece.stores as any)?.owner_id === userId
+
+    // If not owner, verify buyer has a paid digital order for this piece
+    if (!isOwner) {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('id, status')
+        .eq('buyer_id', userId)
+        .eq('piece_id', piece_id)
+        .eq('order_type', 'digital')
+        .eq('status', 'paid')
+        .maybeSingle()
+
+      if (orderError || !order) {
+        return new Response(JSON.stringify({ error: 'No paid order found for this piece' }), { status: 403, headers: corsHeaders })
+      }
     }
 
     // Extract storage path from public URL

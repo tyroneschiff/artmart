@@ -49,7 +49,7 @@ export async function purchasePiece(
 
   const { error: presentError } = await presentPaymentSheet()
   if (presentError) {
-    if (presentError.code === 'Canceled') return
+    if (presentError.code === 'Canceled') throw new Error('Canceled')
     throw new Error(presentError.message)
   }
 }
