@@ -6,6 +6,10 @@ on:
     - cron: '*/15 * * * *'
   workflow_dispatch: # Allow manual triggers
 
+concurrency:
+  group: git-push-sync
+  cancel-in-progress: false
+
 jobs:
   engineering-cycle:
     runs-on: ubuntu-latest
