@@ -17,6 +17,7 @@ export type GiftingData = {
   recipientEmail?: string
   giftMessage?: string
   shippingAddress?: ShippingAddress
+  quantity?: number
 }
 
 interface GiftingModalProps {
@@ -42,13 +43,15 @@ export default function GiftingModal({ visible, isGuest, orderType, onConfirm, o
   const [recipientEmail, setRecipientEmail] = useState('')
   const [giftMessage, setGiftMessage] = useState('')
   const [addr, setAddr] = useState<ShippingAddress>(EMPTY_ADDR)
+  const [quantity, setQuantity] = useState(1)
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (visible) {
-      // Reset errors when modal opens
+      // Reset errors and default quantity when modal opens
       setErrors({})
+      setQuantity(1)
     }
   }, [visible])
 
@@ -90,7 +93,8 @@ export default function GiftingModal({ visible, isGuest, orderType, onConfirm, o
       guestEmail: isGuest ? guestEmail : undefined,
       recipientEmail: recipientEmail || undefined,
       giftMessage: giftMessage || undefined,
-      shippingAddress: orderType === 'print' ? addr : undefined
+      shippingAddress: orderType === 'print' ? addr : undefined,
+      quantity: orderType === 'print' ? quantity : 1
     })
     
     // Reset state after success
@@ -98,6 +102,7 @@ export default function GiftingModal({ visible, isGuest, orderType, onConfirm, o
     setRecipientEmail('')
     setGiftMessage('')
     setAddr(EMPTY_ADDR)
+    setQuantity(1)
     setErrors({})
   }
 
@@ -144,6 +149,77 @@ export default function GiftingModal({ visible, isGuest, orderType, onConfirm, o
                 ? 'Purchase a high-resolution digital download.' 
                 : 'Order a high-quality physical print.'}
             </Text>
+
+            {!isDigital && (
+              <View style={{ 
+                marginBottom: 32, 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                backgroundColor: colors.white, 
+                padding: 16, 
+                borderRadius: 16, 
+                borderWidth: 1, 
+                borderColor: colors.border,
+                shadowColor: colors.dark,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+                elevation: 2
+              }}>
+                <View>
+                  <Text style={{ ...type.label, color: colors.goldDark }}>Quantity</Text>
+                  <Text style={{ ...type.body, fontSize: 12, color: colors.muted }}>Multiple prints make perfect gifts</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                  {quantity >= 2 && (
+                    <View style={{ 
+                      backgroundColor: colors.gold, 
+                      paddingHorizontal: 8, 
+                      paddingVertical: 4, 
+                      borderRadius: 6,
+                      shadowColor: colors.gold,
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                    }}>
+                      <Text style={{ ...type.label, fontSize: 10, color: colors.white, fontWeight: '800' }}>SAVE 15%</Text>
+                    </View>
+                  )}
+                  <TouchableOpacity 
+                    onPress={() => setQuantity(Math.max(1, quantity - 1))}
+                    style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: 20, 
+                      backgroundColor: colors.cream, 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      borderWidth: 1, 
+                      borderColor: colors.goldLight 
+                    }}
+                  >
+                    <Text style={{ fontSize: 24, color: colors.goldDark, fontWeight: '300' }}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={{ ...type.h3, minWidth: 24, textAlign: 'center' }}>{quantity}</Text>
+                  <TouchableOpacity 
+                    onPress={() => setQuantity(quantity + 1)}
+                    style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: 20, 
+                      backgroundColor: colors.cream, 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      borderWidth: 1, 
+                      borderColor: colors.goldLight 
+                    }}
+                  >
+                    <Text style={{ fontSize: 24, color: colors.goldDark, fontWeight: '300' }}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {isGuest && (
               <View style={{ marginBottom: 32 }}>

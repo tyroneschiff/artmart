@@ -2,33 +2,29 @@
 
 ## Strategic Backlog
 
-1. **[REVENUE] Multi-Item UI & Discount Badge**
-    * **The Micro-Task:** In `app/components/GiftingModal.tsx`, add a `+ / -` quantity selector for print orders. Add a `DiscountBadge` ("SAVE 15%") that appears when `quantity >= 2`.
-    * **Why:** Makes the volume discount visible and actionable at the moment of purchase, nudging the user to buy for more family members.
+1. **[UX] "View in Room" Variety**
+    * **The Micro-Task:** In `RoomPreviewModal.tsx`, define a constant `ROOMS` array with 3 Unsplash URLs (Nursery, Office, Living Room). Add a horizontal `ScrollView` selector that updates the `ImageBackground` source.
+    * **Why:** Different users (moms vs. grandpas) need different contexts to pull the trigger on a $30+ print.
 
-2. **[UX] "View in Room" Premium Backgrounds**
-    * **The Micro-Task:** Source 3 royalty-free room images (Nursery, Modern Office, Living Room) and update `RoomPreviewModal.tsx` to include a horizontal `FlatList` selector that swaps the `ImageBackground` source.
-    * **Why:** Helps different buyer personas (e.g., parents vs. office workers) visualize the art in their specific context, increasing purchase confidence.
+2. **[RETENTION] Push Notification Function**
+    * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using `expo-server-sdk` (via esm.sh) to send notifications to `expo_push_token` stored in the `profiles` table.
+    * **Why:** Foundation for closing the feedback loop between the artist and the family, driving repeat engagement.
 
-3. **[RETENTION] Push Notification Delivery (Backend)**
-    * **The Micro-Task:** Create a new Supabase Edge Function `send-push-notification` that takes a `user_id`, `title`, and `body`. Update `moderate-comment/index.ts` to call this function when a comment is approved.
-    * **Why:** Closes the emotional loop by actually notifying parents in real-time when someone interacts with their child's art.
+3. **[RELIABILITY] AI Generation Timeouts**
+    * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, implement a `fetchWithTimeout` helper using `Promise.race` and wrap the Claude/fal.ai calls with a 20s limit.
+    * **Why:** Prevents users from seeing a "hanging" loader for 2 minutes on upstream API failures, allowing for a clean error and credit refund.
 
-4. **[REVENUE] High-Value Credit Pack UI**
-    * **The Micro-Task:** In `app/app/credits.tsx`, add `{ credits: 25, price: 19.99, label: 'VALUE PACK' }` to `PACKS`. Refactor the screen to use `type` and `btn` tokens, removing 80% of `StyleSheet.create`.
-    * **Why:** Nudges users toward higher spending tiers while simultaneously cleaning up design debt.
+4. **[POLISH] Smooth Artwork Reveal**
+    * **The Micro-Task:** In `app/app/piece/[id].tsx`, replace the `Image` with an `Animated.View` wrapping an `Image`. Use `useNativeDriver: true` to fade opacity from 0 to 1 over 600ms when `onLoad` triggers.
+    * **Why:** Elevates the "Aha!" moment when the high-res AI version appears, making the transformation feel more magical.
 
-5. **[POLISH] Magic Image Transition**
-    * **The Micro-Task:** In `app/app/piece/[id].tsx`, use `Animated` to wrap the `mainImage`. Set initial opacity to 0 and animate to 1 over 800ms (`useNativeDriver: true`) when the high-res or watermarked image finishes loading.
-    * **Why:** Smooths the "reveal" moment, making the AI transformation feel more intentional and premium.
+5. **[REVENUE] High-Value Credit Tier**
+    * **The Micro-Task:** In `app/app/credits.tsx`, add a `{ credits: 25, price: 19.99, label: 'BEST VALUE' }` pack. Refactor the pack selector to use the `card` theme token instead of inline styles.
+    * **Why:** Nudges power users toward a higher entry point while cleaning up design system debt.
 
 6. **[UX] Sample Store Empty State**
-    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic empty state with a "View Sample Store" button that opens a static preview of a high-quality completed store.
-    * **Why:** Visualizes the end-goal for new users, reducing "blank canvas" anxiety and demonstrating the platform's value.
-
-7. **[RELIABILITY] Edge Function External Timeouts**
-    * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, wrap the Claude and fal.ai `fetch` calls in a `Promise.race` with a 20s timeout to ensure the function doesn't hang indefinitely and can trigger a credit refund.
-    * **Why:** Prevents "stuck" states for users where credits are spent but no artwork is generated due to upstream API delays.
+    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
+    * **Why:** Shows the value proposition immediately to new users who haven't created anything yet, reducing abandonment.
 
 ## Known gotchas
 
@@ -38,9 +34,11 @@
 - **Deno/Stripe Connection Hangs:** In Supabase Edge Functions, external calls to Stripe or AI APIs can occasionally hang. While Deno has a global timeout, it's safer to use a `Promise.race` with a 10s-20s timeout for external operations to ensure the function returns a clean error rather than timing out the entire gateway.
 - **Dynamic Layout Shifts:** Use `useWindowDimensions` instead of `Dimensions.get('window')` for components that need to respond to orientation changes or split-screen mode on Android, as `get()` only provides the initial value.
 - **Large Image Base64 OOM:** Reading very large images as Base64 strings using `FileSystem.readAsStringAsync` can cause Out-Of-Memory (OOM) errors on low-end Android devices. Prefer `FileSystem.uploadAsync` for direct file uploads where possible.
+- **Android KeyboardAvoidingView:** On Android, `KeyboardAvoidingView` with `behavior="height"` inside a full-screen `Modal` can sometimes cause the input to be obscured by the keyboard if the `softInputMode` isn't set correctly in `app.json`. Always test keyboard interaction on physical Android devices.
 
 ## Done
 
+- **[REVENUE] Multi-Item Print Quantity UI & Discount Badge** — Implemented a premium quantity selector in `GiftingModal.tsx` for physical prints. Added a high-visibility "SAVE 15%" badge that triggers when quantity >= 2, providing immediate social proof and incentive for bulk gifting.
 - **[REVENUE] Multi-Item Print Discount (Logic)** — Implemented 15% bulk discount for physical print orders (quantity >= 2) in `create-payment-intent` edge function. Updated `purchasePiece` in `app/lib/checkout.ts` to support the new `quantity` parameter with full test coverage.
 - **[REVENUE] Multi-Item Print Quantity (DB & Edge)** — Added `quantity` column to `orders` table and updated `create-payment-intent` edge function to handle multi-item orders. This lays the groundwork for volume-based discounts.
 - **[RELIABILITY] Checkout Failure Recovery** — Implemented `checkout_logs` table and a new `log-checkout-error` edge function. Updated `app/lib/checkout.ts` to automatically capture and log Stripe payment failures (excluding cancellations), providing visibility into the "leaky revenue bucket."
@@ -57,6 +55,8 @@
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Multi-Item Print Quantity UI & Discount Badge — Completed the multi-item revenue loop by adding a high-polish quantity selector and a "SAVE 15%" incentive badge to the `GiftingModal`. This makes it effortless for users to buy prints for multiple family members, directly driving higher AOV.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] The foundation is rock solid, but the 'magic' needs to be more visceral. We've proven the revenue engine works with physical prints; now we must scale AOV through volume-based nudges (quantity selectors + badges) and broaden our appeal with diverse room contexts. Reliability is also a brand promise—stuck AI generations are the #1 killer of trust, so explicit timeouts in our edge functions are non-negotiable.
 - [2026-04-23 — CRON B] Multi-Item Print Discount (Logic) — Hardened the revenue engine by implementing a 15% bulk discount for physical prints. Added logic to `create-payment-intent` to apply the multiplier to the total amount when `quantity >= 2`, and updated the mobile checkout library to support multi-item orders.
 - [2026-04-23 — CRON A] Strategic Audit: The vision is expanding from "functional" to "premium". Identified "View in Room" as a major conversion lever that needs more variety to hit different buyer personas (office vs home). Multi-item print discounts are the #1 revenue priority to increase AOV. Also identified a reliability risk in `transform-artwork` where slow AI response times could lead to "hanging" credits; adding explicit timeouts to these edge functions is now in the backlog.
 - [2026-04-23 — CRON B] Multi-Item Print Quantity (DB & Edge) — Enabled multi-item print orders by adding a `quantity` column to the database and updating the `create-payment-intent` logic. This fundamental shift allows for higher AOVs and future volume discounts.
@@ -73,4 +73,3 @@
 - [2026-04-23 — CRON B] "View in Room" Visualization — Implemented a premium room visualization feature. Users can now see their child's artwork in a realistic living room setting directly from the piece detail screen. Uses theme tokens and a high-quality background to maintain the "Step Inside" brand warmth.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to visualization as the primary revenue lever. Identified "View in Room" as the #1 priority to convert the grandparent buyer segment. Prioritized Push Notification infrastructure to close the emotional loop between buyers and creators. Refined design debt tasks to be more surgical, targeting Profile and Create screens for theme token compliance.
 - [2026-04-23 — CRON B] Success UI Celebration (Polish) — Integrated `react-native-confetti-cannon` into the creation flow. Users are now greeted with a burst of celebration upon publishing, reinforcing the emotional reward of creating.
-

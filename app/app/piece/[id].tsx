@@ -155,7 +155,8 @@ export default function PieceScreen() {
           giftingData?.shippingAddress, 
           giftingData?.guestEmail, 
           giftingData?.recipientEmail, 
-          giftingData?.giftMessage
+          giftingData?.giftMessage,
+          giftingData?.quantity
         )
         if (orderType === 'digital') {
           Alert.alert('Purchase complete!', 'Your file is ready to download.', [
