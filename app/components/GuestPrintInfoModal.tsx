@@ -4,38 +4,54 @@ import { colors } from '../lib/theme'
 
 interface GuestPrintInfoModalProps {
   visible: boolean
-  onConfirm: (email: string, giftMessage: string) => void
+  onConfirm: (email: string, recipientEmail: string, giftMessage: string) => void
   onCancel: () => void
 }
 
 export default function GuestPrintInfoModal({ visible, onConfirm, onCancel }: GuestPrintInfoModalProps) {
   const [email, setEmail] = useState('')
+  const [recipientEmail, setRecipientEmail] = useState('')
   const [giftMessage, setGiftMessage] = useState('')
   const [emailError, setEmailError] = useState('')
+  const [recipientEmailError, setRecipientEmailError] = useState('')
 
   const validateEmail = (text: string) => {
     // Basic email regex for client-side validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(text)) {
-      setEmailError('Please enter a valid email address.')
-      return false
-    }
-    setEmailError('')
-    return true
+    return emailRegex.test(text)
   }
 
   const handleConfirm = () => {
-    if (validateEmail(email)) {
-      onConfirm(email, giftMessage)
+    let isValid = true
+    
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address.')
+      isValid = false
+    } else {
+      setEmailError('')
+    }
+
+    if (recipientEmail && !validateEmail(recipientEmail)) {
+      setRecipientEmailError('Please enter a valid recipient email address.')
+      isValid = false
+    } else {
+      setRecipientEmailError('')
+    }
+
+    if (isValid) {
+      onConfirm(email, recipientEmail, giftMessage)
       setEmail('')
+      setRecipientEmail('')
       setGiftMessage('')
     }
   }
 
   const handleCancel = () => {
     setEmail('')
+    setRecipientEmail('')
     setGiftMessage('')
     setEmailError('')
+    setRecipientEmailError('')
     onCancel()
   }
 
@@ -53,22 +69,35 @@ export default function GuestPrintInfoModal({ visible, onConfirm, onCancel }: Gu
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>Order Print as Guest</Text>
-            <Text style={styles.modalText}>Enter your email address to receive order updates and a gift message for the recipient (optional).</Text>
+            <Text style={styles.modalText}>Enter your details and where we should send the gift notification.</Text>
 
             <TextInput
               style={[styles.input, emailError && styles.inputError]}
-              placeholder="Your Email"
+              placeholder="Your Email (for updates)"
               placeholderTextColor={colors.muted}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
               onChangeText={(text) => {
                 setEmail(text)
-                setEmailError('') // Clear error on change
+                setEmailError('')
               }}
-              onBlur={() => validateEmail(email)}
             />
             {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+            <TextInput
+              style={[styles.input, recipientEmailError && styles.inputError]}
+              placeholder="Recipient Email (for gift notification)"
+              placeholderTextColor={colors.muted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={recipientEmail}
+              onChangeText={(text) => {
+                setRecipientEmail(text)
+                setRecipientEmailError('')
+              }}
+            />
+            {recipientEmailError ? <Text style={styles.errorText}>{recipientEmailError}</Text> : null}
 
             <TextInput
               style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
@@ -91,7 +120,7 @@ export default function GuestPrintInfoModal({ visible, onConfirm, onCancel }: Gu
               <TouchableOpacity
                 style={[styles.button, styles.buttonConfirm]}
                 onPress={handleConfirm}
-                disabled={!email.trim() || !!emailError}
+                disabled={!email.trim()}
               >
                 <Text style={styles.buttonText}>Confirm</Text>
               </TouchableOpacity>

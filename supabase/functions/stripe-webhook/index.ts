@@ -56,13 +56,19 @@ Deno.serve(async (req) => {
     .from('orders')
     .update({ status: 'paid' })
     .eq('stripe_payment_intent', intent.id)
-    .select('*, pieces(transformed_image_url, title)')
+    .select('*, pieces(transformed_image_url, title, stores(child_name))')
     .single()
 
   if (order_type === 'print' && order?.shipping_address) {
     try {
       await createPrintfulOrder(order, supabase)
+      
+      // If it's a gift, send notification email
+      if (order.gift_recipient_email) {
+        await sendGiftEmail(order)
+      }
     } catch (e) {
+      console.error('Printful/Email error:', e)
       await supabase
         .from('orders')
         .update({ status: 'printful_failed' })
@@ -72,6 +78,47 @@ Deno.serve(async (req) => {
 
   return new Response(JSON.stringify({ received: true }), { status: 200 })
 })
+
+async function sendGiftEmail(order: any) {
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) {
+    console.error('RESEND_API_KEY not set')
+    return
+  }
+
+  const childName = order.pieces?.stores?.child_name || 'a young artist'
+  const pieceTitle = order.pieces?.title || 'a beautiful artwork'
+  const giftMessage = order.gift_message ? `<p><em>"${order.gift_message}"</em></p>` : ''
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'Draw Up <hello@drawup.art>',
+      to: [order.gift_recipient_email],
+      subject: '✨ A gift is coming!',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #FEFAF3; padding: 40px; border-radius: 20px;">
+          <h1 style="color: #1C1810; font-size: 24px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px;">Someone stepped inside ${childName}'s imagination for you...</h1>
+          <p style="color: #6B5E4E; font-size: 16px; line-height: 24px;">A physical print of <strong>"${pieceTitle}"</strong> is being prepared and will be shipped to you soon.</p>
+          ${giftMessage}
+          <div style="margin: 30px 0;">
+            <img src="${order.pieces?.transformed_image_url}" alt="${pieceTitle}" style="width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          </div>
+          <p style="color: #A89880; font-size: 14px;">This magic was made possible by Draw Up.</p>
+        </div>
+      `,
+    }),
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    console.error('Failed to send email:', error)
+  }
+}
 
 async function createPrintfulOrder(order: any, supabase: any) {
   const printfulKey = Deno.env.get('PRINTFUL_API_KEY')

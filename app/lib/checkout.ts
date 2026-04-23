@@ -6,8 +6,9 @@ export async function purchasePiece(
   orderType: 'digital' | 'print',
   userToken?: string, // Made optional
   shippingAddress?: ShippingAddress,
-  guestEmail?: string, // New optional parameter
-  giftMessage?: string // New optional parameter
+  guestEmail?: string,
+  recipientEmail?: string,
+  giftMessage?: string
 ): Promise<void> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -25,8 +26,9 @@ export async function purchasePiece(
         piece_id: pieceId,
         order_type: orderType,
         shipping_address: shippingAddress ?? null,
-        guest_email: guestEmail ?? null, // Pass guest email
-        gift_message: giftMessage ?? null, // Pass gift message
+        guest_email: guestEmail ?? null,
+        recipient_email: recipientEmail ?? null,
+        gift_message: giftMessage ?? null,
       }),
     }
   )
