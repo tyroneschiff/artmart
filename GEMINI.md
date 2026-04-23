@@ -243,6 +243,11 @@ The most dangerous bugs look like success but do nothing:
 
 ---
 
+### Syncing with the Autonomous Team
+Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fall out of sync. **Always run `./scripts/sync-local.sh` before you start working** to pull the team's latest code.
+
+---
+
 ### CRON A — Strategic Product Lead (runs every 15 minutes)
 
 **Job: Think holistically, plan surgically.** Audit the app from a 360-degree view, find the 'leaky buckets', and define the micro-tasks.
