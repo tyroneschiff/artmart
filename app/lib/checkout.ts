@@ -1,5 +1,5 @@
 import { initPaymentSheet, presentPaymentSheet } from '@stripe/stripe-react-native'
-import { ShippingAddress } from '../components/ShippingAddressModal'
+import { ShippingAddress } from '../components/GiftingModal'
 
 export async function purchasePiece(
   pieceId: string,

@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/store/*"
+  to = "https://twwittitwwuuauhgrdaw.supabase.co/functions/v1/serve-og-tags?store=:splat"
+  status = 200
+
+[[redirects]]
+  from = "/piece/*"
+  to = "https://twwittitwwuuauhgrdaw.supabase.co/functions/v1/serve-og-tags?piece=:splat"
+  status = 200

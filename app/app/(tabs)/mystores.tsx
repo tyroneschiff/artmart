@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors } from '../../lib/theme'
+import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
+import CreditsChip from '../../components/CreditsChip'
 
 type Store = { id: string; child_name: string; slug: string; created_at: string }
 
@@ -72,9 +73,12 @@ export default function MyStoresScreen() {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.header}>My Stores</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
-          <Text style={styles.addBtnText}>+ New store</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <CreditsChip />
+          <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+            <Text style={styles.addBtnText}>+ New</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -92,9 +96,11 @@ export default function MyStoresScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
-            <Text style={styles.emptyIcon}>✨</Text>
+            <View style={styles.emptyPortal}>
+              <Text style={styles.emptyIcon}>✨</Text>
+            </View>
             <Text style={styles.emptyTitle}>Step inside their imagination</Text>
-            <Text style={styles.emptyBody}>Create a dedicated space for each child to share the worlds they've imagined.</Text>
+            <Text style={styles.emptyBody}>Create a dedicated space for each child to share the worlds they've imagined through their art.</Text>
             <TouchableOpacity style={styles.emptyBtn} onPress={() => setModalVisible(true)}>
               <Text style={styles.emptyBtnText}>Create first store</Text>
             </TouchableOpacity>
@@ -151,33 +157,34 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
-  header: { fontSize: 32, fontWeight: '900', letterSpacing: -1, color: colors.dark },
-  addBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 16, paddingVertical: 9 },
-  addBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
-  storeCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 10, padding: 16, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
-  storeIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  storeIconText: { fontSize: 20, fontWeight: '800', color: colors.goldDark },
+  header: { ...type.h1 },
+  addBtn: { ...btn.primary, paddingVertical: 9, paddingHorizontal: 16 },
+  addBtnText: { ...btn.primaryText, fontSize: 14 },
+  storeCard: { ...card, flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, padding: 16 },
+  storeIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: colors.goldMid },
+  storeIconText: { fontSize: 22, fontWeight: '800', color: colors.goldDark },
   storeInfo: { flex: 1 },
-  storeName: { fontSize: 16, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
-  storeSlug: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  storeName: { fontSize: 17, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
+  storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   storeArrow: { fontSize: 20, color: colors.muted },
-  emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.dark, marginBottom: 8 },
-  emptyBody: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  emptyBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  emptyBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
-  errorText: { color: colors.mid, marginBottom: 16, fontSize: 15 },
-  retryBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  emptyWrap: { alignItems: 'center', paddingTop: 100, paddingHorizontal: 40 },
+  emptyPortal: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: colors.border, shadowColor: colors.dark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  emptyIcon: { fontSize: 32 },
+  emptyTitle: { ...type.h2, textAlign: 'center', marginBottom: 12 },
+  emptyBody: { ...type.body, textAlign: 'center', marginBottom: 32 },
+  emptyBtn: { ...btn.primary, paddingHorizontal: 32 },
+  emptyBtnText: { ...btn.primaryText },
+  errorText: { ...type.body, marginBottom: 16 },
+  retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
+  retryBtnText: { ...btn.primaryText, fontSize: 15 },
   modal: { flex: 1, padding: 28, paddingTop: 52, backgroundColor: colors.cream },
-  modalTitle: { fontSize: 28, fontWeight: '900', letterSpacing: -1, color: colors.dark, marginBottom: 6 },
-  modalSub: { fontSize: 15, color: colors.muted, marginBottom: 32, lineHeight: 22 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.muted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
-  input: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, padding: 16, fontSize: 16, color: colors.dark, marginBottom: 16 },
-  slugPreview: { fontSize: 13, color: colors.gold, fontWeight: '600', marginBottom: 16, marginTop: -8 },
-  button: { backgroundColor: colors.dark, borderRadius: 100, padding: 16, alignItems: 'center', marginBottom: 12 },
+  modalTitle: { ...type.h1, marginBottom: 8 },
+  modalSub: { ...type.body, marginBottom: 32 },
+  inputLabel: { ...type.label, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 },
+  input: { ...card, padding: 16, fontSize: 16, color: colors.dark, marginBottom: 16, borderWidth: 1.5 },
+  slugPreview: { fontSize: 13, color: colors.gold, fontWeight: '600', marginBottom: 16, marginTop: -8, marginLeft: 4 },
+  button: { ...btn.primary, marginBottom: 12 },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  cancel: { color: colors.muted, textAlign: 'center', fontSize: 15 },
+  buttonText: { ...btn.primaryText },
+  cancel: { ...type.body, color: colors.muted, textAlign: 'center', textDecorationLine: 'underline' },
 })

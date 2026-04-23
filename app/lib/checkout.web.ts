@@ -1,5 +1,5 @@
 import { Alert, Linking } from 'react-native'
-import { ShippingAddress } from '../components/ShippingAddressModal'
+import { ShippingAddress } from '../components/GiftingModal'
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6762963488'
 

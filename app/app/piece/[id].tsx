@@ -6,11 +6,10 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { purchasePiece } from '../../lib/checkout'
 import { downloadPiece } from '../../lib/download'
-import ShippingAddressModal, { ShippingAddress } from '../../components/ShippingAddressModal'
+import GiftingModal, { GiftingData } from '../../components/GiftingModal'
 import ShareSheet from '../../components/ShareSheet'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
-import { colors } from '../../lib/theme'
-import GuestPrintInfoModal from '../../components/GuestPrintInfoModal'
+import { colors, type, btn, card } from '../../lib/theme'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; original_image_url: string
@@ -64,11 +63,7 @@ export default function PieceScreen() {
   const queryClient = useQueryClient()
     const [purchasing, setPurchasing] = useState<'digital' | 'print' | null>(null)
     const [downloading, setDownloading] = useState(false)
-    const [shippingModalVisible, setShippingModalVisible] = useState(false)
-    const [guestPrintInfoModalVisible, setGuestPrintInfoModalVisible] = useState(false) // New state for guest print modal
-    const [guestEmail, setGuestEmail] = useState('')
-    const [recipientEmail, setRecipientEmail] = useState('')
-    const [giftMessage, setGiftMessage] = useState('')
+    const [giftingModalVisible, setGiftingModalVisible] = useState(false)
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
   
@@ -133,12 +128,20 @@ export default function PieceScreen() {
       onError: (e: any) => Alert.alert('Error', e.message),
     })
   
-    async function executePurchase(orderType: 'digital' | 'print', shippingAddress?: ShippingAddress, guestEmail?: string, recipientEmail?: string, giftMessage?: string) {
+    async function executePurchase(orderType: 'digital' | 'print', giftingData?: GiftingData) {
       // Session check is now more nuanced, handled in handlePurchase
       setPurchasing(orderType)
       try {
         const userToken = session?.access_token || undefined // Pass token if session exists, else undefined
-        await purchasePiece(id, orderType, userToken, shippingAddress, guestEmail, recipientEmail, giftMessage)
+        await purchasePiece(
+          id, 
+          orderType, 
+          userToken, 
+          giftingData?.shippingAddress, 
+          giftingData?.guestEmail, 
+          giftingData?.recipientEmail, 
+          giftingData?.giftMessage
+        )
         if (orderType === 'digital') {
           Alert.alert('Purchase complete!', 'Your file is ready to download.', [
             { text: 'Download now', onPress: () => downloadPiece(id) },
@@ -174,11 +177,7 @@ export default function PieceScreen() {
         }
         executePurchase('digital')
       } else { // orderType === 'print'
-        if (!session) {
-          setGuestPrintInfoModalVisible(true) // Open guest print info modal for unauthenticated users
-        } else {
-          setShippingModalVisible(true) // Open shipping address modal for authenticated users
-        }
+        setGiftingModalVisible(true)
       }
     }
   if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
@@ -329,27 +328,14 @@ export default function PieceScreen() {
         <Image source={{ uri: piece.original_image_url }} style={styles.originalImage} />
       </ScrollView>
 
-      <ShippingAddressModal
-        visible={shippingModalVisible}
-        onConfirm={(addr) => {
-          setShippingModalVisible(false)
-          executePurchase('print', addr, guestEmail, recipientEmail, giftMessage)
-          setGuestEmail('')
-          setRecipientEmail('')
-          setGiftMessage('')
+      <GiftingModal
+        visible={giftingModalVisible}
+        isGuest={!session}
+        onConfirm={(data) => {
+          setGiftingModalVisible(false)
+          executePurchase('print', data)
         }}
-        onCancel={() => setShippingModalVisible(false)}
-      />
-      <GuestPrintInfoModal
-        visible={guestPrintInfoModalVisible}
-        onConfirm={(email, rEmail, message) => {
-          setGuestEmail(email)
-          setRecipientEmail(rEmail)
-          setGiftMessage(message)
-          setGuestPrintInfoModalVisible(false)
-          setShippingModalVisible(true) // Now open shipping address modal
-        }}
-        onCancel={() => setGuestPrintInfoModalVisible(false)}
+        onCancel={() => setGiftingModalVisible(false)}
       />
       <ShareSheet
         visible={!!sharePayload}
@@ -368,43 +354,43 @@ const styles = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
   storeLink: { color: colors.gold, fontWeight: '700', fontSize: 14 },
-  shareBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 7 },
-  shareBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  shareBtn: { ...btn.primary, paddingVertical: 8, paddingHorizontal: 16 },
+  shareBtnText: { ...btn.primaryText, fontSize: 13 },
   mainImage: { width: '100%', aspectRatio: 1 },
   magicLabel: { paddingHorizontal: 16, paddingTop: 12 },
-  magicLabelText: { fontSize: 13, fontWeight: '700', color: colors.gold, fontStyle: 'italic' },
-  title: { fontSize: 26, fontWeight: '800', color: colors.dark, padding: 16, paddingBottom: 8, letterSpacing: -0.5 },
-  description: { fontSize: 14, color: colors.mid, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 },
+  magicLabelText: { ...type.label, color: colors.gold, fontStyle: 'italic', fontSize: 13 },
+  title: { ...type.h2, fontSize: 26, padding: 16, paddingBottom: 8 },
+  description: { ...type.body, fontSize: 14, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 },
   voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
-  purchaseTitle: { fontSize: 18, fontWeight: '800', marginBottom: 12, color: colors.dark },
-  purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: colors.white, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
+  purchaseTitle: { ...type.h3, marginBottom: 12 },
+  purchaseCard: { ...card, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
   purchaseType: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  purchaseDetail: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  purchaseDetail: { ...type.label, marginTop: 2, fontSize: 12 },
   purchasePrice: { fontSize: 18, fontWeight: '800', color: colors.gold },
   redownloadLabel: { fontSize: 14, fontWeight: '700', color: colors.gold },
-  originalLabel: { fontSize: 13, color: colors.muted, paddingHorizontal: 16, marginBottom: 8 },
+  originalLabel: { ...type.label, paddingHorizontal: 16, marginBottom: 8, fontSize: 13 },
   originalImage: { width: '100%', aspectRatio: 1, opacity: 0.7 },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.dark, marginBottom: 16 },
+  sectionTitle: { ...type.h3, marginBottom: 16 },
   commentInputWrap: { marginBottom: 24 },
-  commentInput: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
-  postBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
+  commentInput: { ...card, padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
+  postBtn: { ...btn.primary, paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
   postBtnDisabled: { opacity: 0.5 },
-  postBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
-  loginToComment: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 24 },
+  postBtnText: { ...btn.primaryText, fontSize: 14 },
+  loginToComment: { ...card, padding: 16, alignItems: 'center', marginBottom: 24 },
   loginToCommentText: { color: colors.gold, fontWeight: '700', fontSize: 15 },
   commentsList: { gap: 16 },
-  commentCard: { backgroundColor: colors.white, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
+  commentCard: { ...card, padding: 12 },
   commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   commentAuthor: { fontWeight: '700', color: colors.dark, fontSize: 14 },
-  commentDate: { color: colors.muted, fontSize: 12 },
-  commentContent: { color: colors.mid, fontSize: 14, lineHeight: 20 },
+  commentDate: { ...type.label, fontSize: 12 },
+  commentContent: { ...type.body, fontSize: 14, lineHeight: 20 },
   reportBtn: { alignSelf: 'flex-end', marginTop: 8 },
-  reportLabel: { color: colors.muted, fontSize: 11, fontWeight: '600', textTransform: 'uppercase' },
-  noComments: { textAlign: 'center', color: colors.muted, fontSize: 14, paddingVertical: 20 },
-  errorText: { color: colors.mid, marginBottom: 16, fontSize: 15 },
-  retryBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
+  noComments: { ...type.body, textAlign: 'center', fontSize: 14, paddingVertical: 20 },
+  errorText: { ...type.body, marginBottom: 16 },
+  retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
+  retryBtnText: { ...btn.primaryText, fontSize: 15 },
 })

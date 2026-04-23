@@ -13,8 +13,8 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
 import { colors, btn, type } from '../../lib/theme'
-import ShareSheet from '../../components/ShareSheet'
-import { buildPieceShareMessage, SharePayload } from '../../lib/share'
+import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
+import CreditsChip from '../../components/CreditsChip'
 
 const isWeb = Platform.OS === 'web'
 
@@ -50,7 +50,7 @@ export default function CreateScreen() {
   const [title, setTitle] = useState('')
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [storePickerVisible, setStorePickerVisible] = useState(false)
-  const [step, setStep] = useState<'pick' | 'transform' | 'publish'>('pick')
+  const [step, setStep] = useState<'pick' | 'transform' | 'publish' | 'success'>('pick')
   const [transforming, setTransforming] = useState(false)
   const [transformError, setTransformError] = useState<string | null>(null)
   const [showCreditsUpsell, setShowCreditsUpsell] = useState(false)
@@ -218,27 +218,51 @@ export default function CreateScreen() {
       queryClient.invalidateQueries({ queryKey: ['discover'] })
       queryClient.invalidateQueries({ queryKey: ['store', slug] })
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
-      setTimeout(() => setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId)), 400)
+      setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
+      setStep('success')
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   })
 
   const hasStores = stores && stores.length > 0
 
+  if (step === 'success' && sharePayload) {
+    return (
+      <View style={[styles.container, styles.successContainer]}>
+        <ScrollView contentContainerStyle={styles.successContent}>
+          <View style={styles.successCard}>
+            <Image source={{ uri: transformedUri! }} style={styles.successImage} />
+            <Text style={styles.successTitle}>Published!</Text>
+            <Text style={styles.successSubtitle}>"{title}" is now live in {selectedStore?.child_name}'s store.</Text>
+            
+            <TouchableOpacity 
+              style={styles.whatsappBtn} 
+              onPress={() => shareToWhatsApp(`${sharePayload.message}\n${sharePayload.url}`)}
+            >
+              <Text style={styles.whatsappBtnText}>Share to Family WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.nativeShareBtn} 
+              onPress={() => shareNative(sharePayload)}
+            >
+              <Text style={styles.nativeShareBtnText}>Other Sharing Options</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.startOverBtn} onPress={resetCreate}>
+            <Text style={styles.startOverBtnText}>Step inside another drawing →</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    )
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
         <Text style={styles.header}>Create</Text>
-        {typeof credits === 'number' && (
-          <View style={styles.creditsContainer}>
-            <View style={styles.creditsChip}>
-              <Text style={styles.creditsChipText}>✨ {credits} {credits === 1 ? 'credit' : 'credits'}</Text>
-            </View>
-            <TouchableOpacity style={styles.getMoreBtn} onPress={() => router.push('/credits')}>
-              <Text style={styles.getMoreBtnText}>Get more</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <CreditsChip />
       </View>
 
       {step === 'pick' && (
@@ -361,12 +385,6 @@ export default function CreateScreen() {
         </View>
       )}
 
-      <ShareSheet
-        visible={!!sharePayload}
-        payload={sharePayload}
-        onClose={resetCreate}
-      />
-
       <Modal visible={storePickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
           <Text style={styles.modalTitle}>Select Store</Text>
@@ -391,22 +409,6 @@ const styles = StyleSheet.create({
   content: { padding: 24, paddingTop: 56 },
   header: { fontSize: 32, fontWeight: '900', color: colors.dark, letterSpacing: -1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  creditsContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  creditsChip: { backgroundColor: colors.dark, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 100 },
-  creditsChipText: { color: colors.cream, fontSize: 13, fontWeight: '700', letterSpacing: 0.3 },
-  getMoreBtn: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: colors.white,
-  },
-  getMoreBtnText: {
-    color: colors.mid,
-    fontSize: 12,
-    fontWeight: '600',
-  },
   pickArea: { gap: 16 },
   prompt: { fontSize: 15, color: colors.mid, marginBottom: 16, textAlign: 'center' },
   bigBtn: { backgroundColor: colors.dark, borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 },
@@ -476,4 +478,41 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 26, fontWeight: '900', marginBottom: 24, color: colors.dark },
   storeOption: { padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
   storeOptionText: { fontSize: 16, fontWeight: '600', color: colors.dark },
+  successContainer: { justifyContent: 'center' },
+  successContent: { padding: 24, paddingTop: 60, alignItems: 'center' },
+  successCard: { 
+    backgroundColor: colors.white, 
+    borderRadius: 24, 
+    padding: 24, 
+    width: '100%', 
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.dark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  successImage: { width: '100%', aspectRatio: 1, borderRadius: 16, marginBottom: 24 },
+  successTitle: { fontSize: 28, fontWeight: '900', color: colors.dark, marginBottom: 8, letterSpacing: -1 },
+  successSubtitle: { fontSize: 16, color: colors.mid, textAlign: 'center', marginBottom: 32, lineHeight: 22 },
+  whatsappBtn: { 
+    backgroundColor: colors.gold, 
+    borderRadius: 100, 
+    paddingVertical: 18, 
+    paddingHorizontal: 32, 
+    width: '100%', 
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  whatsappBtnText: { color: colors.white, fontSize: 16, fontWeight: '800' },
+  nativeShareBtn: { 
+    paddingVertical: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  nativeShareBtnText: { color: colors.muted, fontSize: 14, fontWeight: '600' },
+  startOverBtn: { marginTop: 40 },
+  startOverBtnText: { color: colors.goldDark, fontSize: 16, fontWeight: '700' },
 })

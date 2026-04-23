@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/store/:slug",
+      "destination": "https://twwittitwwuuauhgrdaw.supabase.co/functions/v1/serve-og-tags?store=:slug"
+    },
+    {
+      "source": "/piece/:id",
+      "destination": "https://twwittitwwuuauhgrdaw.supabase.co/functions/v1/serve-og-tags?piece=:id"
+    }
+  ]
+}

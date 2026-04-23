@@ -5,6 +5,7 @@ import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
+import CreditsChip from '../../components/CreditsChip'
 
 type Piece = {
   id: string
@@ -93,7 +94,10 @@ export default function DiscoverScreen() {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.header}>Discover</Text>
-        <View style={styles.badge}><Text style={styles.badgeText}>✦ Top worlds</Text></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <CreditsChip />
+          <View style={styles.badge}><Text style={styles.badgeText}>✦ Top worlds</Text></View>
+        </View>
       </View>
       <FlatList
         data={pieces}
