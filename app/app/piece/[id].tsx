@@ -58,6 +58,17 @@ async function fetchMyDigitalOrder(pieceId: string, userId: string) {
   return data
 }
 
+async function fetchPaidOrderCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .eq('buyer_id', userId)
+    .eq('status', 'paid')
+  
+  if (error) throw error
+  return count || 0
+}
+
 export default function PieceScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const session = useAuthStore((s) => s.session)
@@ -81,6 +92,14 @@ export default function PieceScreen() {
       queryFn: () => fetchMyDigitalOrder(id, session!.user.id),
       enabled: !!session,
     })
+
+    const { data: paidOrderCount } = useQuery({
+      queryKey: ['paidOrderCount', session?.user.id],
+      queryFn: () => fetchPaidOrderCount(session!.user.id),
+      enabled: !!session,
+    })
+
+    const isFirstOrder = !!session && paidOrderCount === 0
 
     const showHighRes = isOwner || !!myDigitalOrder
     const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
@@ -167,6 +186,7 @@ export default function PieceScreen() {
           Alert.alert('Order placed!', 'Your print is being prepared and will ship soon!')
         }
         queryClient.invalidateQueries({ queryKey: ['orders'] })
+        queryClient.invalidateQueries({ queryKey: ['paidOrderCount'] })
       } catch (e: any) {
         if (e.message !== 'Canceled') Alert.alert('Payment failed', e.message)
       } finally {
