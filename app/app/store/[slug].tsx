@@ -7,7 +7,7 @@ import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
-type Piece = { id: string; title: string; transformed_image_url: string; vote_count: number; price_digital: number; price_print: number }
+type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; vote_count: number; price_digital: number; price_print: number }
 type Store = { id: string; child_name: string; slug: string; description: string }
 
 async function fetchStore(slug: string) {
@@ -15,7 +15,7 @@ async function fetchStore(slug: string) {
   if (error) throw error
   const { data: pieces, error: e2 } = await supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, vote_count, price_digital, price_print')
+    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, price_digital, price_print')
     .eq('store_id', store.id)
     .eq('published', true)
     .order('vote_count', { ascending: false })
@@ -74,7 +74,7 @@ export default function StoreScreen() {
         columnWrapperStyle={styles.row}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
-            <Image source={{ uri: item.transformed_image_url }} style={styles.image} />
+            <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
             <View style={styles.cardBody}>
               <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
             </View>

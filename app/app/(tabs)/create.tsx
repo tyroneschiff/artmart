@@ -201,11 +201,26 @@ export default function CreateScreen() {
       if (transformedUploadError) throw transformedUploadError
       const { data: { publicUrl: transformedStoredUrl } } = supabase.storage.from('artwork').getPublicUrl(transformedFileName)
 
+      // Generate watermarked (low-res preview) version
+      const watermarked = await ImageManipulator.manipulateAsync(
+        transformedUri,
+        [{ resize: { width: 800 } }],
+        { compress: 0.4, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      )
+      const watermarkedFileName = `${session!.user.id}/${Date.now()}_preview.jpg`
+      const watermarkedBytes = Uint8Array.from(atob(watermarked.base64!), (c) => c.charCodeAt(0))
+      const { error: watermarkedUploadError } = await withUploadTimeout(
+        supabase.storage.from('artwork').upload(watermarkedFileName, watermarkedBytes, { contentType: 'image/jpeg' })
+      )
+      if (watermarkedUploadError) throw watermarkedUploadError
+      const { data: { publicUrl: watermarkedUrl } } = supabase.storage.from('artwork').getPublicUrl(watermarkedFileName)
+
       const { data: pieceRow, error } = await supabase.from('pieces').insert({
         store_id: selectedStore.id,
         title: title.trim(),
         original_image_url: originalUrl,
         transformed_image_url: transformedStoredUrl,
+        watermarked_image_url: watermarkedUrl,
         ai_description: aiDescription || null,
         price_digital: PRICE_DIGITAL_CENTS,
         price_print: PRICE_PRINT_CENTS,

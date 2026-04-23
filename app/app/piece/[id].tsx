@@ -12,7 +12,7 @@ import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card } from '../../lib/theme'
 
 type Piece = {
-  id: string; title: string; transformed_image_url: string; original_image_url: string
+  id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
   vote_count: number; price_digital: number; price_print: number; ai_description: string
   stores: { child_name: string; slug: string; owner_id: string }
 }
@@ -78,6 +78,9 @@ export default function PieceScreen() {
       queryFn: () => fetchMyDigitalOrder(id, session!.user.id),
       enabled: !!session,
     })
+
+    const showHighRes = isOwner || !!myDigitalOrder
+    const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
   
     const voteMutation = useMutation({
       mutationFn: async () => {
@@ -212,7 +215,7 @@ export default function PieceScreen() {
           </TouchableOpacity>
         </View>
 
-        <Image source={{ uri: piece.transformed_image_url }} style={styles.mainImage} />
+        <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
         <View style={styles.magicLabel}>
           <Text style={styles.magicLabelText}>✨ Step inside {piece.stores?.child_name}'s imagination</Text>
         </View>

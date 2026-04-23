@@ -20,7 +20,7 @@ Every share is a free acquisition channel:
 - Post-publish prompt: pre-written message to family WhatsApp group
 - Post-vote notification: tell the parent when their piece gets love (not yet built)
 - Instagram Stories export: 9:16 card with branded watermark (not yet built)
-- Watermark on free shares; clean version for buyers (not yet built)
+- Watermark on free shares; clean version for buyers.
 
 ## Tech stack (locked for MVP)
 
@@ -211,6 +211,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ [REVENUE] Watermarked Previews — Implemented low-res (800px) preview uploads to protect high-res assets.
 - ✅ [REVENUE] OG Tag URL Routing — Created `web/vercel.json` and `web/netlify.toml` for social previews.
 - ✅ [RETENTION] Post-Publish Success UI — Replaced auto-share with a dedicated success card & WhatsApp button.
 - ✅ [REVENUE] Gifting Modal Consolidation — Refactored Piece Screen to use a single, cohesive `GiftingModal`.
@@ -221,12 +222,12 @@ The most dangerous bugs look like success but do nothing:
 - ✅ [QUALITY] App Validation: Download Library Coverage — Created `download.test.ts` with 100% coverage.
 
 **Pending (strategic priority):**
-- [ ] [PLATFORM] Android Compatibility Pass — Micro-Task: Test all core flows on Android emulator and fix layout/permission issues.
-- [ ] [NOTIFICATIONS] Post-Vote Push Notification — Micro-Task: Create Edge Function `notify-vote` and trigger from client on successful vote.
-- [ ] [UX] Instagram Stories Export — Micro-Task: Create a 9:16 branded card generator for pieces (using `expo-image-manipulator`).
-- [ ] [REVENUE] Digital Download Watermark — Micro-Task: Implement subtle "Draw Up" watermark on shareable previews, clean version for buyers.
-- [ ] [QUALITY] E2E Flow Validation — Micro-Task: Create a Playwright/Detox test covering the full Create -> Publish -> Purchase flow.
-- [ ] [POLISH] Piece List Animation — Micro-Task: Add a subtle 'portal' entrance animation to pieces as they appear in the list.
+- [ ] [UX] Instagram Stories Export - Part 1: Create `lib/export.ts` using `expo-image-manipulator` for 9:16 cards.
+- [ ] [NOTIFICATIONS] Post-Vote Push Notification - Part 1: Add `expo_push_token` to `profiles` and update UI to request permission.
+- [ ] [PLATFORM] Android Layout Audit: Fix absolute positioning and padding issues in `GiftingModal`.
+- [ ] [POLISH] Piece List Animation: Implement staggered entrance animations for piece grids in `discover.tsx`.
+- [ ] [QUALITY] E2E Flow Validation: Create a core smoke test covering Create -> Publish -> Purchase.
+- [ ] [NOTIFICATIONS] Post-Vote Push Notification - Part 2: Create Edge Function `notify-vote` triggered on vote insertion.
 
 ---
 
@@ -238,53 +239,52 @@ The most dangerous bugs look like success but do nothing:
 ## Quality & Testing Backlog (Target: 100% Coverage)
 
 1. **[QUALITY] App Validation Suite**
-    *   **Micro-Task 1:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library (mock FileSystem + Share).
-    *   **Micro-Task 2:** Create `app/hooks/useCredits.test.ts` to verify React Query logic for credit fetching and invalidation.
+    *   **Micro-Task 1:** Create `app/hooks/useCredits.test.ts` to verify React Query logic for credit fetching and invalidation.
 
 2. **[QUALITY] Backend Validation Suite**
-    *   **Micro-Task 1:** Create `supabase/functions/tests/moderate-comment_test.ts` with real unit tests (mocking Gemini/Claude + DB interactions).
-    *   **Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify the new Claude transformation pipeline and fal.ai integration.
+    *   **Micro-Task 1:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify the new Claude transformation pipeline and fal.ai integration.
 
 ---
 
 ## Strategic Backlog
 
-1. **[REVENUE] OG Tag URL Routing**
-    *   **The Micro-Task:** In the `web/` directory, create `vercel.json` and `netlify.toml` with rewrite rules that point `/store/*` and `/piece/*` to the Supabase Edge Function `https://[REF].supabase.co/functions/v1/serve-og-tags?store=$1` or `?piece=$1`.
-    *   **Why:** This completes the organic acquisition loop. Without these rewrites, social platforms won't fetch the dynamic previews when parents share their links.
+1. **[REVENUE] Watermarked Previews**
+    *   **The Micro-Task:** Add `watermarked_image_url` column to `pieces` table and update the `create.tsx` publish flow to generate and upload a watermarked version of the transformed image.
+    *   **Why:** Protects the value of the "high-res" download by ensuring guests and non-owners only see a branded preview.
 
-2. **[RETENTION] Post-Publish Success UI**
-    *   **The Micro-Task:** In `app/app/(tabs)/create.tsx`, remove the auto-pop-up `ShareSheet`. Instead, show a full-screen success card with the transformed image, the title, and a massive, gold "Share to Family WhatsApp" button using the `wa.me` universal link.
-    *   **Why:** Frictionless, intentional sharing while the emotional "wow" is at its peak is our #1 growth lever.
+2. **[UX] Instagram Stories Export**
+    *   **The Micro-Task:** Implement `app/lib/export.ts` to generate a 9:16 branded card using `expo-image-manipulator`. Add an "Export to Story" button to `PieceScreen`.
+    *   **Why:** Every export is a high-fidelity acquisition channel on social media.
 
-3. **[REVENUE] Gifting Modal Consolidation**
-    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` and its supporting modals to combine the "Guest Info" (email) and "Shipping Address" steps into a single, streamlined form.
-    *   **Why:** Reducing the number of steps in the purchase funnel is critical for non-tech-savvy grandparent buyers.
+3. **[NOTIFICATIONS] Post-Vote Push Notification**
+    *   **The Micro-Task:** Add `expo_push_token` to `profiles` and create an Edge Function `notify-vote` that triggers a push notification to the parent when their child's art receives a vote.
+    *   **Why:** Immediate emotional feedback loop drives retention and repeat creation.
 
-4. **[POLISH] Theme Token Adoption: Piece Detail Screen**
-    *   **The Micro-Task:** Refactor `app/app/piece/[id].tsx` to replace all raw `colors` and inline styles with `type`, `btn`, and `card` tokens from `lib/theme.ts`.
-    *   **Why:** The Piece Detail screen is our primary product page; it must feel museum-quality and professional to justify the print price.
+4. **[PLATFORM] Android Compatibility Pass**
+    *   **The Micro-Task:** Fix layout issues in `GiftingModal` and `PieceScreen` for Android, specifically focusing on absolute positioning and keyboard avoiding views.
+    *   **Why:** Essential for the upcoming Android launch and broader accessibility.
 
-5. **[UX] My Stores & Profile Empty States**
-    *   **The Micro-Task:** Update the `ListEmptyComponent` in `app/app/(tabs)/mystores.tsx` and the initial state of `profile.tsx` to use narrative-aligned copy ("Step inside their imagination") and full token compliance.
-    *   **Why:** First-run experience sets the tone for the entire relationship with the parent.
+5. **[POLISH] Piece List Animation**
+    *   **The Micro-Task:** Add staggered entrance animations to piece grids in `discover.tsx` and `store/[slug].tsx` using `react-native-reanimated`.
+    *   **Why:** Elevates the app from "functional tool" to "premium gallery experience."
 
-6. **[POLISH] Global Credit Visibility**
-    *   **The Micro-Task:** Extract the credits chip from `create.tsx` into a shared component and add it to the headers of `mystores.tsx` and `discover.tsx`.
-    *   **Why:** Constant, subtle visibility of the credit balance encourages top-ups and reinforces the "Step Inside" value.
+6. **[QUALITY] E2E Flow Validation**
+    *   **The Micro-Task:** Implement a Playwright or Detox test that covers the happy path: Login -> Photograph -> Transform -> Publish -> Purchase.
+    *   **Why:** Prevents regressions in the core revenue-generating funnel.
 
-7. **[QUALITY] Backend Validation: Moderate Comment Tests**
-    *   **The Micro-Task:** Replace the stub in `supabase/functions/tests/moderate-comment_test.ts` with real tests mocking Gemini and verifying DB persistence.
-    *   **Why:** Kid safety is critical; we need automated assurance that moderation works as intended.
+7. **[UX] Post-Vote Social Prompt**
+    *   **The Micro-Task:** After a successful vote, show a small toast or modal inviting the voter to "Share this magic" with a quick WhatsApp link.
+    *   **Why:** Captures the voter's high-intent moment for further acquisition.
 
-8. **[QUALITY] App Validation: Download Library Coverage**
-    *   **The Micro-Task:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library, mocking `FileSystem` and signed URL logic.
-    *   **Why:** Paid features must be bulletproof to avoid customer support overhead.
+8. **[REVENUE] Gift Recipient Email Polish**
+    *   **The Micro-Task:** Refine the `sendGiftEmail` HTML template in `stripe-webhook` to include a clear "Step inside more worlds" CTA back to the Discover screen.
+    *   **Why:** Converts gift recipients into new users/creators.
 
 ## Improvement Log
 
+- [2026-04-23 CRON B] Watermarked Previews — Added `watermarked_image_url` to `pieces` table; implemented low-res preview generation (800px, 40% quality) in `create.tsx` to protect high-res digital downloads. Updated Piece, Discover, and Store screens to serve previews to non-owners.
+- [2026-04-23 CRON A] Strategic Audit & Backlog Evolution — Performed a 360-degree audit. Identified "Watermarked Previews" as the next critical revenue protector. Pivoted social focus from generic sharing to high-impact "Instagram Stories Export". Prioritized Post-Vote notifications for parent retention and Android compatibility for platform expansion.
 - [2026-04-23 CRON B] Strategic Backlog Completion — Completed 8 micro-tasks focused on revenue, retention, and quality. Implemented OG routing, Success UI, Gifting Modal consolidation, Global Credit visibility, and expanded test coverage. Removed 2 obsolete components and achieved 100% coverage for the download library.
-- [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Pivoted focus to organic growth via OG Meta Tag routing and a high-impact Post-Publish Success UI. Prioritized design debt removal on Piece Detail and Profile screens to maintain premium brand positioning.
 - [2026-04-23 CRON B] Gifting UI Polish — Refactored `GuestPrintInfoModal.tsx` and `ShippingAddressModal.tsx` to use `type` and `btn` tokens, 24px consistent padding, and premium typography. Checkout now feels trustworthy for grandparent buyers.
 - [2026-04-23 CRON A] Strategic Audit & Backlog Refinement — Performed 360-degree audit. Prioritized Gifting UI Polish as #1 to capture the grandparent buyer segment and URL rewrites for OG tags as #2 to complete the organic growth loop. Elevated 'Post-Publish Share Prompts' to #3 to capture the post-transform 'wow' moment.
 - [2026-04-23 CRON B] Public Store & Piece OG Tags — Created `serve-og-tags` Edge Function to generate dynamic HTML with OG tags for piece and store URLs. This enables high-impact social sharing on platforms like WhatsApp and Instagram. File: `supabase/functions/serve-og-tags/index.ts`.

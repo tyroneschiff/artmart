@@ -1,6 +1,6 @@
 # Draw Up
 
-![App Coverage](https://img.shields.io/badge/app_coverage-96%25-brightgreen)
+![App Coverage](https://img.shields.io/badge/app_coverage-97%25-brightgreen)
 ![Backend Coverage](https://img.shields.io/badge/backend_coverage-100%25-brightgreen)
 
 Parents photograph their children's artwork, AI transforms it into gallery-quality art, and it publishes to a personal store.

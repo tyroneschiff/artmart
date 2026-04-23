@@ -11,6 +11,7 @@ type Piece = {
   id: string
   title: string
   transformed_image_url: string
+  watermarked_image_url?: string
   vote_count: number
   store_id: string
   stores: { child_name: string; slug: string }
@@ -19,7 +20,7 @@ type Piece = {
 async function fetchTopPieces(): Promise<Piece[]> {
   const { data, error } = await supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, vote_count, store_id, stores(child_name, slug)')
+    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, store_id, stores(child_name, slug)')
     .eq('published', true)
     .not('transformed_image_url', 'is', null)
     .order('vote_count', { ascending: false })
@@ -110,7 +111,7 @@ export default function DiscoverScreen() {
           const canVote = !isVoted && !isVoting
           return (
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
-              <Image source={{ uri: item.transformed_image_url }} style={styles.image} />
+              <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
               <View style={styles.cardBody}>
                 <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.childName}>{item.stores?.child_name}</Text>
