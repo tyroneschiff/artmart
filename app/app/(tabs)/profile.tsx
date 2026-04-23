@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { useCredits } from '../../lib/useCredits'
-import { colors } from '../../lib/theme'
+import { colors, type, btn, card } from '../../lib/theme'
 import Constants from 'expo-constants'
 
 export default function ProfileScreen() {
@@ -68,12 +68,12 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Profile</Text>
+      <Text style={[type.h1, { paddingHorizontal: 20, paddingTop: 60, marginBottom: 32 }]}>Profile</Text>
 
       {/* Credits */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>IMAGINATION CREDITS</Text>
-        <View style={styles.card}>
+        <Text style={type.label}>IMAGINATION CREDITS</Text>
+        <View style={[card, { overflow: 'hidden' }]}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Remaining</Text>
             <Text style={styles.creditsValue}>{credits ?? 0}</Text>
@@ -86,8 +86,8 @@ export default function ProfileScreen() {
 
       {/* Account info */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>ACCOUNT</Text>
-        <View style={styles.card}>
+        <Text style={type.label}>ACCOUNT</Text>
+        <View style={[card, { overflow: 'hidden' }]}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Email</Text>
             <Text style={styles.rowValue} numberOfLines={1}>{session?.user.email}</Text>
@@ -97,31 +97,31 @@ export default function ProfileScreen() {
 
       {/* Display name */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>YOUR NAME</Text>
-        <View style={styles.card}>
+        <Text style={type.label}>YOUR NAME</Text>
+        <View style={[card, { overflow: 'hidden' }]}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, type.body, { fontSize: 15 }]}
             placeholder="Enter your name"
             placeholderTextColor={colors.muted}
             value={displayName}
             onChangeText={setDisplayName}
           />
           <TouchableOpacity
-            style={[styles.saveBtn, !displayName.trim() && styles.saveBtnDisabled]}
+            style={[btn.primary, styles.saveBtn, !displayName.trim() && styles.saveBtnDisabled]}
             onPress={handleSaveName}
             disabled={!displayName.trim() || saving}
           >
             {saving
               ? <ActivityIndicator color={colors.white} size="small" />
-              : <Text style={styles.saveBtnText}>Save name</Text>}
+              : <Text style={btn.primaryText}>Save name</Text>}
           </TouchableOpacity>
         </View>
       </View>
 
       {/* App info */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>APP</Text>
-        <View style={styles.card}>
+        <Text style={type.label}>APP</Text>
+        <View style={[card, { overflow: 'hidden' }]}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Version</Text>
             <Text style={styles.rowValue}>{version}</Text>
@@ -148,10 +148,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
   content: { paddingBottom: 48 },
-  header: { fontSize: 32, fontWeight: '900', letterSpacing: -1, color: colors.dark, paddingHorizontal: 20, paddingTop: 60, marginBottom: 32 },
   section: { paddingHorizontal: 20, marginBottom: 24 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.muted, marginBottom: 8, textTransform: 'uppercase' },
-  card: { backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
   rowLabel: { fontSize: 15, color: colors.dark, fontWeight: '500' },
@@ -159,10 +156,9 @@ const styles = StyleSheet.create({
   creditsValue: { fontSize: 18, fontWeight: '800', color: colors.gold },
   buyBtn: { margin: 12, marginTop: 4, backgroundColor: colors.goldLight, borderRadius: 12, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   buyBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 14 },
-  input: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: colors.dark, borderBottomWidth: 1, borderBottomColor: colors.border },
-  saveBtn: { margin: 12, backgroundColor: colors.dark, borderRadius: 100, paddingVertical: 12, alignItems: 'center' },
+  input: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
+  saveBtn: { margin: 12, paddingVertical: 12 },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
   signOutBtn: { backgroundColor: colors.dangerBg, borderRadius: 16, borderWidth: 1, borderColor: colors.dangerBorder, paddingVertical: 16, alignItems: 'center' },
   signOutText: { color: colors.danger, fontWeight: '700', fontSize: 16 },
 })

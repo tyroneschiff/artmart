@@ -267,35 +267,40 @@ export default function CreateScreen() {
       <View style={[styles.container, styles.successContainer]}>
         <ConfettiCannon count={200} origin={{x: -10, y: 0}} fadeOut={true} />
         <ScrollView contentContainerStyle={styles.successContent}>
-          <View style={styles.successCard}>
+          <View style={[card, styles.successCard]}>
             <Image source={{ uri: transformedUri! }} style={styles.successImage} />
-            <Text style={styles.successTitle}>Published!</Text>
-            <Text style={styles.successSubtitle}>"{title}" is now live in {selectedStore?.child_name}'s store.</Text>
+            <Text style={[type.h1, { marginBottom: 8, textAlign: 'center' }]}>Published!</Text>
+            <Text style={[type.body, { textAlign: 'center', marginBottom: 32, color: colors.mid }]}>
+              "{title}" is now live in {selectedStore?.child_name}'s store.
+            </Text>
             
             <TouchableOpacity 
-              style={styles.whatsappBtn} 
-              onPress={() => shareToWhatsApp(`${sharePayload.message}\n${sharePayload.url}`)}
+              style={[btn.primary, { backgroundColor: colors.gold, width: '100%', paddingVertical: 18, marginBottom: 12 }]} 
+              onPress={() => {
+                const grandmaMessage = `Look what ${selectedStore?.child_name || 'Artist'} just created! ✨ I stepped inside their drawing and found this: ${sharePayload.url}`
+                shareToWhatsApp(grandmaMessage)
+              }}
             >
-              <Text style={styles.whatsappBtnText}>Share to Family WhatsApp</Text>
+              <Text style={[btn.primaryText, { fontSize: 16, fontWeight: '800' }]}>Send to Grandma</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.instagramBtn} 
+              style={[btn.secondary, { width: '100%', paddingVertical: 18, marginBottom: 12 }]} 
               onPress={() => exportStoryCard(transformedUri!, title, selectedStore?.child_name || 'Artist')}
             >
-              <Text style={styles.instagramBtnText}>Export for Instagram Story</Text>
+              <Text style={[btn.secondaryText, { fontSize: 16, fontWeight: '800' }]}>Export for Instagram Story</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.nativeShareBtn} 
+              style={{ paddingVertical: 12, width: '100%', alignItems: 'center' }} 
               onPress={() => shareNative(sharePayload)}
             >
-              <Text style={styles.nativeShareBtnText}>Other Sharing Options</Text>
+              <Text style={[type.label, { color: colors.muted, fontWeight: '600' }]}>Other Sharing Options</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.startOverBtn} onPress={resetCreate}>
-            <Text style={styles.startOverBtnText}>Step inside another drawing →</Text>
+            <Text style={[type.body, { color: colors.goldDark, fontWeight: '700' }]}>Step inside another drawing →</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -305,20 +310,20 @@ export default function CreateScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
-        <Text style={styles.header}>Create</Text>
+        <Text style={type.h1}>Create</Text>
         <CreditsChip />
       </View>
 
       {step === 'pick' && (
         <View style={styles.pickArea}>
-          <Text style={styles.prompt}>Photograph your child's artwork</Text>
-          <TouchableOpacity style={styles.bigBtn} onPress={takePhoto}>
-            <Text style={styles.bigBtnIcon}>📷</Text>
-            <Text style={styles.bigBtnText}>Take Photo</Text>
+          <Text style={[type.body, { marginBottom: 16, textAlign: 'center', color: colors.mid }]}>Photograph your child's artwork</Text>
+          <TouchableOpacity style={[btn.primary, { padding: 24, borderRadius: 20, gap: 8 }]} onPress={takePhoto}>
+            <Text style={{ fontSize: 32 }}>📷</Text>
+            <Text style={btn.primaryText}>Take Photo</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.bigBtn, styles.bigBtnSecondary]} onPress={pickImage}>
-            <Text style={styles.bigBtnIcon}>🖼️</Text>
-            <Text style={[styles.bigBtnText, { color: colors.dark }]}>Choose from Library</Text>
+          <TouchableOpacity style={[btn.secondary, { padding: 24, borderRadius: 20, gap: 8 }]} onPress={pickImage}>
+            <Text style={{ fontSize: 32 }}>🖼️</Text>
+            <Text style={btn.secondaryText}>Choose from Library</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -330,31 +335,31 @@ export default function CreateScreen() {
             <View style={styles.upsellCard}>
               <Text style={styles.upsellTitle}>Out of credits</Text>
               <Text style={styles.upsellMessage}>You're out of credits. Buy a pack to keep bringing your child's imagination to life.</Text>
-              <TouchableOpacity style={styles.upsellBtn} onPress={() => router.push('/credits')}>
-                <Text style={styles.upsellBtnText}>Buy Credits</Text>
+              <TouchableOpacity style={[btn.primary, { paddingVertical: 12, paddingHorizontal: 24 }]} onPress={() => router.push('/credits')}>
+                <Text style={btn.primaryText}>Buy Credits</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <>
-              <Text style={styles.prompt}>Ready to step inside this drawing?</Text>
+              <Text style={[type.body, { marginBottom: 16, textAlign: 'center', color: colors.mid }]}>Ready to step inside this drawing?</Text>
               {isWeb
                 ? <View style={styles.webNotice}><Text style={styles.webNoticeText}>📱 AI transformation works on the mobile app.</Text></View>
                 : transforming
                   ? <View style={styles.center}>
                       <ActivityIndicator size="large" color={colors.gold} />
-                      <Text style={styles.transformingText}>{TRANSFORM_TIPS[tipIndex]}</Text>
-                      <Text style={styles.transformingSubtext}>This takes about 30 seconds</Text>
+                      <Text style={[type.body, { fontWeight: '700' }]}>{TRANSFORM_TIPS[tipIndex]}</Text>
+                      <Text style={[type.label, { color: colors.mid }]}>This takes about 30 seconds</Text>
                     </View>
                   : transformError
                     ? <View style={styles.errorBox}>
                         <Text style={styles.errorTitle}>Transform failed</Text>
                         <Text style={styles.errorMessage}>{transformError}</Text>
-                        <TouchableOpacity style={styles.button} onPress={handleTransform}>
-                          <Text style={styles.buttonText}>Try again</Text>
+                        <TouchableOpacity style={btn.primary} onPress={handleTransform}>
+                          <Text style={btn.primaryText}>Try again</Text>
                         </TouchableOpacity>
                       </View>
-                    : <TouchableOpacity style={styles.button} onPress={handleTransform}>
-                        <Text style={styles.buttonText}>✨ Step Inside</Text>
+                    : <TouchableOpacity style={btn.primary} onPress={handleTransform}>
+                        <Text style={btn.primaryText}>✨ Step Inside</Text>
                       </TouchableOpacity>
               }
             </>
@@ -367,17 +372,17 @@ export default function CreateScreen() {
         <View>
           <View style={styles.compareRow}>
             <View style={styles.compareItem}>
-              <Text style={styles.compareLabel}>The Drawing</Text>
+              <Text style={[type.label, { marginBottom: 4, textAlign: 'center' }]}>The Drawing</Text>
               <Image source={{ uri: imageUri! }} style={styles.compareImage} />
             </View>
             <View style={styles.compareItem}>
-              <Text style={styles.compareLabel}>The World</Text>
+              <Text style={[type.label, { marginBottom: 4, textAlign: 'center' }]}>The World</Text>
               <Image source={{ uri: transformedUri }} style={styles.compareImage} />
             </View>
           </View>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, type.body]}
             placeholder="Give this piece a title"
             placeholderTextColor={colors.muted}
             value={title}
@@ -387,7 +392,7 @@ export default function CreateScreen() {
           {/* Store selector or inline creator */}
           {hasStores ? (
             <TouchableOpacity style={styles.storePicker} onPress={() => setStorePickerVisible(true)}>
-              <Text style={[styles.storePickerText, selectedStore && { color: colors.dark }]}>
+              <Text style={[type.body, { color: colors.muted }, selectedStore && { color: colors.dark }]}>
                 {selectedStore ? `${selectedStore.child_name}'s Store ✓` : 'Select a store →'}
               </Text>
             </TouchableOpacity>
@@ -396,20 +401,20 @@ export default function CreateScreen() {
               <Text style={styles.inlineStoreLabel}>No stores yet — create one to publish</Text>
               <View style={styles.inlineStoreRow}>
                 <TextInput
-                  style={styles.inlineStoreInput}
+                  style={[styles.inlineStoreInput, type.body, { fontSize: 15 }]}
                   placeholder="Child's name (e.g. Emma)"
                   placeholderTextColor={colors.muted}
                   value={newStoreName}
                   onChangeText={setNewStoreName}
                 />
                 <TouchableOpacity
-                  style={[styles.inlineStoreBtn, (!newStoreName.trim() || creatingStore) && styles.buttonDisabled]}
+                  style={[btn.primary, { borderRadius: 10, paddingHorizontal: 16 }, (!newStoreName.trim() || creatingStore) && styles.buttonDisabled]}
                   onPress={handleCreateStoreInline}
                   disabled={!newStoreName.trim() || creatingStore}
                 >
                   {creatingStore
                     ? <ActivityIndicator size="small" color={colors.white} />
-                    : <Text style={styles.inlineStoreBtnText}>Create</Text>}
+                    : <Text style={btn.primaryText}>Create</Text>}
                 </TouchableOpacity>
               </View>
               {selectedStore && (
@@ -419,11 +424,11 @@ export default function CreateScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.button, (!title || !selectedStore) && styles.buttonDisabled]}
+            style={[btn.primary, (!title || !selectedStore) && styles.buttonDisabled]}
             onPress={() => publishMutation.mutate()}
             disabled={!title || !selectedStore || publishMutation.isPending}
           >
-            <Text style={styles.buttonText}>{publishMutation.isPending ? 'Publishing...' : 'Publish to Store'}</Text>
+            <Text style={btn.primaryText}>{publishMutation.isPending ? 'Publishing...' : 'Publish to Store'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setStep('transform')}><Text style={styles.cancel}>← Retransform</Text></TouchableOpacity>

@@ -85,22 +85,30 @@ export default function PieceScreen() {
     const showHighRes = isOwner || !!myDigitalOrder
     const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
   
+    const withTimeout = <T,>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> => {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(errorMessage)), ms)
+      )
+      return Promise.race([promise, timeout])
+    }
+
     const voteMutation = useMutation({
       mutationFn: async () => {
-        const { error } = await supabase.from('votes').insert({ user_id: session!.user.id, piece_id: id })
+        const promise = supabase.from('votes').insert({ user_id: session!.user.id, piece_id: id })
+        const { error } = await withTimeout(promise, 15000, 'Request timed out. Please check your connection.')
         if (error) throw error
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['piece', id] })
         queryClient.invalidateQueries({ queryKey: ['discover'] })
       },
-      onError: () => Alert.alert('Already voted', 'You already voted for this piece.'),
+      onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })
   
     const commentMutation = useMutation({
       mutationFn: async (content: string) => {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
-        const res = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/moderate-comment`, {
+        const promise = fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/moderate-comment`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -108,6 +116,7 @@ export default function PieceScreen() {
           },
           body: JSON.stringify({ piece_id: id, content }),
         })
+        const res = await withTimeout(promise, 15000, 'Request timed out. Please check your connection.')
         if (!res.ok) {
           const err = await res.json()
           throw new Error(err.error || 'Failed to post comment')
@@ -184,15 +193,15 @@ export default function PieceScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Failed to load world</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryBtnText}>Try again</Text>
+        <Text style={type.body}>Failed to load world</Text>
+        <TouchableOpacity style={[btn.primary, { marginTop: 16, paddingHorizontal: 24 }]} onPress={() => refetch()}>
+          <Text style={btn.primaryText}>Try again</Text>
         </TouchableOpacity>
       </View>
     )
   }
 
-  if (!piece) return <View style={styles.center}><Text style={styles.errorText}>Not found.</Text></View>
+  if (!piece) return <View style={styles.center}><Text style={type.body}>Not found.</Text></View>
 
   return (
     <>
@@ -204,10 +213,10 @@ export default function PieceScreen() {
           <TouchableOpacity onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
             <Text style={styles.storeLink}>{piece.stores?.child_name}'s Store</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.shareBtn} onPress={() =>
+          <TouchableOpacity style={[btn.primary, { paddingVertical: 8, paddingHorizontal: 16 }]} onPress={() =>
             setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
           }>
-            <Text style={styles.shareBtnText}>Share</Text>
+            <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
           </TouchableOpacity>
         </View>
 
@@ -215,15 +224,17 @@ export default function PieceScreen() {
         
         <View style={styles.actionRow}>
           <View style={styles.magicLabel}>
-            <Text style={styles.magicLabelText}>✨ Step inside {piece.stores?.child_name}'s imagination</Text>
+            <Text style={[type.label, { color: colors.gold, fontStyle: 'italic', fontSize: 13 }]}>
+              ✨ Step inside {piece.stores?.child_name}'s imagination
+            </Text>
           </View>
           <TouchableOpacity style={styles.viewInRoomBtn} onPress={() => setRoomModalVisible(true)}>
             <Text style={styles.viewInRoomBtnText}>🖼 View in Room</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>{piece.title}</Text>
-        {piece.ai_description ? <Text style={styles.description}>{piece.ai_description}</Text> : null}
+        <Text style={[type.h2, { fontSize: 26, padding: 16, paddingBottom: 8 }]}>{piece.title}</Text>
+        {piece.ai_description ? <Text style={[type.body, { fontSize: 14, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 }]}>{piece.ai_description}</Text> : null}
 
         <TouchableOpacity
           style={styles.voteBtn}
@@ -240,17 +251,17 @@ export default function PieceScreen() {
         </TouchableOpacity>
 
         <View style={styles.purchaseSection}>
-          <Text style={styles.purchaseTitle}>Bring this world home</Text>
+          <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
 
           {(isOwner || myDigitalOrder) && (
             <TouchableOpacity
-              style={styles.purchaseCard}
+              style={[card, styles.purchaseCard]}
               onPress={handleRedownload}
               disabled={downloading || purchasing !== null}
             >
               <View>
                 <Text style={styles.purchaseType}>Keep the high-res vision</Text>
-                <Text style={styles.purchaseDetail}>
+                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>
                   {isOwner ? "Free for you as the creator" : "You own this · Download again"}
                 </Text>
               </View>
@@ -261,13 +272,13 @@ export default function PieceScreen() {
           )}
 
           <TouchableOpacity
-            style={styles.purchaseCard}
+            style={[card, styles.purchaseCard]}
             onPress={() => handlePurchase('print')}
             disabled={purchasing !== null}
           >
             <View>
               <Text style={styles.purchaseType}>Physical Print</Text>
-              <Text style={styles.purchaseDetail}>11×14" matte poster, shipped to you</Text>
+              <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>11×14" matte poster, shipped to you</Text>
             </View>
             {purchasing === 'print'
               ? <ActivityIndicator color={colors.gold} />
@@ -276,12 +287,12 @@ export default function PieceScreen() {
         </View>
 
         <View style={styles.commentSection}>
-          <Text style={styles.sectionTitle}>Comments</Text>
+          <Text style={[type.h3, { marginBottom: 16 }]}>Comments</Text>
           
           {session ? (
             <View style={styles.commentInputWrap}>
               <TextInput
-                style={styles.commentInput}
+                style={[card, styles.commentInput]}
                 placeholder="Add a kind comment..."
                 placeholderTextColor={colors.muted}
                 value={commentText}
@@ -290,27 +301,30 @@ export default function PieceScreen() {
                 multiline
               />
               <TouchableOpacity 
-                style={[styles.postBtn, (!commentText.trim() || commentMutation.isPending) && styles.postBtnDisabled]}
+                style={[btn.primary, styles.postBtn, (!commentText.trim() || commentMutation.isPending) && styles.postBtnDisabled]}
                 onPress={() => commentMutation.mutate(commentText.trim())}
                 disabled={!commentText.trim() || commentMutation.isPending}
               >
-                {commentMutation.isPending ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={styles.postBtnText}>Post</Text>}
+                {commentMutation.isPending ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={[btn.primaryText, { fontSize: 14 }]}>Post</Text>}
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.loginToComment} onPress={() => router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })}>
-              <Text style={styles.loginToCommentText}>Sign in to add a comment</Text>
+            <TouchableOpacity 
+              style={[card, { padding: 16, alignItems: 'center', marginBottom: 24 }]} 
+              onPress={() => router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })}
+            >
+              <Text style={{ color: colors.gold, fontWeight: '700', fontSize: 15 }}>Sign in to add a comment</Text>
             </TouchableOpacity>
           )}
 
           <View style={styles.commentsList}>
             {comments?.map((c) => (
-              <View key={c.id} style={styles.commentCard}>
+              <View key={c.id} style={[card, { padding: 12 }]}>
                 <View style={styles.commentHeader}>
                   <Text style={styles.commentAuthor}>{c.profiles?.display_name || 'Anonymous'}</Text>
-                  <Text style={styles.commentDate}>{new Date(c.created_at).toLocaleDateString()}</Text>
+                  <Text style={[type.label, { fontSize: 12 }]}>{new Date(c.created_at).toLocaleDateString()}</Text>
                 </View>
-                <Text style={styles.commentContent}>{c.content}</Text>
+                <Text style={[type.body, { fontSize: 14, lineHeight: 20 }]}>{c.content}</Text>
                 <TouchableOpacity onPress={() => {
                   if (!session) {
                     router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
@@ -321,15 +335,15 @@ export default function PieceScreen() {
                     ])
                   }
                 }}>
-                  <Text style={styles.reportLabel}>Report</Text>
+                  <Text style={[type.label, { fontSize: 11, textTransform: 'uppercase' }]}>Report</Text>
                 </TouchableOpacity>
               </View>
             ))}
-            {comments?.length === 0 && <Text style={styles.noComments}>No comments yet. Be the first to say something kind!</Text>}
+            {comments?.length === 0 && <Text style={[type.body, { textAlign: 'center', fontSize: 14, paddingVertical: 20 }]}>No comments yet. Be the first to say something kind!</Text>}
           </View>
         </View>
 
-        <Text style={styles.originalLabel}>The drawing</Text>
+        <Text style={[type.label, { paddingHorizontal: 16, marginBottom: 8, fontSize: 13 }]}>The drawing</Text>
         <Image source={{ uri: piece.original_image_url }} style={styles.originalImage} />
       </ScrollView>
 
@@ -367,12 +381,9 @@ const styles = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
   storeLink: { color: colors.gold, fontWeight: '700', fontSize: 14 },
-  shareBtn: { ...btn.primary, paddingVertical: 8, paddingHorizontal: 16 },
-  shareBtnText: { ...btn.primaryText, fontSize: 13 },
   mainImage: { width: '100%', aspectRatio: 1 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16 },
   magicLabel: { paddingHorizontal: 16, paddingTop: 12, flex: 1 },
-  magicLabelText: { ...type.label, color: colors.gold, fontStyle: 'italic', fontSize: 13 },
   viewInRoomBtn: { 
     marginTop: 12,
     backgroundColor: colors.white, 
@@ -386,38 +397,21 @@ const styles = StyleSheet.create({
     gap: 4
   },
   viewInRoomBtnText: { color: colors.mid, fontWeight: '700', fontSize: 12 },
-  title: { ...type.h2, fontSize: 26, padding: 16, paddingBottom: 8 },
-  description: { ...type.body, fontSize: 14, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 },
   voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
-  purchaseTitle: { ...type.h3, marginBottom: 12 },
-  purchaseCard: { ...card, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
+  purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
   purchaseType: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  purchaseDetail: { ...type.label, marginTop: 2, fontSize: 12 },
   purchasePrice: { fontSize: 18, fontWeight: '800', color: colors.gold },
   redownloadLabel: { fontSize: 14, fontWeight: '700', color: colors.gold },
-  originalLabel: { ...type.label, paddingHorizontal: 16, marginBottom: 8, fontSize: 13 },
   originalImage: { width: '100%', aspectRatio: 1, opacity: 0.7 },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 16 },
-  sectionTitle: { ...type.h3, marginBottom: 16 },
   commentInputWrap: { marginBottom: 24 },
-  commentInput: { ...card, padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
-  postBtn: { ...btn.primary, paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
+  commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
+  postBtn: { paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
   postBtnDisabled: { opacity: 0.5 },
-  postBtnText: { ...btn.primaryText, fontSize: 14 },
-  loginToComment: { ...card, padding: 16, alignItems: 'center', marginBottom: 24 },
-  loginToCommentText: { color: colors.gold, fontWeight: '700', fontSize: 15 },
   commentsList: { gap: 16 },
-  commentCard: { ...card, padding: 12 },
   commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   commentAuthor: { fontWeight: '700', color: colors.dark, fontSize: 14 },
-  commentDate: { ...type.label, fontSize: 12 },
-  commentContent: { ...type.body, fontSize: 14, lineHeight: 20 },
-  reportBtn: { alignSelf: 'flex-end', marginTop: 8 },
   reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
-  noComments: { ...type.body, textAlign: 'center', fontSize: 14, paddingVertical: 20 },
-  errorText: { ...type.body, marginBottom: 16 },
-  retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText: { ...btn.primaryText, fontSize: 15 },
 })
