@@ -43,12 +43,8 @@ Deno.serve(async (req) => {
 
     if (!buyerId) {
       // No auth or failed auth
-      if (order_type === 'digital') {
-        return new Response(JSON.stringify({ error: 'Unauthorized: Digital orders require authentication' }), { status: 401, headers: corsHeaders })
-      }
-      // If order_type is 'print' and no auth, it's a guest print order
       if (!guest_email) {
-        return new Response(JSON.stringify({ error: 'Guest email required for guest print orders' }), { status: 400, headers: corsHeaders })
+        return new Response(JSON.stringify({ error: `Guest email required for guest ${order_type} orders` }), { status: 400, headers: corsHeaders })
       }
     }
 

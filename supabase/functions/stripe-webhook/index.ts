@@ -74,10 +74,92 @@ Deno.serve(async (req) => {
         .update({ status: 'printful_failed' })
         .eq('id', order.id)
     }
+  } else if (order_type === 'digital' && order) {
+    // If it's a guest order, send download email
+    if (order.guest_email || !order.buyer_id) {
+      try {
+        await sendDigitalDownloadEmail(order, supabase)
+      } catch (e) {
+        console.error('Digital download email error:', e)
+      }
+    }
   }
 
   return new Response(JSON.stringify({ received: true }), { status: 200 })
 })
+
+async function sendDigitalDownloadEmail(order: any, supabase: any) {
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) {
+    console.error('RESEND_API_KEY not set')
+    return
+  }
+
+  const email = order.guest_email || order.buyer_email
+  if (!email) {
+    console.error('No email found for digital order')
+    return
+  }
+
+  const pieceTitle = order.pieces?.title || 'your artwork'
+  
+  if (!order.pieces?.transformed_image_url) {
+    console.error('No transformed_image_url found for digital order')
+    return
+  }
+
+  // Extract storage path from public URL
+  const url = new URL(order.pieces.transformed_image_url)
+  const storagePath = url.pathname.split('/storage/v1/object/public/artwork/')[1]
+  
+  if (!storagePath) {
+    throw new Error('Could not resolve storage path for digital download')
+  }
+
+  // Generate signed URL valid for 7 days
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('artwork')
+    .createSignedUrl(storagePath, 604800)
+
+  if (signedError || !signedData) {
+    throw new Error('Could not generate signed URL for digital download')
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'Draw Up <hello@drawup.art>',
+      to: [email],
+      subject: '✨ Your digital artwork is ready!',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #FEFAF3; padding: 40px; border-radius: 20px;">
+          <h1 style="color: #1C1810; font-size: 24px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px;">Step inside the imagination...</h1>
+          <p style="color: #6B5E4E; font-size: 16px; line-height: 24px;">Thank you for your purchase of <strong>"${pieceTitle}"</strong>. You can download your high-resolution digital file using the button below:</p>
+          
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${signedData.signedUrl}" style="background-color: #E8A020; color: #FFFFFF; padding: 16px 32px; border-radius: 100px; text-decoration: none; font-weight: 800; display: inline-block;">Download Artwork</a>
+          </div>
+
+          <div style="margin: 30px 0;">
+            <img src="${order.pieces?.transformed_image_url}" alt="${pieceTitle}" style="width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+          </div>
+          
+          <p style="color: #6B5E4E; font-size: 14px;">This link will be valid for 7 days. If you need help, just reply to this email.</p>
+          <p style="color: #A89880; font-size: 14px;">Keep creating,<br>The Draw Up Team</p>
+        </div>
+      `,
+    }),
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    console.error('Failed to send digital download email:', error)
+  }
+}
 
 async function sendGiftEmail(order: any) {
   const resendKey = Deno.env.get('RESEND_API_KEY')

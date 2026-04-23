@@ -98,7 +98,7 @@ Aesthetic blend: ucals.com layout discipline + tincan.kids warmth. Premium but a
 - [x] Photograph art, receive AI-transformed version
 - [x] Publish piece to store
 - [x] Visitor can vote on a piece
-- [x] Visitor can purchase digital download (Stripe + signed URL)
+- [ ] Visitor can purchase digital download (Stripe + signed URL)
 - [x] Visitor can order physical print (Stripe → Printful)
 - [x] Top-voted pieces discoverable in browse screen
 - [ ] Store accessible via public shareable URL (web routes not deployed)
@@ -211,6 +211,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ [REVENUE] Guest Digital Purchases - Part 1 (Backend) — Updated `create-payment-intent` and `stripe-webhook` to support guest digital orders with signed URLs and email notifications.
 - ✅ [REVENUE] Watermarked Previews — Implemented low-res (800px) preview uploads to protect high-res assets.
 - ✅ [REVENUE] OG Tag URL Routing — Created `web/vercel.json` and `web/netlify.toml` for social previews.
 - ✅ [RETENTION] Post-Publish Success UI — Replaced auto-share with a dedicated success card & WhatsApp button.
@@ -219,15 +220,14 @@ The most dangerous bugs look like success but do nothing:
 - ✅ [UX] My Stores Empty State Polish — Updated `mystores.tsx` with narrative-aligned copy and portal aesthetic.
 - ✅ [POLISH] Global Credit Visibility — Added shared `CreditsChip` to all main tab headers.
 - ✅ [QUALITY] Backend Validation: Moderate Comment Tests — Added unit tests for moderation logic.
-- ✅ [QUALITY] App Validation: Download Library Coverage — Created `download.test.ts` with 100% coverage.
 
 **Pending (strategic priority):**
+- [ ] [REVENUE] Guest Digital Purchases - Part 2 (UI): Add a "Buy Digital Download" button to `PieceScreen` for guests and update `GiftingModal` to handle digital-only information collection.
 - [ ] [UX] Instagram Stories Export - Part 1: Create `lib/export.ts` using `expo-image-manipulator` for 9:16 cards.
 - [ ] [NOTIFICATIONS] Post-Vote Push Notification - Part 1: Add `expo_push_token` to `profiles` and update UI to request permission.
 - [ ] [PLATFORM] Android Layout Audit: Fix absolute positioning and padding issues in `GiftingModal`.
 - [ ] [POLISH] Piece List Animation: Implement staggered entrance animations for piece grids in `discover.tsx`.
 - [ ] [QUALITY] E2E Flow Validation: Create a core smoke test covering Create -> Publish -> Purchase.
-- [ ] [NOTIFICATIONS] Post-Vote Push Notification - Part 2: Create Edge Function `notify-vote` triggered on vote insertion.
 
 ---
 
@@ -248,40 +248,42 @@ The most dangerous bugs look like success but do nothing:
 
 ## Strategic Backlog
 
-1. **[REVENUE] Watermarked Previews**
-    *   **The Micro-Task:** Add `watermarked_image_url` column to `pieces` table and update the `create.tsx` publish flow to generate and upload a watermarked version of the transformed image.
-    *   **Why:** Protects the value of the "high-res" download by ensuring guests and non-owners only see a branded preview.
+1. **[REVENUE] Guest Digital Purchases - Part 1 (Backend)**
+    *   **The Micro-Task:** Update `create-payment-intent` Edge Function to allow `order_type: 'digital'` for unauthenticated users (requiring `guest_email`) and update `stripe-webhook` to generate a signed URL and email it via Resend for guest digital orders.
+    *   **Why:** Unlocks a critical revenue stream from non-authenticated family members who want digital assets but don't want to create an account.
 
-2. **[UX] Instagram Stories Export**
-    *   **The Micro-Task:** Implement `app/lib/export.ts` to generate a 9:16 branded card using `expo-image-manipulator`. Add an "Export to Story" button to `PieceScreen`.
-    *   **Why:** Every export is a high-fidelity acquisition channel on social media.
+2. **[REVENUE] Guest Digital Purchases - Part 2 (UI)**
+    *   **The Micro-Task:** Add a "Buy Digital Download" button to `PieceScreen` for guests and update `GiftingModal` to handle digital-only information collection (email only, no shipping address).
+    *   **Why:** Completes the guest purchase funnel, removing the authentication wall from the digital product.
 
-3. **[NOTIFICATIONS] Post-Vote Push Notification**
-    *   **The Micro-Task:** Add `expo_push_token` to `profiles` and create an Edge Function `notify-vote` that triggers a push notification to the parent when their child's art receives a vote.
-    *   **Why:** Immediate emotional feedback loop drives retention and repeat creation.
+3. **[UX] Instagram Stories Export - Part 1 (Layout)**
+    *   **The Micro-Task:** Implement `app/lib/export.ts` using `expo-image-manipulator` to generate a 9:16 branded card featuring the transformed artwork, the child's name, and the Draw Up logo.
+    *   **Why:** Every social share becomes a high-fidelity acquisition channel, driving organic traffic back to the stores.
 
-4. **[PLATFORM] Android Compatibility Pass**
-    *   **The Micro-Task:** Fix layout issues in `GiftingModal` and `PieceScreen` for Android, specifically focusing on absolute positioning and keyboard avoiding views.
-    *   **Why:** Essential for the upcoming Android launch and broader accessibility.
+4. **[NOTIFICATIONS] Post-Vote Push - Part 1 (Infrastructure)**
+    *   **The Micro-Task:** Install `expo-notifications`, add `expo_push_token` column to `profiles` table, and update the app's `_layout.tsx` to request permission and save the token on login.
+    *   **Why:** Builds the foundation for the most important emotional retention loop in the app.
 
-5. **[POLISH] Piece List Animation**
-    *   **The Micro-Task:** Add staggered entrance animations to piece grids in `discover.tsx` and `store/[slug].tsx` using `react-native-reanimated`.
-    *   **Why:** Elevates the app from "functional tool" to "premium gallery experience."
+5. **[PLATFORM] Android Layout Pass**
+    *   **The Micro-Task:** Fix the `KeyboardAvoidingView` behavior in `GiftingModal` for Android and audit `PieceScreen` for absolute positioning overlaps that obscure buttons on smaller Android devices.
+    *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
 
-6. **[QUALITY] E2E Flow Validation**
-    *   **The Micro-Task:** Implement a Playwright or Detox test that covers the happy path: Login -> Photograph -> Transform -> Publish -> Purchase.
-    *   **Why:** Prevents regressions in the core revenue-generating funnel.
+6. **[NOTIFICATIONS] Post-Vote Push - Part 2 (Edge Function)**
+    *   **The Micro-Task:** Create a Supabase Edge Function `notify-vote` triggered by a database webhook on `votes` insertion to send a push notification to the piece owner's `expo_push_token`.
+    *   **Why:** Provides immediate "magic" feedback to parents, encouraging them to create and share more.
 
-7. **[UX] Post-Vote Social Prompt**
-    *   **The Micro-Task:** After a successful vote, show a small toast or modal inviting the voter to "Share this magic" with a quick WhatsApp link.
-    *   **Why:** Captures the voter's high-intent moment for further acquisition.
+7. **[POLISH] Piece List Animation**
+    *   **The Micro-Task:** Add staggered entrance animations to the piece grids in `discover.tsx` and `store/[slug].tsx` using `react-native-reanimated` or standard `Animated` API.
+    *   **Why:** Transitions the app from a functional tool to a premium, high-end gallery experience.
 
-8. **[REVENUE] Gift Recipient Email Polish**
-    *   **The Micro-Task:** Refine the `sendGiftEmail` HTML template in `stripe-webhook` to include a clear "Step inside more worlds" CTA back to the Discover screen.
-    *   **Why:** Converts gift recipients into new users/creators.
+8. **[QUALITY] E2E Flow Validation**
+    *   **The Micro-Task:** Implement a core smoke test (Playwright or Detox) that covers the "Happy Path": Login -> Photograph -> Transform -> Publish -> Purchase.
+    *   **Why:** Protects the primary revenue-generating funnel from regressions during rapid iteration.
 
 ## Improvement Log
 
+- [2026-04-23 CRON B] Guest Digital Purchases (Backend) — Updated `create-payment-intent` to allow unauthenticated digital orders and `stripe-webhook` to generate signed download URLs and email them via Resend. This unlocks revenue from non-authenticated family members.
+- [2026-04-23 CRON A] Strategic Audit & Backlog Evolution — Identified 'Guest Digital Purchases' as a major revenue gap; although prints support guests, digital downloads currently require auth, creating friction for grandparent buyers. Refined backlog to prioritize this revenue loop alongside organic growth via Instagram Stories export. Continued focus on Android compatibility.
 - [2026-04-23 CRON B] Watermarked Previews — Added `watermarked_image_url` to `pieces` table; implemented low-res preview generation (800px, 40% quality) in `create.tsx` to protect high-res digital downloads. Updated Piece, Discover, and Store screens to serve previews to non-owners.
 - [2026-04-23 CRON A] Strategic Audit & Backlog Evolution — Performed a 360-degree audit. Identified "Watermarked Previews" as the next critical revenue protector. Pivoted social focus from generic sharing to high-impact "Instagram Stories Export". Prioritized Post-Vote notifications for parent retention and Android compatibility for platform expansion.
 - [2026-04-23 CRON B] Strategic Backlog Completion — Completed 8 micro-tasks focused on revenue, retention, and quality. Implemented OG routing, Success UI, Gifting Modal consolidation, Global Credit visibility, and expanded test coverage. Removed 2 obsolete components and achieved 100% coverage for the download library.
