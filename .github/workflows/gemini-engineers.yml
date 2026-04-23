@@ -30,6 +30,20 @@ jobs:
         with:
           version: latest
 
+      - name: Install App Dependencies
+        working-directory: app
+        run: npm install --legacy-peer-deps
+
+      - name: Run App Tests & Coverage
+        working-directory: app
+        run: npm run test:coverage
+
+      - name: Update Coverage Badge
+        run: |
+          PERCENTAGE=$(node -e "const s = require('./app/coverage/coverage-summary.json'); console.log(Math.round(s.total.statements.pct))")
+          COLOR=$(node -e "const p = $PERCENTAGE; console.log(p >= 90 ? 'brightgreen' : p >= 80 ? 'green' : p >= 70 ? 'yellow' : 'red')")
+          sed -i "s/coverage-.*-.*)/coverage-${PERCENTAGE}%25-${COLOR})/" README.md
+
       - name: CRON A - Strategic Product Lead
         env:
           GEMINI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
