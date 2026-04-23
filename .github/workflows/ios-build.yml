@@ -1,0 +1,78 @@
+name: Daily iOS Build & Submit
+
+on:
+  schedule:
+    # Run at 00:00 UTC every day
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  build-and-submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Check for app changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            app:
+              - 'app/app/**'
+              - 'app/lib/**'
+              - 'app/components/**'
+              - 'app/hooks/**'
+              - 'app/app.json'
+              - 'app/eas.json'
+
+      - name: Skip if no changes
+        if: github.event_name == 'schedule' && steps.changes.outputs.app == 'false'
+        run: echo "No changes detected in app source. Skipping build." && exit 0
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Bump Build Number
+        working-directory: app
+        run: |
+          # Increment iOS build number in app.json using node
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            const current = parseInt(pkg.expo.ios.buildNumber || '1');
+            pkg.expo.ios.buildNumber = (current + 1).toString();
+            fs.writeFileSync('app.json', JSON.stringify(pkg, null, 2));
+            console.log('Bumped build number to ' + pkg.expo.ios.buildNumber);
+          "
+
+      - name: EAS Build
+        working-directory: app
+        run: eas build --platform ios --profile preview --non-interactive
+
+      - name: EAS Submit
+        working-directory: app
+        run: eas submit --platform ios --profile production --latest --non-interactive
+
+      - name: Commit build number bump
+        if: success()
+        run: |
+          git config --global user.name "Gemini Build Bot"
+          git config --global user.email "bot@geminicli.com"
+          git add app/app.json
+          git commit -m "chore: bump ios build number [skip ci]"
+          git push
