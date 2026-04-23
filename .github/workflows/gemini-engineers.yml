@@ -26,7 +26,7 @@ jobs:
         run: npm install -g @google/gemini-cli
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-supabase-cli@v1
+        uses: supabase/setup-cli@v1
         with:
           version: latest
 
