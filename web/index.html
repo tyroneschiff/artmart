@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draw Up — Your child's art, elevated</title>
+  <meta name="description" content="Photograph your child's drawings. AI transforms them into gallery-quality art. Share a store with family. Order prints." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #E8A020;
+      --gold-light: #FDF0D5;
+      --gold-mid: #F5C96A;
+      --cream: #FEFAF3;
+      --cream-dark: #F5EDD8;
+      --dark: #1C1810;
+      --mid: #6B5E4E;
+      --muted: #A89880;
+      --white: #FFFFFF;
+      --border: #EDE4D0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: var(--dark);
+      background: var(--cream);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 48px;
+      height: 68px;
+      position: sticky;
+      top: 0;
+      background: rgba(254, 250, 243, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--dark);
+      text-decoration: none;
+      letter-spacing: -0.04em;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 32px; }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--mid);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--dark); }
+
+    .nav-cta {
+      background: var(--dark);
+      color: var(--white);
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .nav-cta:hover { opacity: 0.8; }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 48px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-light);
+      border: 1px solid var(--gold-mid);
+      color: #8B5E00;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before { content: "✦"; font-size: 10px; }
+
+    h1 {
+      font-size: clamp(44px, 5.5vw, 68px);
+      font-weight: 900;
+      line-height: 1.0;
+      letter-spacing: -0.04em;
+      color: var(--dark);
+      margin-bottom: 24px;
+    }
+
+    h1 .accent { color: var(--gold); }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--mid);
+      line-height: 1.7;
+      margin-bottom: 40px;
+      max-width: 440px;
+    }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--dark);
+      color: var(--white);
+      padding: 15px 28px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--mid);
+      padding: 15px 28px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 15px;
+      text-decoration: none;
+      display: inline-block;
+      border: 1.5px solid var(--border);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--dark); color: var(--dark); }
+
+    .hero-note {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Hero visual */
+    .hero-visual {
+      position: relative;
+    }
+
+    .art-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .art-tile {
+      border-radius: 20px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .art-tile:nth-child(1) { background: #FDEBD0; }
+    .art-tile:nth-child(2) { background: #D5E8F5; margin-top: 24px; }
+    .art-tile:nth-child(3) { background: #D5F5E3; margin-top: -24px; }
+    .art-tile:nth-child(4) { background: #F5D5E8; }
+
+    .art-tag {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(6px);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .art-tag span { color: var(--muted); font-weight: 400; }
+
+    .starburst {
+      position: absolute;
+      top: -16px;
+      right: -16px;
+      width: 72px;
+      height: 72px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--white);
+      text-align: center;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── TRUST BAR ── */
+    .trust {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .trust-item {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .trust-dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0; }
+
+    /* ── HOW IT WORKS ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 48px;
+    }
+
+    .section-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--dark);
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: var(--mid);
+      line-height: 1.7;
+      max-width: 520px;
+      margin-bottom: 64px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .step {
+      background: var(--white);
+      padding: 44px 36px;
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      background: var(--gold-light);
+      border: 1.5px solid var(--gold-mid);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #8B5E00;
+      margin-bottom: 24px;
+    }
+
+    .step h3 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      color: var(--dark);
+    }
+
+    .step p {
+      font-size: 15px;
+      color: var(--mid);
+      line-height: 1.65;
+    }
+
+    /* ── WHY PEOPLE BUY ── */
+    .why-section {
+      background: var(--dark);
+      padding: 100px 0;
+    }
+
+    .why-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    .why-section .section-eyebrow { color: var(--gold); }
+    .why-section h2 { color: var(--white); margin-bottom: 64px; }
+
+    .why-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .why-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 36px 28px;
+    }
+
+    .why-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gold-light);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .why-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .why-card p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.65;
+    }
+
+    /* ── PRICING ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .price-card {
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px;
+      background: var(--white);
+    }
+
+    .price-card.featured {
+      border-color: var(--gold);
+      background: var(--gold-light);
+      position: relative;
+    }
+
+    .price-card.featured::before {
+      content: "Most popular";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .price-amount {
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+
+    .price-amount sub {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0;
+    }
+
+    .price-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 8px;
+    }
+
+    .price-desc {
+      font-size: 14px;
+      color: var(--mid);
+      line-height: 1.6;
+    }
+
+    /* ── QUOTE ── */
+    .quote-section {
+      background: var(--gold-light);
+      border-top: 1px solid var(--gold-mid);
+      border-bottom: 1px solid var(--gold-mid);
+      padding: 80px 48px;
+      text-align: center;
+    }
+
+    blockquote {
+      max-width: 680px;
+      margin: 0 auto;
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+      color: var(--dark);
+    }
+
+    blockquote cite {
+      display: block;
+      margin-top: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      font-style: normal;
+      color: var(--muted);
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      padding: 120px 48px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .cta-section h2 { margin-bottom: 20px; }
+    .cta-section p {
+      font-size: 18px;
+      color: var(--mid);
+      margin-bottom: 44px;
+      line-height: 1.7;
+    }
+
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--dark);
+      text-decoration: none;
+    }
+
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--dark); }
+
+    footer p { font-size: 13px; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 0 24px; }
+      .nav-right .nav-link { display: none; }
+
+      .hero { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px 48px; }
+      .hero-sub { max-width: 100%; }
+      .hero-visual { order: -1; }
+      .starburst { display: none; }
+
+      .trust { padding: 20px 24px; gap: 24px; }
+
+      .section { padding: 72px 24px; }
+      .steps { grid-template-columns: 1fr; }
+      .why-inner { padding: 0 24px; }
+      .why-cards { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+
+      .quote-section { padding: 60px 24px; }
+      .cta-section { padding: 80px 24px; }
+      footer { padding: 32px 24px; flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">draw up</a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#download" class="nav-cta">Get the app</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section style="background: var(--cream);">
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-badge">For families who save everything</div>
+        <h1>Their drawings<br>deserve a <span class="accent">frame.</span></h1>
+        <p class="hero-sub">
+          Photograph the crayon drawings your child brings home. AI turns them into gallery-quality art your whole family will want on their walls.
+        </p>
+        <div class="hero-actions">
+          <a href="#download" class="btn-primary">Download for Android</a>
+          <a href="#how" class="btn-ghost">See how it works</a>
+        </div>
+        <p class="hero-note">Free to create · Prints from $29.99 · Ships worldwide</p>
+      </div>
+
+      <div class="hero-visual">
+        <div class="starburst">NEW<br>✦</div>
+        <div class="art-stack">
+          <div class="art-tile">🦕<div class="art-tag">Dino World <span>· Emma, 5</span></div></div>
+          <div class="art-tile">🌊<div class="art-tag">Ocean Dream <span>· Liam, 7</span></div></div>
+          <div class="art-tile">🌸<div class="art-tag">Spring <span>· Sophia, 6</span></div></div>
+          <div class="art-tile">🚀<div class="art-tag">Space <span>· Noah, 8</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust">
+    <div class="trust-item"><div class="trust-dot"></div>AI-powered transformation</div>
+    <div class="trust-item"><div class="trust-dot"></div>Family shareable stores</div>
+    <div class="trust-item"><div class="trust-dot"></div>Museum-quality prints</div>
+    <div class="trust-item"><div class="trust-dot"></div>Ships worldwide</div>
+    <div class="trust-item"><div class="trust-dot"></div>Free to start</div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" style="background: var(--cream);">
+    <div class="section">
+      <div class="section-eyebrow">How it works</div>
+      <h2>Three steps from<br>crayon to canvas.</h2>
+      <p class="section-sub">No scanner, no design skills, no fuss. Just point your camera and let the magic happen.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Photograph<br>the drawing</h3>
+          <p>Point your phone camera at any drawing your child makes — crayon, marker, watercolour, paint. It takes seconds.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>AI elevates<br>the artwork</h3>
+          <p>Our AI reads the drawing and transforms it into a gallery-quality piece — watercolour, oil, or digital art — keeping the soul of what your child made.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Share, vote<br>and print</h3>
+          <p>Each child gets their own store. Share the link with grandparents and family. They can vote on favourites and order a print shipped to their door.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY PEOPLE BUY -->
+  <section class="why-section">
+    <div class="why-inner">
+      <div class="section-eyebrow">Why people buy</div>
+      <h2>Childhood doesn't<br>keep itself.</h2>
+
+      <div class="why-cards">
+        <div class="why-card">
+          <div class="why-icon">👵</div>
+          <h3>Grandparents who want to feel close</h3>
+          <p>A print of your child's artwork is the most personal gift they can hang in their home. No one else in the world has it.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🖼️</div>
+          <h3>Parents who want it on the wall</h3>
+          <p>The drawing is beautiful. The AI version is frame-worthy. The original stays on the fridge — the print goes above the fireplace.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">⏳</div>
+          <h3>A phase that won't last forever</h3>
+          <p>They'll stop drawing dragons at some point. Draw Up turns the phase into something permanent, beautiful, and yours forever.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE -->
+  <div class="quote-section">
+    <blockquote>
+      "My mum cried when I sent her Emma's first print. It's hanging in her living room next to the family photos."
+      <cite>— Sarah, mum of two · Sydney</cite>
+    </blockquote>
+  </div>
+
+  <!-- PRICING -->
+  <section id="pricing" style="background: var(--cream);">
+    <div class="section">
+      <div class="section-eyebrow">Pricing</div>
+      <h2>Pay only when<br>someone loves it.</h2>
+      <p class="section-sub">Creating and sharing is always free. You only pay when family wants to own the art.</p>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-amount">Free</div>
+          <div class="price-name">Create &amp; Share</div>
+          <div class="price-desc">Photograph art, run the AI transform, publish to your child's store, and share with family. Always free, forever.</div>
+        </div>
+        <div class="price-card featured">
+          <div class="price-amount">$2<sub>.99</sub></div>
+          <div class="price-name">Digital Download</div>
+          <div class="price-desc">High-resolution file sent instantly. Print it yourself at any size, at any lab, anywhere in the world.</div>
+        </div>
+        <div class="price-card">
+          <div class="price-amount">$29<sub>.99</sub></div>
+          <div class="price-name">Physical Print</div>
+          <div class="price-desc">Museum-quality matte poster, printed and shipped to your door. Ready to frame. Ships worldwide.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="download" style="background: var(--white); border-top: 1px solid var(--border);">
+    <div class="cta-section">
+      <div class="section-eyebrow" style="text-align:center;">Available now on Android</div>
+      <h2>Start with one drawing.</h2>
+      <p>Download the app, photograph something from the fridge, and see what it becomes. Takes about 60 seconds.</p>
+      <div class="cta-actions">
+        <a href="#" class="btn-primary">Download for Android</a>
+        <a href="#how" class="btn-ghost">Learn more</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="/" class="footer-logo">draw up</a>
+    <div class="footer-links">
+      <a href="mailto:hello@drawup.art">hello@drawup.art</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+    <p>© 2026 Draw Up</p>
+  </footer>
+
+</body>
+</html>
