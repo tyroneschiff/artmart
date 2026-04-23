@@ -52,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Bump Build Number
         working-directory: app
