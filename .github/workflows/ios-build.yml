@@ -73,7 +73,7 @@ jobs:
 
       - name: EAS Submit
         working-directory: app
-        run: eas submit --platform ios --profile production --latest --non-interactive
+        run: eas submit --platform ios --profile production --latest --non-interactive --no-wait
 
       - name: Commit build number bump
         if: success()
