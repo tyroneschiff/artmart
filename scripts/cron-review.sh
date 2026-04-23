@@ -3,10 +3,14 @@
 cd "$(dirname "$0")/.."
 
 # Ensure the API key is available
-if [ -z "$GOOGLE_GENERATIVE_AI_API_KEY" ]; then
-  echo "Error: GOOGLE_GENERATIVE_AI_API_KEY environment variable is required."
+if [ -z "$GEMINI_API_KEY" ] && [ -z "$GOOGLE_GENERATIVE_AI_API_KEY" ]; then
+  echo "Error: GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY environment variable is required."
   exit 1
 fi
+
+# Fallback for scripts that expect one or the other
+export GEMINI_API_KEY="${GEMINI_API_KEY:-$GOOGLE_GENERATIVE_AI_API_KEY}"
+export GOOGLE_GENERATIVE_AI_API_KEY="${GOOGLE_GENERATIVE_AI_API_KEY:-$GEMINI_API_KEY}"
 
 gemini -p "You are CRON A, the Strategic Product Lead for Draw Up. Your mission is to evolve this app into a high-conversion, premium family gifting experience. 
 

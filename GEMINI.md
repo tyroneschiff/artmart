@@ -28,7 +28,7 @@ Every share is a free acquisition channel:
 |---|---|---|
 | Mobile | Expo (React Native) | iOS-first; Android after App Store launch |
 | Backend / DB | Supabase | Postgres + Auth + Storage + Edge Functions |
-| AI — description | Gemini API (gemini-2.0-flash) | Server-side via Edge Function |
+| AI — description | Gemini API (gemini-2.5-flash) | Server-side via Edge Function |
 | AI — transform | fal.ai (Flux Kontext img2img) | Server-side via Edge Function; pay-per-use |
 | Payments | Stripe | Digital purchases + Printful order initiation |
 | Print fulfillment | Printful API | Drop-ship physical prints, no inventory |
@@ -187,6 +187,11 @@ The most dangerous bugs look like success but do nothing:
 ## Recent session notes
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
+
+**2026-04-23 — GEMINI MODEL UPGRADE:**
+- Upgraded Gemini model from `gemini-2.0-flash` to `gemini-2.5-flash` in `moderate-comment` and `transform-artwork` edge functions.
+- Root cause: `gemini-2.0-flash` was returning 404/400 errors via v1beta API; `gemini-2.5-flash` is the current stable version.
+- Verified API key functionality with `gemini-2.5-flash` using manual curl tests.
 
 **2026-04-23 — BUSINESS MODEL PIVOT (decided, not yet implemented):**
 - **Product reframe: "Step inside your child's drawing" — NOT "transform art into gallery pieces."** The drawing IS the vision; the AI is the door into that world. Never say "elevate," "improve," "gallery-worthy," "fine art print," or treat the original as raw material. Description is the hero product — written as a witness to the world the child built, not as a curator praising technique. All new copy, prompts, and product decisions must flow from this framing.
