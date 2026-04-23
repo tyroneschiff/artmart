@@ -13,9 +13,6 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`))
 
-const CREDIT_PACK_PRICE_CENTS = 999
-const CREDIT_PACK_AMOUNT = 12
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -39,17 +36,31 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
+    // Default to Imagination Pack if not specified or invalid
+    const { amount: requestedAmount } = await req.json().catch(() => ({}))
+    
+    let priceCents = 999
+    let creditAmount = 12
+    
+    if (requestedAmount === 3) {
+      priceCents = 299
+      creditAmount = 3
+    } else if (requestedAmount === 12) {
+      priceCents = 999
+      creditAmount = 12
+    }
+
     const paymentIntent = await stripe.paymentIntents.create(
       {
-        amount: CREDIT_PACK_PRICE_CENTS,
+        amount: priceCents,
         currency: 'usd',
         metadata: {
           user_id: userId,
           type: 'credits',
-          amount: CREDIT_PACK_AMOUNT,
+          amount: creditAmount,
         },
       },
-      { idempotencyKey: `credits-${userId}-${Date.now()}` }
+      { idempotencyKey: `credits-${userId}-${creditAmount}-${Date.now()}` }
     )
 
     return new Response(

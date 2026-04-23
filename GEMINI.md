@@ -211,6 +211,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ [REVENUE] Pack Variations - Implemented $2.99 "Taste" pack (3 credits) and $9.99 "Imagination" pack (12 credits) in `credits.tsx` and updated `purchase-credits` Edge Function.
 - ✅ [REVENUE] Guest Digital Purchases - Part 2 (UI) — Refactored `GiftingModal.tsx` and updated `PieceScreen.tsx` to support guest digital checkout.
 - ✅ [REVENUE] Guest Digital Purchases - Part 1 (Backend) — Updated `create-payment-intent` and `stripe-webhook` to support guest digital orders.
 - ✅ [REVENUE] Watermarked Previews — Implemented low-res (800px) preview uploads to protect high-res assets.
@@ -218,15 +219,15 @@ The most dangerous bugs look like success but do nothing:
 - ✅ [RETENTION] Post-Publish Success UI — Replaced auto-share with a dedicated success card & WhatsApp button.
 - ✅ [REVENUE] Gifting Modal Consolidation — Refactored Piece Screen to use a single, cohesive `GiftingModal`.
 - ✅ [POLISH] Theme Token Adoption: Piece Detail Screen — Refactored `[id].tsx` with design system tokens.
-- ✅ [UX] My Stores Empty State Polish — Updated `mystores.tsx` with narrative-aligned copy.
 
 **Pending (strategic priority):**
-- [ ] [REVENUE] Pack Variations: Add a 3-credit "Taste" pack for $2.99 to `app/app/credits.tsx` to lower the barrier to entry.
-- [ ] [UX] Instagram Stories Export - Part 1: Implement `app/lib/export.ts` using `expo-image-manipulator` to generate a 9:16 branded card.
-- [ ] [NOTIFICATIONS] Post-Vote Push Notification - Part 1: Add `expo_push_token` to `profiles` and update `_layout.tsx` to request permission.
-- [ ] [PLATFORM] Android Layout Pass: Fix `KeyboardAvoidingView` and padding in `GiftingModal.tsx` specifically for Android.
-- [ ] [POLISH] Success UI Celebration: Add a confetti effect to `app/app/(tabs)/create.tsx` on the success step.
-- [ ] [QUALITY] E2E Smoke Test: Create a core test covering Create -> Publish -> Purchase.
+- [ ] [UX] Instagram Stories Export - Part 1: Implement `app/lib/export.ts` to generate a 9:16 branded card.
+- [ ] [NOTIFICATIONS] Post-Vote Push - Part 1: Add `expo_push_token` to `profiles` and request permissions in `_layout.tsx`.
+- [ ] [POLISH] Success UI Celebration: Add confetti effect to `app/app/(tabs)/create.tsx` on publish success.
+- [ ] [PLATFORM] Android Layout Pass: Fix `KeyboardAvoidingView` in `GiftingModal.tsx` for Android.
+- [ ] [REVENUE] Gifting Receipt: Update `stripe-webhook` to email the *buyer* a confirmation receipt via Resend.
+- [ ] [QUALITY] E2E Smoke Test: Create a core test covering Create -> Publish -> Purchase happy path.
+- [ ] [QUALITY] App Validation Suite: Create `app/hooks/useCredits.test.ts` to verify React Query logic for credit fetching and invalidation.
 
 ---
 
@@ -247,36 +248,34 @@ The most dangerous bugs look like success but do nothing:
 
 ## Strategic Backlog
 
-1. **[REVENUE] Guest Digital Purchases - Part 2 (UI)**
-    *   **The Micro-Task:** Refactor `GiftingModal.tsx` to accept an `orderType` prop; if 'digital', hide shipping fields and only require `guestEmail`. Update `PieceScreen.tsx` to pass this prop and handle the guest digital flow.
-    *   **Why:** Removes the final friction point for family members wanting to buy a quick digital download from a shared link.
-
-2. **[REVENUE] Pack Variations**
-    *   **The Micro-Task:** Update `app/app/credits.tsx` to show two offer cards: a new 3-credit "Taste" pack ($2.99) and the existing 12-credit "Imagination" pack ($9.99).
-    *   **Why:** Lowers the psychological barrier for first-time creators who aren't ready to commit $10.
-
-3. **[UX] Instagram Stories Export - Part 1 (Layout)**
-    *   **The Micro-Task:** Implement `app/lib/export.ts` using `expo-image-manipulator` to generate a 9:16 branded card featuring the transformed artwork and Draw Up logo.
+1. **[UX] Instagram Stories Export - Part 1 (Generator)**
+    *   **The Micro-Task:** Implement `app/lib/export.ts` using `expo-image-manipulator` to generate a 9:16 branded card (artwork + logo + "Step inside" text).
     *   **Why:** Every social share becomes a high-fidelity acquisition channel, driving organic traffic back to the stores.
 
-4. **[NOTIFICATIONS] Post-Vote Push - Part 1 (Infrastructure)**
+2. **[NOTIFICATIONS] Post-Vote Push - Part 1 (Infrastructure)**
     *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
     *   **Why:** Builds the foundation for the most important emotional retention loop in the app.
 
-5. **[PLATFORM] Android Layout Pass**
-    *   **The Micro-Task:** Fix the `KeyboardAvoidingView` behavior in `GiftingModal.tsx` for Android and audit `PieceScreen.tsx` for absolute positioning overlaps.
-    *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
-
-6. **[POLISH] Success UI Celebration**
+3. **[POLISH] Success UI Celebration**
     *   **The Micro-Task:** Install `react-native-confetti-cannon` (or similar) and trigger it when the `step === 'success'` in `app/app/(tabs)/create.tsx`.
     *   **Why:** Amplifies the "wow" moment of publishing, making the user feel like they've truly achieved something special.
 
-7. **[QUALITY] E2E Smoke Test**
+4. **[PLATFORM] Android Layout Pass**
+    *   **The Micro-Task:** Fix the `KeyboardAvoidingView` behavior in `GiftingModal.tsx` for Android and audit `PieceScreen.tsx` for absolute positioning overlaps.
+    *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
+
+5. **[REVENUE] Gifting Receipt**
+    *   **The Micro-Task:** Update `supabase/functions/stripe-webhook/index.ts` to send a confirmation email to the *buyer* (not just the gift recipient) using Resend.
+    *   **Why:** Closes the loop for the purchaser, providing them with a receipt and a link to view the piece they gifted.
+
+6. **[QUALITY] E2E Smoke Test**
     *   **The Micro-Task:** Implement a core smoke test (Playwright or Detox) that covers the "Happy Path": Login -> Photograph -> Transform -> Publish -> Purchase.
     *   **Why:** Protects the primary revenue-generating funnel from regressions.
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Pack Variations — Implemented "Taste Pack" ($2.99/3 credits) and updated UI/Backend to handle multiple credit tiers. Lowers barrier to entry for new creators.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to barrier-to-entry revenue levers (Taste Pack) and high-fidelity growth (Instagram Stories Export). Prioritized Success UI celebration as a low-effort/high-delight task. Refined Gifting loop to include buyer receipts.
 - [2026-04-23 CRON B] Guest Digital Purchases (UI) — Refactored `GiftingModal.tsx` to support `orderType: 'digital' | 'print'`. Updated `PieceScreen.tsx` to allow unauthenticated digital purchases via the modal, removing a major friction point for shared links.
 - [2026-04-23 CRON A] Strategic Audit & Backlog Evolution — Identified Guest Digital Purchases as the highest impact lever for revenue conversion from shared links. Prioritized lower-tier credit packs to reduce barrier to entry. Shifted focus to "Success UI" celebration and Instagram Stories export to amplify the organic growth loop.
 - [2026-04-23 CRON B] Guest Digital Purchases (Backend) — Updated `create-payment-intent` to allow unauthenticated digital orders and `stripe-webhook` to generate signed download URLs and email them via Resend.

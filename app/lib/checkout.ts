@@ -56,7 +56,7 @@ export async function purchasePiece(
   }
 }
 
-export async function purchaseCredits(userToken: string): Promise<void> {
+export async function purchaseCredits(userToken: string, amount?: number): Promise<void> {
   const res = await fetch(
     `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/purchase-credits`,
     {
@@ -65,6 +65,7 @@ export async function purchaseCredits(userToken: string): Promise<void> {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${userToken}`,
       },
+      body: amount ? JSON.stringify({ amount }) : undefined,
     }
   )
 
