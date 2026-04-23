@@ -344,6 +344,8 @@ export default function PieceScreen() {
       <ShareSheet
         visible={!!sharePayload}
         payload={sharePayload}
+        imageUri={piece.transformed_image_url}
+        childName={piece.stores?.child_name}
         onClose={() => setSharePayload(null)}
       />
     </>

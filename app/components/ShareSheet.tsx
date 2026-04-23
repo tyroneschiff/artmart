@@ -1,19 +1,31 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform } from 'react-native'
 import { colors } from '../lib/theme'
 import { SharePayload, shareNative, shareToWhatsApp } from '../lib/share'
+import { exportStoryCard } from '../lib/export'
 
 type Props = {
   visible: boolean
   payload: SharePayload | null
+  imageUri?: string // Added to support story export
+  childName?: string // Added to support story export
   onClose: () => void
 }
 
-export default function ShareSheet({ visible, payload, onClose }: Props) {
+export default function ShareSheet({ visible, payload, imageUri, childName, onClose }: Props) {
   if (!payload) return null
 
   async function handleWhatsApp() {
     onClose()
     await shareToWhatsApp(`${payload!.message}\n${payload!.url}`)
+  }
+
+  async function handleInstagram() {
+    onClose()
+    if (imageUri) {
+      await exportStoryCard(imageUri, payload!.title, childName || 'Artist')
+    } else {
+      Alert.alert('Not available', 'Story export is only available for full pieces.')
+    }
   }
 
   async function handleNative() {
@@ -47,18 +59,25 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
             <Text style={styles.actionLabel}>WhatsApp</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.action} onPress={handleNative}>
+          <TouchableOpacity style={styles.action} onPress={handleInstagram}>
             <View style={[styles.actionIcon, { backgroundColor: colors.goldLight }]}>
+              <Text style={styles.actionEmoji}>📸</Text>
+            </View>
+            <Text style={styles.actionLabel}>Story</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.action} onPress={handleNative}>
+            <View style={[styles.actionIcon, { backgroundColor: '#EEF0F8' }]}>
               <Text style={styles.actionEmoji}>↑</Text>
             </View>
             <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.action} onPress={handleCopy}>
-            <View style={[styles.actionIcon, { backgroundColor: '#EEF0F8' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: '#F8F8F8' }]}>
               <Text style={styles.actionEmoji}>🔗</Text>
             </View>
-            <Text style={styles.actionLabel}>Copy link</Text>
+            <Text style={styles.actionLabel}>Copy</Text>
           </TouchableOpacity>
         </View>
 

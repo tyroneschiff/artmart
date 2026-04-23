@@ -14,6 +14,7 @@ import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
 import { colors, btn, type } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
+import { exportStoryCard } from '../../lib/export'
 import CreditsChip from '../../components/CreditsChip'
 
 const isWeb = Platform.OS === 'web'
@@ -255,6 +256,13 @@ export default function CreateScreen() {
               onPress={() => shareToWhatsApp(`${sharePayload.message}\n${sharePayload.url}`)}
             >
               <Text style={styles.whatsappBtnText}>Share to Family WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.instagramBtn} 
+              onPress={() => exportStoryCard(transformedUri!, title, selectedStore?.child_name || 'Artist')}
+            >
+              <Text style={styles.instagramBtnText}>Export for Instagram Story</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -522,6 +530,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   whatsappBtnText: { color: colors.white, fontSize: 16, fontWeight: '800' },
+  instagramBtn: {
+    backgroundColor: colors.white,
+    borderRadius: 100,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  instagramBtnText: { color: colors.dark, fontSize: 16, fontWeight: '800' },
   nativeShareBtn: { 
     paddingVertical: 12,
     width: '100%',

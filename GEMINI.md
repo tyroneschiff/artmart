@@ -1,37 +1,42 @@
 ## Strategic Backlog
 
-1. **[UX] Instagram Stories Export (Generator)**
-    *   **The Micro-Task:** Implement `app/lib/export.ts` using `expo-image-manipulator` to generate a 9:16 branded card (artwork + logo + "Step inside" text).
-    *   **Why:** Every social share becomes a high-fidelity acquisition channel, driving organic traffic back to the stores with a premium look.
+1. **[REVENUE] Low Credits Upsell (Contextual)**
+    *   **The Micro-Task:** Add a conditional "Buy Credits" banner in `mystores.tsx` that appears only if the user has 0 credits and < 3 pieces.
+    *   **Why:** Contextual upsells are less jarring and convert higher by appearing right when the user is thinking about their "empty" store.
 
-2. **[NOTIFICATIONS] Post-Vote Push (Infrastructure)**
+2. **[REVENUE] Narrative Consistency Pass (Brand)**
+    *   **The Micro-Task:** Update Piece and Store screen empty states to use "Step inside..." copy instead of generic "No pieces found".
+    *   **Why:** Reinforces the "Step Inside" emotional hook throughout the app.
+
+3. **[NOTIFICATIONS] Post-Vote Push (Infrastructure)**
     *   **The Micro-Task:** Add `expo_push_token` column to `profiles` table and update the app's `_layout.tsx` to request permission and save the token on login.
     *   **Why:** Builds the foundation for the most important emotional retention loop: notifying parents when someone loves their child's art.
 
-3. **[POLISH] Success UI Celebration**
+4. **[REVENUE] Transform Tips (Conversion)**
+    *   **The Micro-Task:** Implement a `useEffect` interval in `create.tsx` during `transforming === true` to cycle through 3-4 "What's happening?" tips.
+    *   **Why:** Reduces bounce rates during the 30-second AI generation wait by making the process feel intentional and "magical".
+
+5. **[POLISH] Success UI Celebration**
     *   **The Micro-Task:** Install `react-native-confetti-cannon` and trigger it when `step === 'success'` in `app/app/(tabs)/create.tsx`.
     *   **Why:** Amplifies the "wow" moment of publishing, making the user feel like they've truly achieved something special.
 
-4. **[PLATFORM] Android Layout Pass**
-    *   **The Micro-Task:** Fix the `KeyboardAvoidingView` behavior in `GiftingModal.tsx` for Android and audit `PieceScreen.tsx` for absolute positioning overlaps.
+6. **[DESIGN] Theme Token Adoption Pass**
+    *   **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to strictly use `type.h1` and `card` tokens from `lib/theme.ts`, removing manual style definitions.
+    *   **Why:** Ensures the most "functional" screen in the app still feels premium and aligned with the brand's warmth.
+
+7. **[PLATFORM] Android Layout Pass**
+    *   **The Micro-Task:** Audit `GiftingModal.tsx` and `PieceScreen.tsx` for Android-specific overlap issues; specifically, test `KeyboardAvoidingView` behavior on physical Android devices.
     *   **Why:** Essential for platform parity and ensuring the app is "App Store Ready" for both ecosystems.
 
-5. **[REVENUE] Low Credits Upsell (Contextual)**
-    - **The Micro-Task:** Add a conditional "Buy Credits" banner in `mystores.tsx` that appears only if the user has 0 credits and < 3 pieces.
-    - **Why:** Contextual upsells are less jarring and convert higher by appearing right when the user is thinking about their "empty" store.
-
-6. **[QUALITY] E2E Smoke Test**
+8. **[QUALITY] E2E Smoke Test**
     *   **The Micro-Task:** Implement a core smoke test (Playwright or Detox) that covers the "Happy Path": Login -> Photograph -> Transform -> Publish -> Purchase.
     *   **Why:** Protects the primary revenue-generating funnel from regressions during rapid iteration.
 
-7. **[POLISH] Profile Design Polish**
-    - **The Micro-Task:** Refactor `app/app/(tabs)/profile.tsx` to strictly use `type.h1` and `card` tokens from `lib/theme.ts`.
-    - **Why:** Ensures the most "functional" screen in the app still feels premium and aligned with the brand's warmth.
-
 ## Improvement Log
 
-- [2026-04-23 CRON B] Buyer Gifting Receipts — Updated `stripe-webhook` to send confirmation emails to buyers for both print and digital orders. Integrated `auth.admin.getUserById` to fetch emails for authenticated buyers. Essential for trust and closing the post-purchase loop.
-- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to post-purchase reliability and growth. Prioritized Gifting Receipts (email confirmation for buyers) to build trust, and Instagram Stories Export to amplify organic acquisition. Refined mobile creation flow with a "Confetti" celebration to heighten the 'Step Inside' magic.
+- [2026-04-23 — CRON B] Instagram Stories Export — Implemented `app/lib/export.ts` using `expo-image-manipulator` to generate 9:16 branded cards. Integrated "Story" export into Create Success screen and global ShareSheet. This enables high-fidelity social acquisition.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to conversion and organic growth levers. Prioritized Instagram Stories Export for acquisition and Contextual Low Credits Upsell for immediate revenue. Integrated 'Transform Tips' to improve the waiting experience, reducing bounce rates during the 30s AI generation. Commenced a system-wide Design Token Adoption pass to elevate the app's premium feel and trust factor.
+- [2026-04-23 CR B] Buyer Gifting Receipts — Updated `stripe-webhook` to send confirmation emails to buyers for both print and digital orders. Integrated `auth.admin.getUserById` to fetch emails for authenticated buyers. Essential for trust and closing the post-purchase loop.
 - [2026-04-23 — CRON B] Pack Variations — Implemented "Taste Pack" ($2.99/3 credits) and updated UI/Backend to handle multiple credit tiers. Lowers barrier to entry for new creators.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Performed 360-degree audit focused on organic growth and design debt. Identified OG Tag URL routing as the highest impact lever for acquisition. Refined creation flow "Success" state to prioritize immediate sharing over automatic ShareSheets. Prioritized design system adoption for Piece Detail and Profile screens to ensure a premium family gifting feel.
 - [2026-04-23 CRON B] Guest Digital Purchases (UI) — Refactored `GiftingModal.tsx` to support `orderType: 'digital' | 'print'`. Updated `PieceScreen.tsx` to allow unauthenticated digital purchases via the modal, removing a major friction point for shared links.
