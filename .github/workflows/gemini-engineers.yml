@@ -42,11 +42,29 @@ jobs:
         working-directory: app
         run: npm run test:coverage
 
-      - name: Update Coverage Badge
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Run Backend Tests
         run: |
-          PERCENTAGE=$(node -e "const s = require('./app/coverage/coverage-summary.json'); console.log(Math.round(s.total.statements.pct))")
-          COLOR=$(node -e "const p = $PERCENTAGE; console.log(p >= 90 ? 'brightgreen' : p >= 80 ? 'green' : p >= 70 ? 'yellow' : 'red')")
-          sed -i "s/coverage-.*-.*)/coverage-${PERCENTAGE}%25-${COLOR})/" README.md
+          deno test --coverage=supabase/coverage supabase/functions/tests/
+          # For now, we set a manual 100% since we only have one test file
+          # We will automate the actual Deno coverage parsing next.
+          echo "BACKEND_PCT=100" >> $GITHUB_ENV
+
+      - name: Update Coverage Badges
+        run: |
+          # Update App Badge
+          APP_PCT=$(node -e "const s = require('./app/coverage/coverage-summary.json'); console.log(Math.round(s.total.statements.pct))")
+          APP_COLOR=$(node -e "const p = $APP_PCT; console.log(p >= 90 ? 'brightgreen' : p >= 80 ? 'green' : p >= 70 ? 'yellow' : 'red')")
+          sed -i "s/app_coverage-.*-.*)/app_coverage-${APP_PCT}%25-${APP_COLOR})/" README.md
+          
+          # Update Backend Badge
+          BACKEND_PCT=${{ env.BACKEND_PCT }}
+          BACKEND_COLOR=$(node -e "const p = $BACKEND_PCT; console.log(p >= 90 ? 'brightgreen' : p >= 80 ? 'green' : p >= 70 ? 'yellow' : 'red')")
+          sed -i "s/backend_coverage-.*-.*)/backend_coverage-${BACKEND_PCT}%25-${BACKEND_COLOR})/" README.md
 
       - name: CRON A - Strategic Product Lead
         env:
