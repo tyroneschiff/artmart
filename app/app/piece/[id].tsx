@@ -64,6 +64,7 @@ export default function PieceScreen() {
     const [purchasing, setPurchasing] = useState<'digital' | 'print' | null>(null)
     const [downloading, setDownloading] = useState(false)
     const [giftingModalVisible, setGiftingModalVisible] = useState(false)
+    const [modalOrderType, setModalOrderType] = useState<'digital' | 'print'>('print')
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
   
@@ -173,13 +174,12 @@ export default function PieceScreen() {
     }
   
     function handlePurchase(orderType: 'digital' | 'print') {
-      if (orderType === 'digital') {
-        if (!session) {
-          router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
-          return
-        }
+      setModalOrderType(orderType)
+      if (orderType === 'digital' && session) {
+        // Logged in digital purchase - direct to payment
         executePurchase('digital')
-      } else { // orderType === 'print'
+      } else {
+        // Guest digital OR any print (guest/auth) - needs modal
         setGiftingModalVisible(true)
       }
     }
@@ -334,9 +334,10 @@ export default function PieceScreen() {
       <GiftingModal
         visible={giftingModalVisible}
         isGuest={!session}
+        orderType={modalOrderType}
         onConfirm={(data) => {
           setGiftingModalVisible(false)
-          executePurchase('print', data)
+          executePurchase(modalOrderType, data)
         }}
         onCancel={() => setGiftingModalVisible(false)}
       />
