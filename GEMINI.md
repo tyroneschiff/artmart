@@ -282,6 +282,18 @@ Because the autonomous team runs 24/7 on GitHub Actions, your local Mac will fal
 
 ---
 
+## Quality & Testing Backlog (Target: 100% Coverage)
+
+1. **[QUALITY] App Validation Suite**
+    *   **Micro-Task 1:** Create `app/lib/download.test.ts` to achieve 100% coverage for the download library (mock FileSystem + Share).
+    *   **Micro-Task 2:** Create `app/hooks/useCredits.test.ts` to verify React Query logic for credit fetching and invalidation.
+
+2. **[QUALITY] Backend Validation Suite**
+    *   **Micro-Task 1:** Replace stub in `supabase/functions/tests/moderate-comment_test.ts` with a real unit test (mock Gemini + DB select/insert).
+    *   **Micro-Task 2:** Create `supabase/functions/tests/transform-artwork_test.ts` to verify credit check and fal.ai integration logic.
+
+---
+
 ## Strategic Backlog
 
 1. **[REVENUE] Prominent "Buy Credits" CTA & UX Polish**
