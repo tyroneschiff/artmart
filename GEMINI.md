@@ -2,27 +2,31 @@
 
 ## Strategic Backlog
 
-1. **[UX] "View in Room" Variety**
+1. **[REVENUE] High-Value Credit Tier & Refactor**
+    * **The Micro-Task:** In `app/app/credits.tsx`, add a `{ credits: 25, price: 19.99, label: 'BEST VALUE' }` pack. Refactor the entire screen to use `colors`, `type`, and `card` tokens instead of inline styles.
+    * **Why:** Nudges power users toward a higher entry point while cleaning up design system debt on a critical revenue screen.
+
+2. **[UX] "View in Room" Variety**
     * **The Micro-Task:** In `RoomPreviewModal.tsx`, define a constant `ROOMS` array with 3 Unsplash URLs (Nursery, Office, Living Room). Add a horizontal `ScrollView` selector that updates the `ImageBackground` source.
     * **Why:** Different users (moms vs. grandpas) need different contexts to pull the trigger on a $30+ print.
 
-2. **[RETENTION] Push Notification Function**
-    * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using `expo-server-sdk` (via esm.sh) to send notifications to `expo_push_token` stored in the `profiles` table.
-    * **Why:** Foundation for closing the feedback loop between the artist and the family, driving repeat engagement.
-
-3. **[RELIABILITY] AI Generation Timeouts**
-    * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, implement a `fetchWithTimeout` helper using `Promise.race` and wrap the Claude/fal.ai calls with a 20s limit.
-    * **Why:** Prevents users from seeing a "hanging" loader for 2 minutes on upstream API failures, allowing for a clean error and credit refund.
+3. **[RELIABILITY] Direct Storage Upload (OOM Fix)**
+    * **The Micro-Task:** In `app/app/(tabs)/create.tsx`, refactor `publishMutation` to use `supabase.storage.from('artwork').upload()` with a `File` or `Blob` (via `fetch(uri).blob()`) or `FileSystem.uploadAsync` to avoid `readAsStringAsync` OOM errors.
+    * **Why:** Prevents the app from crashing on low-end Android devices when uploading high-res original drawings.
 
 4. **[POLISH] Smooth Artwork Reveal**
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, replace the `Image` with an `Animated.View` wrapping an `Image`. Use `useNativeDriver: true` to fade opacity from 0 to 1 over 600ms when `onLoad` triggers.
     * **Why:** Elevates the "Aha!" moment when the high-res AI version appears, making the transformation feel more magical.
 
-5. **[REVENUE] High-Value Credit Tier**
-    * **The Micro-Task:** In `app/app/credits.tsx`, add a `{ credits: 25, price: 19.99, label: 'BEST VALUE' }` pack. Refactor the pack selector to use the `card` theme token instead of inline styles.
-    * **Why:** Nudges power users toward a higher entry point while cleaning up design system debt.
+5. **[RETENTION] Push Notification Function**
+    * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using `expo-server-sdk` (via esm.sh) to send notifications to `expo_push_token` stored in the `profiles` table.
+    * **Why:** Foundation for closing the feedback loop between the artist and the family, driving repeat engagement.
 
-6. **[UX] Sample Store Empty State**
+6. **[REVENUE] First-Order Incentive**
+    * **The Micro-Task:** In `app/app/piece/[id].tsx`, detect if the user has 0 previous orders and show a "First Order Special: 20% OFF" badge on the Print CTA.
+    * **Why:** Reduces the "first-time buyer" friction and builds immediate momentum in the customer lifecycle.
+
+7. **[UX] Sample Store Empty State**
     * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
     * **Why:** Shows the value proposition immediately to new users who haven't created anything yet, reducing abandonment.
 
@@ -33,11 +37,12 @@
 - **Android Modal Presentation:** `presentation: 'pageSheet'` is an iOS-only feature. For Android, ensure modals are handled with appropriate animations or full-screen routes to maintain a consistent UX.
 - **Deno/Stripe Connection Hangs:** In Supabase Edge Functions, external calls to Stripe or AI APIs can occasionally hang. While Deno has a global timeout, it's safer to use a `Promise.race` with a 10s-20s timeout for external operations to ensure the function returns a clean error rather than timing out the entire gateway.
 - **Dynamic Layout Shifts:** Use `useWindowDimensions` instead of `Dimensions.get('window')` for components that need to respond to orientation changes or split-screen mode on Android, as `get()` only provides the initial value.
-- **Large Image Base64 OOM:** Reading very large images as Base64 strings using `FileSystem.readAsStringAsync` can cause Out-Of-Memory (OOM) errors on low-end Android devices. Prefer `FileSystem.uploadAsync` for direct file uploads where possible.
+- **Large Image Base64 OOM:** Reading very large images as Base64 strings using `FileSystem.readAsStringAsync` can cause Out-Of-Memory (OOM) errors on low-end Android devices. Prefer `FileSystem.uploadAsync` or `fetch(uri).blob()` for direct file uploads where possible.
 - **Android KeyboardAvoidingView:** On Android, `KeyboardAvoidingView` with `behavior="height"` inside a full-screen `Modal` can sometimes cause the input to be obscured by the keyboard if the `softInputMode` isn't set correctly in `app.json`. Always test keyboard interaction on physical Android devices.
 
 ## Done
 
+- **[RELIABILITY] AI Generation Timeouts** — Implemented `fetchWithTimeout` helper using `Promise.race` and `AbortController` in `transform-artwork` edge function. Claude and fal.ai calls now have a 20s limit with warm, brand-aligned error messages, preventing hanging loaders and ensuring a reliable credit refund path.
 - **[REVENUE] Multi-Item Print Quantity UI & Discount Badge** — Implemented a premium quantity selector in `GiftingModal.tsx` for physical prints. Added a high-visibility "SAVE 15%" badge that triggers when quantity >= 2, providing immediate social proof and incentive for bulk gifting.
 - **[REVENUE] Multi-Item Print Discount (Logic)** — Implemented 15% bulk discount for physical print orders (quantity >= 2) in `create-payment-intent` edge function. Updated `purchasePiece` in `app/lib/checkout.ts` to support the new `quantity` parameter with full test coverage.
 - **[REVENUE] Multi-Item Print Quantity (DB & Edge)** — Added `quantity` column to `orders` table and updated `create-payment-intent` edge function to handle multi-item orders. This lays the groundwork for volume-based discounts.
@@ -55,6 +60,8 @@
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] AI Generation Timeouts — Hardened the transformation engine by implementing 20s timeouts for upstream AI calls (Claude/fal.ai). Used `Promise.race` and `AbortController` to ensure requests are cancelled, providing a "warm" error message that keeps the user experience premium even during API turbulence.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Trust and AOV are our dual engines for this phase. Reliability (AI timeouts and OOM fixes) ensures the "Step Inside" magic never breaks, while the credit refactor and first-order incentives target immediate revenue growth. We are shifting from "functional" to "premium and resilient."
 - [2026-04-23 — CRON B] Multi-Item Print Quantity UI & Discount Badge — Completed the multi-item revenue loop by adding a high-polish quantity selector and a "SAVE 15%" incentive badge to the `GiftingModal`. This makes it effortless for users to buy prints for multiple family members, directly driving higher AOV.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] The foundation is rock solid, but the 'magic' needs to be more visceral. We've proven the revenue engine works with physical prints; now we must scale AOV through volume-based nudges (quantity selectors + badges) and broaden our appeal with diverse room contexts. Reliability is also a brand promise—stuck AI generations are the #1 killer of trust, so explicit timeouts in our edge functions are non-negotiable.
 - [2026-04-23 — CRON B] Multi-Item Print Discount (Logic) — Hardened the revenue engine by implementing a 15% bulk discount for physical prints. Added logic to `create-payment-intent` to apply the multiplier to the total amount when `quantity >= 2`, and updated the mobile checkout library to support multi-item orders.

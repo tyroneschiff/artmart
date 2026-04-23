@@ -23,6 +23,21 @@ async function rpc(fn: string, body: Record<string, unknown>): Promise<number> {
   return await res.json()
 }
 
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      controller.abort()
+      reject(new Error('The AI is taking a little longer than usual to imagine this piece. Please try again in a moment.'))
+    }, timeoutMs)
+  })
+
+  return Promise.race([
+    fetch(url, { ...options, signal: controller.signal }),
+    timeoutPromise
+  ])
+}
+
 function extractJson(text: string): { description: string; prompt: string } {
   try {
     return JSON.parse(text)
@@ -86,7 +101,7 @@ Deno.serve(async (req) => {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicKey) throw new Error('Missing ANTHROPIC_API_KEY')
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+    const claudeRes = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': anthropicKey,
@@ -130,7 +145,7 @@ Example output:
           }]
         }]
       }),
-    })
+    }, 20000)
 
     if (!claudeRes.ok) {
       const err = await claudeRes.text()
@@ -142,7 +157,7 @@ Example output:
     const { description, prompt } = extractJson(rawText)
 
     // Step 2: fal.ai Flux Kontext → transformed image (synchronous)
-    const falRes = await fetch('https://fal.run/fal-ai/flux-pro/kontext', {
+    const falRes = await fetchWithTimeout('https://fal.run/fal-ai/flux-pro/kontext', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${falKey}`,
@@ -163,7 +178,7 @@ Original drawing prompt: ${prompt}`,
         image_url: 'data:' + mimeType + ';base64,' + imageBase64,
         guidance_scale: 6.0,
       }),
-    })
+    }, 20000)
 
     if (!falRes.ok) {
       const err = await falRes.text()
