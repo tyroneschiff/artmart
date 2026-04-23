@@ -41,7 +41,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
         <View style={styles.logoWrap}>
           <Text style={styles.logo}>draw up</Text>
-          <Text style={styles.tagline}>Bring your child's imagination to life.</Text>
+          <Text style={styles.tagline}>Step inside your child's imagination.</Text>
         </View>
 
         <View style={styles.form}>

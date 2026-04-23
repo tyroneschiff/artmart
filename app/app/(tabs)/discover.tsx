@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors } from '../../lib/theme'
+import { colors, type, btn, card } from '../../lib/theme'
 
 type Piece = {
   id: string
@@ -130,8 +130,8 @@ export default function DiscoverScreen() {
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>✨</Text>
-            <Text style={styles.emptyTitle}>No worlds discovered</Text>
-            <Text style={styles.emptyBody}>Be the first to step inside a drawing and share the world.</Text>
+            <Text style={styles.emptyTitle}>The portal is waiting</Text>
+            <Text style={styles.emptyBody}>No worlds have been discovered yet. Be the first to step inside a drawing and share what you find.</Text>
           </View>
         }
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -144,23 +144,23 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 20 },
-  header: { fontSize: 32, fontWeight: '900', letterSpacing: -1, color: colors.dark },
+  header: { ...type.h1 },
   badge: { backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
-  badgeText: { fontSize: 12, fontWeight: '700', color: colors.goldDark },
+  badgeText: { ...type.label, color: colors.goldDark, fontWeight: '700' },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
-  card: { flex: 1, backgroundColor: colors.white, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  card: { flex: 1, ...card, overflow: 'hidden' },
   image: { width: '100%', aspectRatio: 1 },
   cardBody: { padding: 12 },
-  title: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
-  childName: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  title: { ...type.h3, fontSize: 13, letterSpacing: -0.2 },
+  childName: { ...type.label, marginTop: 2 },
   voteBtn: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
   voteBtnDone: { opacity: 0.45 },
   voteText: { fontSize: 13, color: colors.gold, fontWeight: '700' },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.dark, marginBottom: 8 },
-  emptyBody: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
-  errorText: { color: colors.mid, marginBottom: 16, fontSize: 15 },
-  retryBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  emptyTitle: { ...type.h2, fontSize: 18, marginBottom: 8 },
+  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center' },
+  errorText: { ...type.body, marginBottom: 16 },
+  retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
+  retryBtnText: { ...btn.primaryText, fontSize: 15 },
 })

@@ -3,7 +3,7 @@ import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndi
 import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import { colors } from '../../lib/theme'
+import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
@@ -83,8 +83,8 @@ export default function StoreScreen() {
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>✨</Text>
-            <Text style={styles.emptyTitle}>Step inside soon</Text>
-            <Text style={styles.emptyBody}>{store.child_name} hasn't shared any worlds yet. Check back soon!</Text>
+            <Text style={styles.emptyTitle}>A world yet to be built</Text>
+            <Text style={styles.emptyBody}>{store.child_name} is still dreaming up their first world. Check back soon to step inside.</Text>
           </View>
         }
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -105,23 +105,23 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 22, color: colors.dark, lineHeight: 26 },
-  shareBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 16, paddingVertical: 9 },
-  shareBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  shareBtn: { ...btn.primary, paddingHorizontal: 16, paddingVertical: 9 },
+  shareBtnText: { ...btn.primaryText, fontSize: 13 },
   storeHeader: { alignItems: 'center', paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 16, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
   avatarText: { fontSize: 28, fontWeight: '900', color: colors.goldDark },
-  storeName: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5, color: colors.dark },
-  pieceCount: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  storeName: { ...type.h2 },
+  pieceCount: { ...type.label, marginTop: 4 },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
-  card: { flex: 1, backgroundColor: colors.white, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  card: { flex: 1, ...card, overflow: 'hidden' },
   image: { width: '100%', aspectRatio: 1 },
   cardBody: { padding: 12 },
-  title: { fontSize: 13, fontWeight: '700', color: colors.dark },
+  title: { ...type.h3, fontSize: 13 },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.dark, marginBottom: 8 },
-  emptyBody: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
-  errorText: { color: colors.mid, marginBottom: 16, fontSize: 15 },
-  retryBtn: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  emptyTitle: { ...type.h2, fontSize: 18, marginBottom: 8 },
+  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center' },
+  errorText: { ...type.body, marginBottom: 16 },
+  retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
+  retryBtnText: { ...btn.primaryText, fontSize: 15 },
 })
