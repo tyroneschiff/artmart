@@ -21,6 +21,38 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 3
   }
 }
 
+async function logCheckoutError(
+  params: {
+    piece_id?: string;
+    error_code: string;
+    error_message: string;
+    payment_intent_id?: string;
+    metadata?: any;
+  },
+  userToken?: string
+) {
+  try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    }
+    if (userToken) {
+      headers['Authorization'] = `Bearer ${userToken}`
+    }
+
+    await fetchWithTimeout(
+      `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/log-checkout-error`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(params),
+      },
+      5000 // 5s timeout for logging
+    ).catch(e => console.error('Silent failure logging checkout error:', e))
+  } catch (err) {
+    console.error('Failed to log checkout error:', err)
+  }
+}
+
 export async function purchasePiece(
   pieceId: string,
   orderType: 'digital' | 'print',
@@ -72,6 +104,17 @@ export async function purchasePiece(
   const { error: presentError } = await presentPaymentSheet()
   if (presentError) {
     if (presentError.code === 'Canceled') throw new Error('Canceled')
+    
+    // Log the failure for reliability tracking
+    const payment_intent_id = json.client_secret.split('_secret')[0]
+    logCheckoutError({
+      piece_id: pieceId,
+      error_code: presentError.code,
+      error_message: presentError.message,
+      payment_intent_id,
+      metadata: { orderType }
+    }, userToken)
+
     throw new Error(presentError.message)
   }
 }
@@ -107,6 +150,16 @@ export async function purchaseCredits(userToken: string, amount?: number): Promi
   const { error: presentError } = await presentPaymentSheet()
   if (presentError) {
     if (presentError.code === 'Canceled') throw new Error('Canceled')
+    
+    // Log the failure for reliability tracking
+    const payment_intent_id = json.client_secret.split('_secret')[0]
+    logCheckoutError({
+      error_code: presentError.code,
+      error_message: presentError.message,
+      payment_intent_id,
+      metadata: { type: 'credits', amount }
+    }, userToken)
+
     throw new Error(presentError.message)
   }
 }

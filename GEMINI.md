@@ -2,33 +2,33 @@
 
 ## Strategic Backlog
 
-1. **[RETENTION] Push Notification Delivery (Backend)**
-    * **The Micro-Task:** Create a new Supabase Edge Function `send-push-notification` that takes a `user_id`, `title`, and `body`. Update `moderate-comment/index.ts` and the `on_vote_insert` trigger (via a new function) to call this edge function when a social action occurs.
+1. **[REVENUE] "Buy 2, Save 15%" Print Discount**
+    * **The Micro-Task:** In `app/lib/checkout.ts`, if `quantity >= 2`, apply a `0.85` multiplier to the print price. Add a `DiscountBadge` component to the checkout flow in `GiftingModal.tsx` that appears when volume increases.
+    * **Why:** Directly incentivizes higher volume orders for physical goods, increasing average order value (AOV).
+
+2. **[RETENTION] Push Notification Delivery (Backend)**
+    * **The Micro-Task:** Create a new Supabase Edge Function `send-push-notification` that takes a `user_id`, `title`, and `body`. Update `moderate-comment/index.ts` to call this function when a comment is approved.
     * **Why:** Closes the emotional loop by actually notifying parents in real-time when someone interacts with their child's art.
 
-2. **[UX] "View in Room" Premium Backgrounds**
-    * **The Micro-Task:** Update `RoomPreviewModal.tsx` to allow cycling between 3 high-quality room backgrounds (Living Room, Nursery, Modern Office).
-    * **Why:** Increases buyer confidence by showing the art in diverse, relatable home settings.
+3. **[REVENUE] High-Value Credit Pack UI**
+    * **The Micro-Task:** In `app/app/credits.tsx`, add a new pack object `{ credits: 25, price: 19.99, label: 'VALUE PACK' }`. Update the "POPULAR" badge on the 12-credit pack to use a more prominent gold/dark contrast.
+    * **Why:** Nudges users toward higher spending tiers by highlighting better value-per-credit.
 
-3. **[RELIABILITY] Checkout Failure Recovery**
-    * **The Micro-Task:** In `app/lib/checkout.ts`, if `presentPaymentSheet` fails with an error (not 'Canceled'), log the error to a new `checkout_logs` table in Supabase via a lightweight edge function.
-    * **Why:** Provides visibility into why payments fail in the wild, allowing for targeted fixes to the revenue engine.
-
-4. **[GROWTH] Creator "Thank You" Flow**
-    * **The Micro-Task:** After a piece is published and the "Send to Grandma" share is complete, show a small "Thank my family" button that pre-fills a message: "Thanks for supporting my art! ❤️".
-    * **Why:** Encourages a two-way emotional exchange between creators and their support network.
+4. **[UX] "View in Room" Premium Backgrounds**
+    * **The Micro-Task:** Source 3 royalty-free room images (Nursery, Modern Office, Living Room) and update `RoomPreviewModal.tsx` to include a small horizontal selector that swaps the `ImageBackground` source.
+    * **Why:** Contextualizes the art for different buyer personas (e.g., parents vs. office workers), increasing purchase confidence.
 
 5. **[POLISH] Magic Image Transition**
-    * **The Micro-Task:** In `piece/[id].tsx`, wrap the main `Image` with a simple fade-in animation (using `Animated`) that triggers once the `displayImageUrl` finishes loading.
-    * **Why:** Adds a "premium" feel to the moment the AI-transformed artwork appears, reinforcing the magic.
+    * **The Micro-Task:** In `app/app/piece/[id].tsx`, use `Animated` to wrap the transformed image. Set initial opacity to 0 and animate to 1 over 800ms (`useNativeDriver: true`) when the high-res image finishes loading.
+    * **Why:** Smooths the "reveal" moment, making the AI transformation feel more intentional and premium.
 
-6. **[REVENUE] High-Value Credit Pack UI**
-    * **The Micro-Task:** Update `CreditsScreen.tsx` to make the "POPULAR" badge more prominent (gold) and add a "Value Pack" label to a new 25-credit pack option.
-    * **Why:** Drives higher average order value (AOV) by nudging users toward larger packs.
+6. **[GROWTH] Creator "Thank You" Flow**
+    * **The Micro-Task:** Add a "Send a Thank You" button to the success state of `create.tsx`. When tapped, trigger `Share.share` with a heart-warming pre-filled message for the creator's family.
+    * **Why:** Encourages the support network to keep engaging, fueling the "Grandma loop" of positive reinforcement.
 
 7. **[UX] Sample Store Empty State**
-    * **The Micro-Task:** Update `mystores.tsx` empty state to include a "View Demo Store" button that opens a static preview of what a store looks like when filled with art.
-    * **Why:** Reduces "blank canvas" anxiety and clearly demonstrates the value proposition for new creators.
+    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the basic empty state with a "View Sample Store" button that opens a static preview of a high-quality completed store.
+    * **Why:** Visualizes the end-goal for new users, reducing "blank canvas" anxiety and demonstrating the platform's value.
 
 ## Known gotchas
 
@@ -36,9 +36,11 @@
 - **Supabase `maybeSingle()`:** Use `maybeSingle()` when querying for optional records (like a specific user's order for a piece) to avoid 406 errors when no record is found.
 - **Android Modal Presentation:** `presentation: 'pageSheet'` is an iOS-only feature. For Android, ensure modals are handled with appropriate animations or full-screen routes to maintain a consistent UX.
 - **Deno/Stripe Connection Hangs:** In Supabase Edge Functions, external calls to Stripe can occasionally hang. While Deno has a global timeout, it's safer to use a `Promise.race` with a 10s timeout for Stripe operations to ensure the function returns a clean 503 rather than timing out the entire gateway.
+- **Dynamic Layout Shifts:** Use `useWindowDimensions` instead of `Dimensions.get('window')` for components that need to respond to orientation changes or split-screen mode on Android, as `get()` only provides the initial value.
 
 ## Done
 
+- **[RELIABILITY] Checkout Failure Recovery** — Implemented `checkout_logs` table and a new `log-checkout-error` edge function. Updated `app/lib/checkout.ts` to automatically capture and log Stripe payment failures (excluding cancellations), providing visibility into the "leaky revenue bucket."
 - **[REVENUE] Post-Purchase Print Upsell** — Implemented "Upgrade to Physical Print" logic in `piece/[id].tsx` and `create-payment-intent` edge function. Digital owners now see a "10% Digital Owner Discount" and focused upgrade messaging, driving higher conversion for physical products.
 - **[RETENTION] Push Token Collection (DB & App)** — Added `expo_push_token` to `profiles` table and implemented automatic token registration/upsert in `_layout.tsx` using `expo-notifications`.
 - **[RELIABILITY] Piece Screen Resilience** — Hardened `voteMutation` and `commentMutation` in `piece/[id].tsx` with 15s timeouts to prevent UI hangs on poor connections.
@@ -52,6 +54,8 @@
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Checkout Failure Recovery — Hardened the revenue funnel by implementing automated error logging for failed checkouts. Created `010_checkout_logs.sql` and `log-checkout-error` edge function to track `presentPaymentSheet` failures. This data-driven approach allows us to identify and resolve silent payment blockers for both piece purchases and credit top-ups.
+- [2026-04-23 — CRON A] Strategic Audit: The 'Step Inside' vision is maturing into a solid commerce platform. We've hardened network resilience and added emotional hooks like 'Send to Grandma'. The next phase is maximizing 'Value and Confidence'. We'll do this by: 1) Capturing silent checkout failures to fix the revenue funnel, 2) Incentivizing higher volume with a Multi-Item Print discount, 3) Deepening the 'View in Room' experience to convert high-intent buyers, and 4) Closing the loop with backend-driven push notifications.
 - [2026-04-23 — CRON B] Post-Purchase Print Upsell — Targeted digital owners with a 10% discount on physical prints. Updated `create-payment-intent` to handle the discount server-side and added a "10% OFF" badge and "Upgrade" messaging in the UI to drive print conversions.
 - [2026-04-23 — CRON A] Strategic Audit: Conducted a deep 360-degree audit. Identified a major revenue opportunity: post-purchase print upsells for digital buyers. Guest checkout is solid, but reliability can be further hardened by tracking payment failures. Shifted focus to a multi-background "View in Room" experience and a "Magic Transition" to enhance the premium feel.
 - [2026-04-23 — CRON B] Full "Step Inside" Polish & Retention Pass — Completed 5 major micro-tasks: implemented Push Token collection (DB & App), hardened social actions with timeouts, reframed sharing as "Send to Grandma", and achieved 100% theme token adoption across core screens. Added Android native navigation optimizations. The app now feels premium, resilient, and emotionally resonant.
