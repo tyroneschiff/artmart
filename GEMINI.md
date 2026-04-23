@@ -2,31 +2,27 @@
 
 ## Strategic Backlog
 
-1. **[REVENUE] High-Value Credit Tier & Refactor**
-    * **The Micro-Task:** In `app/app/credits.tsx`, add a `{ credits: 25, price: 19.99, label: 'BEST VALUE' }` pack. Refactor the entire screen to use `colors`, `type`, and `card` tokens instead of inline styles.
-    * **Why:** Nudges power users toward a higher entry point while cleaning up design system debt on a critical revenue screen.
-
-2. **[UX] "View in Room" Variety**
+1. **[UX] "View in Room" Variety**
     * **The Micro-Task:** In `RoomPreviewModal.tsx`, define a constant `ROOMS` array with 3 Unsplash URLs (Nursery, Office, Living Room). Add a horizontal `ScrollView` selector that updates the `ImageBackground` source.
     * **Why:** Different users (moms vs. grandpas) need different contexts to pull the trigger on a $30+ print.
 
-3. **[RELIABILITY] Direct Storage Upload (OOM Fix)**
+2. **[RELIABILITY] Direct Storage Upload (OOM Fix)**
     * **The Micro-Task:** In `app/app/(tabs)/create.tsx`, refactor `publishMutation` to use `supabase.storage.from('artwork').upload()` with a `File` or `Blob` (via `fetch(uri).blob()`) or `FileSystem.uploadAsync` to avoid `readAsStringAsync` OOM errors.
     * **Why:** Prevents the app from crashing on low-end Android devices when uploading high-res original drawings.
 
-4. **[POLISH] Smooth Artwork Reveal**
+3. **[POLISH] Smooth Artwork Reveal**
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, replace the `Image` with an `Animated.View` wrapping an `Image`. Use `useNativeDriver: true` to fade opacity from 0 to 1 over 600ms when `onLoad` triggers.
     * **Why:** Elevates the "Aha!" moment when the high-res AI version appears, making the transformation feel more magical.
 
-5. **[RETENTION] Push Notification Function**
+4. **[RETENTION] Push Notification Function**
     * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using `expo-server-sdk` (via esm.sh) to send notifications to `expo_push_token` stored in the `profiles` table.
     * **Why:** Foundation for closing the feedback loop between the artist and the family, driving repeat engagement.
 
-6. **[REVENUE] First-Order Incentive**
+5. **[REVENUE] First-Order Incentive**
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, detect if the user has 0 previous orders and show a "First Order Special: 20% OFF" badge on the Print CTA.
     * **Why:** Reduces the "first-time buyer" friction and builds immediate momentum in the customer lifecycle.
 
-7. **[UX] Sample Store Empty State**
+6. **[UX] Sample Store Empty State**
     * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
     * **Why:** Shows the value proposition immediately to new users who haven't created anything yet, reducing abandonment.
 
@@ -42,6 +38,7 @@
 
 ## Done
 
+- **[REVENUE] High-Value Credit Tier & Refactor** — Added a 25-credit "BEST VALUE" pack to `credits.tsx` to nudge power users toward higher AOV. Refactored the entire screen to use `colors`, `type`, and `card` tokens, eliminating design debt and ensuring brand consistency.
 - **[RELIABILITY] AI Generation Timeouts** — Implemented `fetchWithTimeout` helper using `Promise.race` and `AbortController` in `transform-artwork` edge function. Claude and fal.ai calls now have a 20s limit with warm, brand-aligned error messages, preventing hanging loaders and ensuring a reliable credit refund path.
 - **[REVENUE] Multi-Item Print Quantity UI & Discount Badge** — Implemented a premium quantity selector in `GiftingModal.tsx` for physical prints. Added a high-visibility "SAVE 15%" badge that triggers when quantity >= 2, providing immediate social proof and incentive for bulk gifting.
 - **[REVENUE] Multi-Item Print Discount (Logic)** — Implemented 15% bulk discount for physical print orders (quantity >= 2) in `create-payment-intent` edge function. Updated `purchasePiece` in `app/lib/checkout.ts` to support the new `quantity` parameter with full test coverage.
@@ -60,6 +57,8 @@
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] High-Value Credit Tier & Refactor — Maximized credit revenue potential by introducing a 25-credit pack at $19.99. Simultaneously wiped out design debt on the credits screen by migrating all styles to theme tokens, ensuring a "Step Inside" premium feel on the most critical conversion screen.
+- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Conducted a holistic product audit. Revenue fundamentals are strong with multi-item discounts and upsells implemented. The next frontier is maximizing initial conversion and platform stability. Prioritized the Android OOM storage fix as a critical blocker for lower-end devices. On the revenue side, introducing a High-Value Credit Tier and First-Order Incentive will drive higher initial LTV. Retention will be addressed by finally wiring up the push notification edge function to close the emotional loop. The goal is to make the funnel un-crashable and deeply incentivized.
 - [2026-04-23 — CRON B] AI Generation Timeouts — Hardened the transformation engine by implementing 20s timeouts for upstream AI calls (Claude/fal.ai). Used `Promise.race` and `AbortController` to ensure requests are cancelled, providing a "warm" error message that keeps the user experience premium even during API turbulence.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Trust and AOV are our dual engines for this phase. Reliability (AI timeouts and OOM fixes) ensures the "Step Inside" magic never breaks, while the credit refactor and first-order incentives target immediate revenue growth. We are shifting from "functional" to "premium and resilient."
 - [2026-04-23 — CRON B] Multi-Item Print Quantity UI & Discount Badge — Completed the multi-item revenue loop by adding a high-polish quantity selector and a "SAVE 15%" incentive badge to the `GiftingModal`. This makes it effortless for users to buy prints for multiple family members, directly driving higher AOV.
