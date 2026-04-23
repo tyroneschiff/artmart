@@ -251,7 +251,9 @@ export default function PieceScreen() {
         </TouchableOpacity>
 
         <View style={styles.purchaseSection}>
-          <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
+          <Text style={[type.h3, { marginBottom: 12 }]}>
+            {myDigitalOrder ? "Upgrade to Physical Print" : "Bring this world home"}
+          </Text>
 
           {(isOwner || myDigitalOrder) && (
             <TouchableOpacity
@@ -276,13 +278,33 @@ export default function PieceScreen() {
             onPress={() => handlePurchase('print')}
             disabled={purchasing !== null}
           >
-            <View>
-              <Text style={styles.purchaseType}>Physical Print</Text>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={styles.purchaseType}>Physical Print</Text>
+                {myDigitalOrder && (
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountBadgeText}>10% OFF</Text>
+                  </View>
+                )}
+              </View>
               <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>11×14" matte poster, shipped to you</Text>
             </View>
-            {purchasing === 'print'
-              ? <ActivityIndicator color={colors.gold} />
-              : <Text style={styles.purchasePrice}>${(piece.price_print / 100).toFixed(2)}</Text>}
+            <View style={{ alignItems: 'flex-end' }}>
+              {purchasing === 'print' ? (
+                <ActivityIndicator color={colors.gold} />
+              ) : (
+                <>
+                  <Text style={styles.purchasePrice}>
+                    ${((myDigitalOrder ? piece.price_print * 0.9 : piece.price_print) / 100).toFixed(2)}
+                  </Text>
+                  {myDigitalOrder && (
+                    <Text style={[type.label, { fontSize: 10, textDecorationLine: 'line-through' }]}>
+                      ${(piece.price_print / 100).toFixed(2)}
+                    </Text>
+                  )}
+                </>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -403,6 +425,8 @@ const styles = StyleSheet.create({
   purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
   purchaseType: { fontSize: 15, fontWeight: '700', color: colors.dark },
   purchasePrice: { fontSize: 18, fontWeight: '800', color: colors.gold },
+  discountBadge: { backgroundColor: colors.gold, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  discountBadgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
   redownloadLabel: { fontSize: 14, fontWeight: '700', color: colors.gold },
   originalImage: { width: '100%', aspectRatio: 1, opacity: 0.7 },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 16 },

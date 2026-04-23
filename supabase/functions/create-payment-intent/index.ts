@@ -60,7 +60,23 @@ Deno.serve(async (req) => {
     if (pieceError || !piece) return new Response(JSON.stringify({ error: 'Piece not found' }), { status: 404, headers: corsHeaders })
     if (!piece.published) return new Response(JSON.stringify({ error: 'Piece not published' }), { status: 400, headers: corsHeaders })
 
-    const amount = order_type === 'digital' ? piece.price_digital : piece.price_print
+    let amount = order_type === 'digital' ? piece.price_digital : piece.price_print
+
+    // Apply 10% discount for physical print if digital version is already owned
+    if (order_type === 'print') {
+      const { data: digitalOrder } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('piece_id', piece_id)
+        .eq('order_type', 'digital')
+        .eq('status', 'paid')
+        .or(`buyer_id.eq.${buyerId},guest_email.eq.${guest_email}`)
+        .maybeSingle()
+
+      if (digitalOrder) {
+        amount = Math.round(amount * 0.9)
+      }
+    }
 
     const paymentIntent = await stripe.paymentIntents.create(
       {

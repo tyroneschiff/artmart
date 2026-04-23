@@ -10,18 +10,36 @@
     * **The Micro-Task:** Update `RoomPreviewModal.tsx` to allow cycling between 3 high-quality room backgrounds (Living Room, Nursery, Modern Office).
     * **Why:** Increases buyer confidence by showing the art in diverse, relatable home settings.
 
-3. **[GROWTH] Creator "Thank You" Flow**
+3. **[RELIABILITY] Checkout Failure Recovery**
+    * **The Micro-Task:** In `app/lib/checkout.ts`, if `presentPaymentSheet` fails with an error (not 'Canceled'), log the error to a new `checkout_logs` table in Supabase via a lightweight edge function.
+    * **Why:** Provides visibility into why payments fail in the wild, allowing for targeted fixes to the revenue engine.
+
+4. **[GROWTH] Creator "Thank You" Flow**
     * **The Micro-Task:** After a piece is published and the "Send to Grandma" share is complete, show a small "Thank my family" button that pre-fills a message: "Thanks for supporting my art! ❤️".
     * **Why:** Encourages a two-way emotional exchange between creators and their support network.
+
+5. **[POLISH] Magic Image Transition**
+    * **The Micro-Task:** In `piece/[id].tsx`, wrap the main `Image` with a simple fade-in animation (using `Animated`) that triggers once the `displayImageUrl` finishes loading.
+    * **Why:** Adds a "premium" feel to the moment the AI-transformed artwork appears, reinforcing the magic.
+
+6. **[REVENUE] High-Value Credit Pack UI**
+    * **The Micro-Task:** Update `CreditsScreen.tsx` to make the "POPULAR" badge more prominent (gold) and add a "Value Pack" label to a new 25-credit pack option.
+    * **Why:** Drives higher average order value (AOV) by nudging users toward larger packs.
+
+7. **[UX] Sample Store Empty State**
+    * **The Micro-Task:** Update `mystores.tsx` empty state to include a "View Demo Store" button that opens a static preview of what a store looks like when filled with art.
+    * **Why:** Reduces "blank canvas" anxiety and clearly demonstrates the value proposition for new creators.
 
 ## Known gotchas
 
 - **React Native `fetch` Timeouts:** Raw `fetch` calls in React Native do not inherently timeout if the cellular network drops mid-request; they can hang indefinitely. Always wrap `fetch` calls with an `AbortController` and a `setTimeout` (e.g., 30s) to gracefully handle offline or poor connectivity states.
 - **Supabase `maybeSingle()`:** Use `maybeSingle()` when querying for optional records (like a specific user's order for a piece) to avoid 406 errors when no record is found.
 - **Android Modal Presentation:** `presentation: 'pageSheet'` is an iOS-only feature. For Android, ensure modals are handled with appropriate animations or full-screen routes to maintain a consistent UX.
+- **Deno/Stripe Connection Hangs:** In Supabase Edge Functions, external calls to Stripe can occasionally hang. While Deno has a global timeout, it's safer to use a `Promise.race` with a 10s timeout for Stripe operations to ensure the function returns a clean 503 rather than timing out the entire gateway.
 
 ## Done
 
+- **[REVENUE] Post-Purchase Print Upsell** — Implemented "Upgrade to Physical Print" logic in `piece/[id].tsx` and `create-payment-intent` edge function. Digital owners now see a "10% Digital Owner Discount" and focused upgrade messaging, driving higher conversion for physical products.
 - **[RETENTION] Push Token Collection (DB & App)** — Added `expo_push_token` to `profiles` table and implemented automatic token registration/upsert in `_layout.tsx` using `expo-notifications`.
 - **[RELIABILITY] Piece Screen Resilience** — Hardened `voteMutation` and `commentMutation` in `piece/[id].tsx` with 15s timeouts to prevent UI hangs on poor connections.
 - **[GROWTH] "Send to Grandma" Emotional Loop** — Updated the WhatsApp share button in the creation success screen with high-emotion "Send to Grandma" copy and a pre-filled emotional message.
@@ -34,6 +52,8 @@
 
 ## Improvement Log
 
+- [2026-04-23 — CRON B] Post-Purchase Print Upsell — Targeted digital owners with a 10% discount on physical prints. Updated `create-payment-intent` to handle the discount server-side and added a "10% OFF" badge and "Upgrade" messaging in the UI to drive print conversions.
+- [2026-04-23 — CRON A] Strategic Audit: Conducted a deep 360-degree audit. Identified a major revenue opportunity: post-purchase print upsells for digital buyers. Guest checkout is solid, but reliability can be further hardened by tracking payment failures. Shifted focus to a multi-background "View in Room" experience and a "Magic Transition" to enhance the premium feel.
 - [2026-04-23 — CRON B] Full "Step Inside" Polish & Retention Pass — Completed 5 major micro-tasks: implemented Push Token collection (DB & App), hardened social actions with timeouts, reframed sharing as "Send to Grandma", and achieved 100% theme token adoption across core screens. Added Android native navigation optimizations. The app now feels premium, resilient, and emotionally resonant.
 - [2026-04-23 — CRON A] Strategic Audit: The "Step Inside" vision is technically solid but lacks network resilience in the piece detail social actions and the emotional closure of push notifications. Shifting focus to reliability (timeouts for votes/comments) and the "Send to Grandma" emotional loop will solidify the platform's utility, while a multi-screen Theme Token Adoption pass will eradicate remaining design debt.
 - [2026-04-23 — CRON B] Reliable Checkout Network Resilience — Hardened the checkout engine by wrapping `fetch` calls in `app/lib/checkout.ts` with 30s timeouts. Added user-friendly, on-brand error messages for cellular drops and timeouts to prevent UI hangs and buyer frustration.
