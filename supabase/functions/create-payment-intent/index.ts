@@ -24,7 +24,15 @@ Deno.serve(async (req) => {
 
     let buyerId: string | null = null
     const authHeader = req.headers.get('Authorization')
-    const { piece_id, order_type, shipping_address, guest_email, recipient_email, gift_message } = await req.json()
+    const { 
+      piece_id, 
+      order_type, 
+      shipping_address, 
+      guest_email, 
+      recipient_email, 
+      gift_message,
+      quantity = 1 
+    } = await req.json()
 
     // Authentication Logic
     if (authHeader?.startsWith('Bearer ')) {
@@ -78,13 +86,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    const totalAmount = amount * quantity
+
     const paymentIntent = await stripe.paymentIntents.create(
       {
-        amount,
+        amount: totalAmount,
         currency: 'usd',
         metadata: {
           piece_id,
           order_type,
+          quantity: quantity.toString(),
           buyer_id: buyerId ?? undefined, // Stripe metadata doesn't like null, use undefined
           guest_email: guest_email ?? undefined,
           gift_recipient_email: recipient_email ?? undefined,
@@ -111,6 +122,7 @@ Deno.serve(async (req) => {
       buyer_id: buyerId,
       piece_id,
       order_type,
+      quantity,
       stripe_payment_intent: paymentIntent.id,
       status: 'pending',
       shipping_address: shipping_address ?? null,
