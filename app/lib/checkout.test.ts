@@ -82,6 +82,16 @@ describe('checkout lib', () => {
     await expect(purchasePiece('p', 'digital')).rejects.toThrow('Canceled')
   })
 
+  it('purchasePiece handles network timeout', async () => {
+    mockFetch.mockRejectedValueOnce({ name: 'AbortError' })
+    await expect(purchasePiece('p', 'digital')).rejects.toThrow('Connection timed out')
+  })
+
+  it('purchasePiece handles network failure (offline)', async () => {
+    mockFetch.mockRejectedValueOnce({ message: 'Network request failed' })
+    await expect(purchasePiece('p', 'digital')).rejects.toThrow('We couldn\'t connect to the server')
+  })
+
   it('purchaseCredits handles successful payment flow', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
