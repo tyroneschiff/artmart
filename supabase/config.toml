@@ -1,0 +1,19 @@
+project_id = "twwittitwwuuauhgrdaw"
+
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.download-piece]
+verify_jwt = false
+
+[functions.moderate-comment]
+verify_jwt = false
+
+[functions.purchase-credits]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.transform-artwork]
+verify_jwt = false
