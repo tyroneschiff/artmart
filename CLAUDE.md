@@ -66,7 +66,7 @@ All values live in `lib/theme.ts`. Use tokens, never raw hex.
 - Tab bar: white background, gold active tint
 - Never use `#FF6B35` — replaced by gold everywhere
 
-Aesthetic blend: ucals.com layout discipline + tincan.kids warmth. Premium but approachable.
+Aesthetic: ucals.com layout discipline + tincan.kids warmth. Premium but approachable.
 
 ## Platform strategy
 
@@ -80,8 +80,9 @@ Aesthetic blend: ucals.com layout discipline + tincan.kids warmth. Premium but a
 - API keys in Supabase secrets only — never in app bundle or eas.json
 - Stripe webhooks must verify signature; Supabase RLS must be set before any table goes live
 - Prompt caching headers on all Claude API calls
-- Physical print flow exists in code but is hidden from non-owners — Printful variant ID and API key must be verified before enabling
+- Physical print flow exists in code but is hidden from all users — Printful variant ID and API key must be verified before enabling
 - Comments are built with Claude Haiku moderation — auth-only, 300 char limit, 1-per-5min rate limit
+- "Gallery" is the correct term for a child's collection — not "Store". Route paths use `/store/[slug]` but all UI copy says "Gallery"
 
 ## Coding conventions
 
@@ -207,19 +208,20 @@ The most dangerous bugs look like success but do nothing:
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
 **2026-04-24:**
-- Physical print flow hidden from all users pending Printful account verification (correct variant ID unknown). Only download CTA remains on piece detail page.
-- "Store" renamed to "Gallery" throughout — tabs, screens, copy, modal text. Route paths (`/store/[slug]`) unchanged.
-- Sort labels changed from "Top worlds / New worlds" to "Most loved / Newest" — cleaner, less forced.
-- Vote badge moved from below-card text to image overlay on both Discover and Gallery pages — consistent treatment.
-- Gallery page bottom nav added (Discover / Create / My Galleries / Profile) for navigation from shared links.
-- Autonomous cron system migrated from Gemini CLI to Claude Code CLI. Scripts rewritten. Supabase auto-deploy removed from workflow — deploy remains manual. Migration files and edge functions explicitly prohibited for CRON B.
-- Delete functionality added to piece detail (owner-only). Root cause of silent no-op: missing RLS DELETE policy on `pieces` table — fixed in `012_pieces_delete_policy.sql`.
+- Physical print flow hidden from ALL users pending Printful account verification. Do not re-add print cards for any user — see `## What we've tried and rejected`.
+- "Store" renamed to "Gallery" throughout UI. Route paths (`/store/[slug]`) unchanged in code. Do not revert copy back to "Store" — the rename is intentional.
+- Sort labels: "Most loved" / "Newest" — not "Top worlds" / "New worlds".
+- Vote badge moved to image overlay (consistent across Discover and Gallery pages).
+- Gallery page bottom nav added (Discover / Create / My Galleries / Profile).
+- Autonomous crons migrated from Gemini to Claude Code CLI. Supabase auto-deploy removed. Migrations and edge functions off-limits for CRON B.
+- Delete piece added (owner-only). RLS DELETE policy added in `012_pieces_delete_policy.sql`.
+- Digital download CTA added for non-owners/non-buyers on piece detail page.
+- CLAUDE.md had unresolved merge conflicts from Gemini sync — cleaned up 2026-04-24.
 
-**2026-04-23 — BUSINESS MODEL PIVOT (decided, not yet implemented):**
-- **Product reframe: "Step inside your child's drawing"** — the drawing IS the vision; the AI is the door into that world. Never say "elevate," "improve," "gallery-worthy," or treat the original as raw material.
-- **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs. Stripe takes ~$0.59/transaction.
-- **Grandparent is the print buyer.** Parent generates → shares to family WhatsApp → grandparent buys print as gift. This is the highest-ARPU lever.
-- **Implementation sequence:** (1) reframe copy [DONE], (2) credits + paywall [DONE], (3) grandparent guest checkout + gift-a-print, (4) comments [DONE].
+**2026-04-23 — BUSINESS MODEL PIVOT:**
+- **Product reframe: "Step inside your child's drawing"** — the drawing IS the vision; the AI is the door. Never say "elevate," "improve," "gallery-worthy," or treat the original as raw material.
+- **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs.
+- **Grandparent is the print buyer.** Parent generates → shares to family WhatsApp → grandparent buys print as gift. Highest-ARPU lever.
 
 **2026-04-22:**
 - Transform failing: iPhone photos 4–15MB, Claude rejects >5MB. Fixed with `expo-image-manipulator` compression.
@@ -236,34 +238,6 @@ The most dangerous bugs look like success but do nothing:
 
 **Response style:** Maximum signal, minimum words. Code over prose.
 
-<<<<<<< HEAD
-=======
-## Current task queue
-
-**Done (recent):**
-- ✅ Product reframe rollout (step 1) — Claude system prompt in `transform-artwork/index.ts` rewritten from "art director elevating" to "visual collaborator stepping inside a child's imagination"; user-text "Step inside this child's drawing"; app copy updated (tagline `login.tsx:38`, transform button + status + compare labels `create.tsx`, share messages `share.ts`). Deployed to edge function; client changes need EAS rebuild.
-- ✅ Transform ES256 JWT fix — `transform-artwork/index.ts` deployed with `--no-verify-jwt` (gateway skips), function verifies via `jose.createRemoteJWKSet` against Supabase JWKS endpoint. Unblocks every transform on current asymmetric-JWT project config.
-- ✅ Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation` with a 90s `Promise.race`
-- ✅ Transformed image download timeout — 30s AbortController around `fetch(transformedUrl)` + `arrayBuffer()` in `create.tsx:107–120`
-- ✅ Re-download path — `piece/[id].tsx` queries existing digital orders; card swaps to "Re-download" when `status=paid` exists
-- ✅ Re-download column fix — `fetchMyDigitalOrder` in `piece/[id].tsx` corrected from `.eq('user_id')/.eq('type')` to `.eq('buyer_id')/.eq('order_type')` to match what the edge function actually inserts; re-download CTA now appears for paying customers
-
-**Pending (reframe + monetization pivot — see Recent Session Notes 2026-04-23):**
-- ✅ Reframe pass 2 — updated `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, and `piece/[id].tsx` to match "step inside" framing; replaced "gallery / piece / art" with "world" where appropriate; updated empty states and icons.
-- ✅ Profile display name fix — `profile.tsx` now fetches and pre-fills the display name via `useQuery`; no longer write-only and doesn't clear on save.
-- ✅ Error handling with retry — added `isError`/`refetch` with a "Try again" pill to `store/[slug].tsx`, `discover.tsx`, `mystores.tsx`, and `piece/[id].tsx` to handle transient network failures.
-- ✅ Store empty state — replaced bare text in `store/[slug].tsx` with a warm centered block (icon + possessive copy) matching the app's pattern.
-- ✅ Anonymous vote redirect — `discover.tsx:157-163` and `piece/[id].tsx:281-287` both redirect to login when `!session`; `disabled` no longer includes `!session`; verified in code.
-- ✅ Login return redirect — `login.tsx:27-30` reads `returnTo` param and redirects there on success; verified in code.
-- ✅ Credits schema + 3-free tier — `useCredits.ts` queries `profiles.credits`; `transformArtwork.ts` returns `credits` after deduct; `OutOfCreditsError` (402) handled in `create.tsx:151-153` with upsell modal; code evidence confirms done.
-- ✅ Buy Credits screen + Stripe flow — `credits.tsx` screen with 3 packs; `purchaseCredits()` in `checkout.ts:124` calls `purchase-credits` edge function (exists at `supabase/functions/purchase-credits/index.ts`); `stripe-webhook/index.ts` exists; code evidence confirms done.
-- ✅ Comments with Claude Haiku pre-moderation — `piece/[id].tsx:313-368` has full comments UI; 300-char limit enforced (`maxLength={300}`); auth-only posting; report button calls `reportMutation` inserting to `reports` table; `moderate-comment/index.ts` edge function exists; code evidence confirms done.
-- ✅ Purchase CTA for new visitors — `piece/[id].tsx:313-343` added `{!isOwner && !myDigitalOrder && (...)}` block with Print ($30) and Digital ($5) cards; both call `handlePurchase()` → `GiftingModal` with `isGuest={!session}` for grandparent guest checkout; also fixed "Gallery" → "Store" at line 267.
-- [ ] Accept TestFlight invite — appstoreconnect.apple.com/apps/6762963488/testflight/ios
-- [ ] Deploy landing page to Vercel on drawup.art (domain not registered)
-- [ ] OG meta tags for piece/store public URLs
-
->>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
 ---
 
 ## Autonomous improvement system
@@ -281,10 +255,11 @@ The most dangerous bugs look like success but do nothing:
 **Process:**
 1. Read `## Known production errors` — real failures outrank hypotheses
 2. Read `## Recent user feedback` — actual user confusion outranks code analysis
-3. Read the current `## Strategic Backlog` — verify every line reference still exists in code
-4. Audit the create → transform → publish flow end to end
-5. Audit the credits purchase flow end to end
-6. Apply `## Decision filter` to any candidate improvements
+3. Read `## What we've tried and rejected` — never re-suggest these
+4. Read the current `## Strategic Backlog` — verify every line reference still exists in code
+5. Audit the create → transform → publish flow end to end
+6. Audit the credits purchase flow end to end
+7. Apply `## Decision filter` to any candidate improvements
 
 **May update:**
 - `## Strategic Backlog` — rewrite entirely each run, max 8 items
@@ -318,6 +293,7 @@ The most dangerous bugs look like success but do nothing:
 - Never start what you can't finish — a button with no handler is worse than nothing
 - Use only tokens from `app/lib/theme.ts`, never raw hex values
 - Apply `## Decision filter` before implementing — if it doesn't pass, pick the next backlog item
+- Read `## What we've tried and rejected` before implementing — do not re-add rejected features
 
 **After implementing:**
 1. Move completed item to `## Current task queue` Done ✅ with one-line summary
@@ -330,10 +306,7 @@ The most dangerous bugs look like success but do nothing:
 
 *(Rewritten each run by CRON A — Implementer reads this to pick next task)*
 
-<<<<<<< HEAD
-1. **[CONFIRMED] Anonymous vote button silently no-ops — missed signup funnel** — `discover.tsx` vote handler fires `canVote && voteMutation.mutate(item.id)` which silently does nothing when unauthenticated; `piece/[id].tsx` vote handler fires `session && voteMutation.mutate()` which also silently does nothing. Fix requires two changes per button: (1) `onPress` must call `router.push('/(auth)/login')` when no session, AND (2) remove `!session` from `disabled` prop — React Native swallows the tap before `onPress` fires if `disabled` is true.
-
-2. **[CONFIRMED] Login always redirects to Discover — breaks vote conversion funnel** — `login.tsx` hardcodes `router.replace('/(tabs)/discover')` on success. When item 1 routes an anonymous voter to login, they complete signup but land on Discover instead of the piece. Pass originating route as param and redirect there on success.
+1. **[CONFIRMED] Discover vote tap loses vote after login** — `discover.tsx` vote button routes unauthenticated users to `{ pathname: '/(auth)/login', params: { returnTo: '/(tabs)/discover' } }`. After login, user lands on Discover — no auto-vote fires. Fix: change `returnTo` to `` `/piece/${item.id}` `` and add `vote: '1'` param. `piece/[id].tsx:109-114` already has the auto-vote mechanism on mount. Impact: converts the highest-intent anonymous action into a real vote after signup.
 
 ---
 
@@ -343,10 +316,11 @@ The most dangerous bugs look like success but do nothing:
 
 - **Subscription model (monthly)** — Rejected in favour of credit packs. Not enough usage data to price a subscription. Revisit after month 2.
 - **"Imagination Credits" as label** — Replaced with plain "Credits". "Imagination" felt decorative on transactional UI; reserved for emotional moments (descriptions, share messages, empty states).
-- **"Top worlds / New worlds" sort labels** — Replaced with "Most loved / Newest". "Worlds" in a UI label felt forced; the word earns its place as the noun for pieces, not as a sort filter.
+- **"Top worlds / New worlds" sort labels** — Replaced with "Most loved / Newest". Less forced; "worlds" earns its place as the noun for pieces, not as a sort filter.
 - **Compare labels ("The Drawing" / "The World")** — Removed entirely. Two images side by side is self-explanatory; any label risked implying the drawing isn't a world too.
-- **Physical print card visible to all users** — Hidden pending Printful variant ID verification. Showing a purchasable option that can't fulfil is worse than not showing it.
+- **Physical print card visible to any user** — Hidden pending Printful variant ID verification. Showing a purchasable option that can't fulfil is worse than not showing it. Do not re-add for any user until Printful is configured.
 - **Auto-deploy Supabase functions from cron** — Removed from GitHub Actions. A bad edge function deploying automatically breaks production transforms for all users. Manual deploy only.
+- **Reverting "Gallery" back to "Store"** — The rename to "Gallery" is intentional. Route paths use `/store/[slug]` but all UI copy must say "Gallery". Do not revert.
 
 ---
 
@@ -373,53 +347,37 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Transform JWT fix — ES256 JWKS verification in edge function
 - ✅ Upload timeouts — 90s Promise.race on both storage uploads in publishMutation
 - ✅ Transformed image download timeout — 30s AbortController in create.tsx
-- ✅ Re-download path — piece/[id].tsx queries existing digital orders, swaps CTA
-- ✅ Re-download column fix — corrected buyer_id/order_type field names
+- ✅ Re-download path + column fix — piece/[id].tsx queries existing digital orders, correct field names
 - ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
 - ✅ Read Aloud — OpenAI TTS nova voice via edge function, expo-av playback
-- ✅ Child name in descriptions — passed through transform flow, used in Claude prompt
 - ✅ Delete piece — owner-only, confirmation alert, RLS DELETE policy migration
 - ✅ Gallery rename — "Store" → "Gallery" throughout UI
 - ✅ Gallery bottom nav — Discover / Create / My Galleries / Profile
 - ✅ Vote badge overlay — consistent image overlay on Discover and Gallery pages
 - ✅ Physical print hidden — removed from piece detail pending Printful verification
+- ✅ Digital download CTA for non-owners — `piece/[id].tsx` shows purchase section to visitors
 - ✅ Autonomous crons migrated to Claude Code CLI
+- ✅ CLAUDE.md merge conflicts resolved
 
 **Pending:**
-- [ ] Anonymous vote → login redirect (backlog item 1 + 2)
+- [ ] Discover vote → login redirect to piece (backlog item 1)
 - [ ] Grandparent guest checkout — buy from gallery without login
 - [ ] Web gallery deployment — drawup.art domain + public routes
 - [ ] OG meta tags for piece/gallery public URLs
 
 ---
-=======
-1. **Discover vote tap redirects to discover, not the voted piece — vote silently lost** `[Growth]` `[UX]` — `discover.tsx:158` — `returnTo: '/(tabs)/discover'` sends user back to the discover feed after login; discover has no auto-vote logic, so the intended vote is silently dropped. `piece/[id].tsx:109-114` already has the auto-vote mechanism (`vote=1` param fires `voteMutation` on mount). Fix: change `discover.tsx:158` from `params: { returnTo: '/(tabs)/discover' }` to `params: { returnTo: \`/piece/${item.id}\`, vote: '1' }` — after login the piece page auto-votes and the user lands on the piece they cared about. Impact: converts the discover vote tap into a real vote-after-signup instead of a confusing dead end.
-
-2. **"Gallery" copy violations in store/[slug].tsx** `[Copy]` `[Reframe]` — Five locations in `store/[slug].tsx` still say "Gallery": line 50 ("Failed to load gallery" → "Failed to load store"); line 58 ("Gallery not found." → "Store not found."); line 82 (header "{store.child_name}'s Gallery" → "{store.child_name}'s Store"); line 132 (bottom nav "My Galleries" → "My Stores"); line 134 (same). Note: `piece/[id].tsx:267` was fixed this run. Impact: inconsistent with the reframe on a high-traffic screen.
->>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
 
 ## Improvement Log
 
 *(One line per run, newest first)*
 
-<<<<<<< HEAD
+- [2026-04-24 Human] Resolved CLAUDE.md merge conflicts from Gemini sync; added Gallery/Store rename protection and print card rejection to What we've tried and rejected; fixed piece/[id].tsx Gallery→Store revert and print card re-add from cron run.
+- [2026-04-24 CRON B] Digital download CTA for grandparents + Gallery copy fix — added `{!isOwner && !myDigitalOrder}` block with digital card; fixed "Gallery"→"Store" revert. File: `app/app/piece/[id].tsx`.
+- [2026-04-24 CRON A] Marked 7 task queue items ✅; found cron had re-added print card and reverted Gallery→Store; confirmed discover vote redirect sends to discover not piece (vote lost); rewrote backlog.
 - [2026-04-24 Human] Migrated cron system to Claude Code CLI; added Decision filter, What we've tried and rejected, Known production errors, Recent user feedback sections to CLAUDE.md.
-=======
-- [2026-04-24 CRON B] Purchase CTA for grandparents — added `{!isOwner && !myDigitalOrder}` block with Print/Digital cards + prices; both route through `GiftingModal` with `isGuest={!session}`; also fixed "Gallery"→"Store" at `piece/[id].tsx:267`. File: `app/app/piece/[id].tsx`.
-- [2026-04-24 CRON A] Backlog items 1 & 2 confirmed done in code; marked 7 task queue items ✅ (vote redirect, login return, credits, buy credits, comments); found critical: `piece/[id].tsx:292` purchase CTA gated to owner/existing-buyer — grandparent can't buy; discover vote redirect sends to discover not piece so vote lost; 6 "Gallery" copy violations remain; rewrote backlog with 3 verified items.
->>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
-- [2026-04-22 CRON B] Reframe pass 2 & critical UX fixes — updated 5 screens with "step inside" copy; fixed write-only profile name; added network error retry UI; improved store empty state. Files: `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, `piece/[id].tsx`.
-- [2026-04-22 CRON B] Re-download column fix — `fetchMyDigitalOrder` corrected from `user_id`/`type` to `buyer_id`/`order_type`; paying customers can now re-download. File: `app/app/piece/[id].tsx`.
-- [2026-04-22 CRON B] Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation`; 90s `Promise.race` prevents permanent "Publishing…" state on cellular drop. File: `app/app/(tabs)/create.tsx`.
-- [2026-04-22 CRON B] Transformed image download timeout — 30s AbortController wraps `fetch`+`arrayBuffer()` at `create.tsx:107–120`; AbortError → user-readable message via existing error box; spinner no longer hangs forever on CDN drop. File: `app/app/(tabs)/create.tsx`.
-<<<<<<< HEAD
-- [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog item; line refs updated.
-- [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists. File: `app/app/piece/[id].tsx`.
-- [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails. File: `supabase/functions/create-payment-intent/index.ts`.
-=======
-- [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog #3; all 7 prior items verified still broken; line refs updated.
-- [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists; `maybeSingle()` used so no-order case returns null without throwing. File: `app/app/piece/[id].tsx`.
-- [2026-04-22 CRON A] Verified all 8 backlog items — all confirmed still broken; sharpened item 4 to document that `disabled` prop on vote buttons must also change (not just `onPress`), or the login-redirect will be swallowed by React Native before firing; fixed item 6 line reference (27, not 28).
-- [2026-04-22 CRON A] Verified all 7 prior backlog items — all confirmed still broken; found new #3: `publishMutation` storage uploads (`create.tsx:158–170`) have no timeout, parent permanently stuck on "Publishing…" on cellular drop; added to Known gotchas (Supabase Storage upload no timeout); renumbered backlog to 8 items.
-- [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails; prevents silent Stripe capture with no order row. File: `supabase/functions/create-payment-intent/index.ts`.
->>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
+- [2026-04-22 CRON B] Reframe pass 2 & critical UX fixes — updated 5 screens with "step inside" copy; fixed write-only profile name; added network error retry UI; improved store empty state.
+- [2026-04-22 CRON B] Re-download column fix — `fetchMyDigitalOrder` corrected from `user_id`/`type` to `buyer_id`/`order_type`.
+- [2026-04-22 CRON B] Upload timeouts — `withUploadTimeout` wraps both storage uploads; 90s Promise.race prevents permanent "Publishing…" state.
+- [2026-04-22 CRON B] Transformed image download timeout — 30s AbortController; AbortError → user-readable message.
+- [2026-04-22 CRON A] Found column mismatch in fetchMyDigitalOrder; re-download CTA was silently broken.
+- [2026-04-22 CRON B] Order insert error check — return 500 before sending client_secret if insert fails.

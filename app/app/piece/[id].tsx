@@ -264,7 +264,7 @@ export default function PieceScreen() {
         <View style={styles.titleRow}>
           <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
           <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
-            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Store →</Text>
+            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Gallery →</Text>
           </TouchableOpacity>
         </View>
 
@@ -315,25 +315,12 @@ export default function PieceScreen() {
             <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
             <TouchableOpacity
               style={[card, styles.purchaseCard]}
-              onPress={() => handlePurchase('print')}
-              disabled={purchasing !== null}
-            >
-              <View>
-                <Text style={styles.purchaseType}>Physical print</Text>
-                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>Shipped to your door</Text>
-              </View>
-              {purchasing === 'print'
-                ? <ActivityIndicator color={colors.gold} />
-                : <Text style={styles.purchasePrice}>${((piece.price_print || 3000) / 100).toFixed(2)}</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[card, styles.purchaseCard]}
               onPress={() => handlePurchase('digital')}
               disabled={purchasing !== null}
             >
               <View>
                 <Text style={styles.purchaseType}>Digital download</Text>
-                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>Full-resolution file</Text>
+                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>Full-resolution file, yours to keep</Text>
               </View>
               {purchasing === 'digital'
                 ? <ActivityIndicator color={colors.gold} />
