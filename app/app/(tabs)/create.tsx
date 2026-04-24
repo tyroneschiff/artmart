@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
+import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
@@ -54,7 +54,6 @@ export default function CreateScreen() {
   const { data: credits } = useCredits()
 
   const [imageUri, setImageUri] = useState<string | null>(null)
-  const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [transformedUri, setTransformedUri] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
@@ -91,7 +90,6 @@ export default function CreateScreen() {
   function resetCreate() {
     setStep('pick')
     setImageUri(null)
-    setImageBase64(null)
     setTransformedUri(null)
     setTitle('')
     setSelectedStore(null)
@@ -105,11 +103,10 @@ export default function CreateScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.7,
-      base64: true,
+      base64: false,
     })
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri)
-      setImageBase64(result.assets[0].base64 ?? null)
       setTransformedUri(null)
       setStep('transform')
     }
@@ -118,10 +115,9 @@ export default function CreateScreen() {
   async function takePhoto() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync()
     if (status !== 'granted') { Alert.alert('Permission needed', 'Camera access is required.'); return }
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, base64: true })
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, base64: false })
     if (!result.canceled && result.assets[0]) {
       setImageUri(result.assets[0].uri)
-      setImageBase64(result.assets[0].base64 ?? null)
       setTransformedUri(null)
       setStep('transform')
     }
@@ -138,30 +134,13 @@ export default function CreateScreen() {
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
       )
       const { transformedUrl, description } = await transformArtwork(imageUri, compressed.base64 ?? undefined)
-      // Credits will be updated via Realtime listener
+      
       const localPath = FileSystem.documentDirectory + `transformed_${Date.now()}.jpg`
-      const dlController = new AbortController()
-      const dlTimeout = setTimeout(() => dlController.abort(), 30_000)
-      let arrayBuffer: ArrayBuffer
-      try {
-        const imgRes = await fetch(transformedUrl, { signal: dlController.signal })
-        if (!imgRes.ok) throw new Error(`Could not download your artwork (HTTP ${imgRes.status}). Please try again.`)
-        arrayBuffer = await imgRes.arrayBuffer()
-        clearTimeout(dlTimeout)
-      } catch (fetchErr: any) {
-        clearTimeout(dlTimeout)
-        throw fetchErr.name === 'AbortError'
-          ? new Error('Downloading your artwork timed out. Please try again.')
-          : fetchErr
-      }
-      const bytes = new Uint8Array(arrayBuffer)
-      let binary = ''
-      const chunkSize = 8192
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.slice(i, i + chunkSize))
-      }
-      await FileSystem.writeAsStringAsync(localPath, btoa(binary), { encoding: FileSystem.EncodingType.Base64 })
-      setTransformedUri(localPath)
+      const { uri: downloadedUri } = await withUploadTimeout(
+        FileSystem.downloadAsync(transformedUrl, localPath)
+      )
+      
+      setTransformedUri(downloadedUri)
       setAiDescription(description)
       setStep('publish')
     } catch (e: any) {
@@ -201,39 +180,64 @@ export default function CreateScreen() {
 
   const publishMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedStore || !imageUri || !transformedUri || !title) throw new Error('Missing required fields')
+      if (!selectedStore || !imageUri || !transformedUri || !title || !session) throw new Error('Missing required fields')
 
       const ext = imageUri.split('.').pop()?.split('?')[0] ?? 'jpg'
-      const fileName = `${session!.user.id}/${Date.now()}_original.${ext}`
-      const originalBase64 = await FileSystem.readAsStringAsync(imageUri, { encoding: 'base64' })
-      const originalBytes = Uint8Array.from(atob(originalBase64), (c) => c.charCodeAt(0))
-      const { error: uploadError } = await withUploadTimeout(
-        supabase.storage.from('artwork').upload(fileName, originalBytes, { contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}` })
+      const fileName = `${session.user.id}/${Date.now()}_original.${ext}`
+
+      // Upload original
+      const originalUploadUrl = `${supabaseUrl}/storage/v1/object/artwork/${fileName}`
+      const originalResult = await withUploadTimeout(
+        FileSystem.uploadAsync(originalUploadUrl, imageUri, {
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': supabaseAnonKey,
+            'Content-Type': `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+          },
+        })
       )
-      if (uploadError) throw uploadError
+      if (originalResult.status >= 400) throw new Error(`Original upload failed: ${originalResult.body}`)
       const { data: { publicUrl: originalUrl } } = supabase.storage.from('artwork').getPublicUrl(fileName)
 
-      const transformedFileName = `${session!.user.id}/${Date.now()}_transformed.jpg`
-      const transformedBase64 = await FileSystem.readAsStringAsync(transformedUri, { encoding: 'base64' })
-      const transformedBytes = Uint8Array.from(atob(transformedBase64), (c) => c.charCodeAt(0))
-      const { error: transformedUploadError } = await withUploadTimeout(
-        supabase.storage.from('artwork').upload(transformedFileName, transformedBytes, { contentType: 'image/jpeg' })
+      // Upload transformed
+      const transformedFileName = `${session.user.id}/${Date.now()}_transformed.jpg`
+      const transformedUploadUrl = `${supabaseUrl}/storage/v1/object/artwork/${transformedFileName}`
+      const transformedResult = await withUploadTimeout(
+        FileSystem.uploadAsync(transformedUploadUrl, transformedUri, {
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': supabaseAnonKey,
+            'Content-Type': 'image/jpeg',
+          },
+        })
       )
-      if (transformedUploadError) throw transformedUploadError
+      if (transformedResult.status >= 400) throw new Error(`Transformed upload failed: ${transformedResult.body}`)
       const { data: { publicUrl: transformedStoredUrl } } = supabase.storage.from('artwork').getPublicUrl(transformedFileName)
 
-      // Generate watermarked (low-res preview) version
+      // Generate and upload watermarked (low-res preview) version
       const watermarked = await ImageManipulator.manipulateAsync(
         transformedUri,
         [{ resize: { width: 800 } }],
-        { compress: 0.4, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        { compress: 0.4, format: ImageManipulator.SaveFormat.JPEG }
       )
-      const watermarkedFileName = `${session!.user.id}/${Date.now()}_preview.jpg`
-      const watermarkedBytes = Uint8Array.from(atob(watermarked.base64!), (c) => c.charCodeAt(0))
-      const { error: watermarkedUploadError } = await withUploadTimeout(
-        supabase.storage.from('artwork').upload(watermarkedFileName, watermarkedBytes, { contentType: 'image/jpeg' })
+      const watermarkedFileName = `${session.user.id}/${Date.now()}_preview.jpg`
+      const watermarkedUploadUrl = `${supabaseUrl}/storage/v1/object/artwork/${watermarkedFileName}`
+      const watermarkedResult = await withUploadTimeout(
+        FileSystem.uploadAsync(watermarkedUploadUrl, watermarked.uri, {
+          httpMethod: 'POST',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': supabaseAnonKey,
+            'Content-Type': 'image/jpeg',
+          },
+        })
       )
-      if (watermarkedUploadError) throw watermarkedUploadError
+      if (watermarkedResult.status >= 400) throw new Error(`Preview upload failed: ${watermarkedResult.body}`)
       const { data: { publicUrl: watermarkedUrl } } = supabase.storage.from('artwork').getPublicUrl(watermarkedFileName)
 
       const { data: pieceRow, error } = await supabase.from('pieces').insert({

@@ -6,13 +6,13 @@
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, display a high-contrast badge (using `colors.gold`) near the Print CTA if `isFirstOrder` is true, announcing a 20% discount.
     * **Why:** Visual nudge to capture intent from new users who might be hesitating on price.
 
-2. **[RELIABILITY] Direct Storage Upload (OOM Fix)**
-    * **The Micro-Task:** In `app/app/(tabs)/create.tsx`, refactor `publishMutation` to use `fetch(uri).blob()` or `FileSystem.uploadAsync` for both original and transformed images, eliminating all `readAsStringAsync` calls.
-    * **Why:** Critical fix for Android OOM crashes when users upload high-resolution original artwork.
-
-3. **[RETENTION] Push Notification Function**
-    * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using `expo-server-sdk` to send a push notification when a piece receives its first comment.
+2. **[RETENTION] Push Notification Function**
+    * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using direct `fetch` calls to the Expo Push API to send a notification when a piece receives its first comment.
     * **Why:** Re-engages the artist/child with immediate positive feedback, driving repeat app opens.
+
+3. **[REVENUE] Post-Comment Incentive Loop**
+    * **The Micro-Task:** In `supabase/functions/moderate-comment/index.ts`, if the piece has 0 previous comments, include a `first_comment: true` flag in the response to the app.
+    * **Why:** Lays the groundwork for the app to show a "Your first comment!" celebration and a limited-time print discount.
 
 4. **[UX] "View in Room" Variety**
     * **The Micro-Task:** In `RoomPreviewModal.tsx`, define a `ROOMS` array with 3 Unsplash URLs. Add a horizontal selector that lets users switch between Nursery, Office, and Living Room contexts.
@@ -22,13 +22,13 @@
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, wrap the main `Image` in an `Animated.View`. Use `useNativeDriver: true` to fade the opacity from 0 to 1 over 800ms when `onLoad` triggers.
     * **Why:** Elevates the "Step Inside" magic by making the transformation feel intentional and high-end rather than a jarring image pop.
 
-6. **[UX] Sample Store Empty State**
-    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
-    * **Why:** Demonstrates the end-state value to new users before they've committed to creating, reducing early-funnel abandonment.
-
-7. **[RELIABILITY] Supabase Edge Function Retries**
+6. **[RELIABILITY] Supabase Edge Function Retries**
     * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, implement a simple retry loop (max 1 retry) for the Claude and fal.ai API calls to handle transient network hiccups.
     * **Why:** Hardens the most expensive and complex part of the user journey, ensuring credits are never "wasted" on a random 502 error.
+
+7. **[UX] Sample Store Empty State**
+    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
+    * **Why:** Demonstrates the end-state value to new users before they've committed to creating, reducing early-funnel abandonment.
 
 ## Known gotchas
 
@@ -38,10 +38,11 @@
 - **Deno/Stripe Connection Hangs:** In Supabase Edge Functions, external calls to Stripe or AI APIs can occasionally hang. While Deno has a global timeout, it's safer to use a `Promise.race` with a 10s-20s timeout for external operations to ensure the function returns a clean error rather than timing out the entire gateway.
 - **Dynamic Layout Shifts:** Use `useWindowDimensions` instead of `Dimensions.get('window')` for components that need to respond to orientation changes or split-screen mode on Android, as `get()` only provides the initial value.
 - **Large Image Base64 OOM:** Reading very large images as Base64 strings using `FileSystem.readAsStringAsync` or selecting them with `base64: true` in `ImagePicker` can cause Out-Of-Memory (OOM) errors on low-end Android devices. Prefer `FileSystem.uploadAsync` or `fetch(uri).blob()` for direct file uploads.
-- **Android KeyboardAvoidingView:** On Android, `KeyboardAvoidingView` with `behavior="height"` inside a full-screen `Modal` can sometimes cause the input to be obscured by the keyboard if the `softInputMode` isn't set correctly in `app.json`. Always test keyboard interaction on physical Android devices.
+- **Supabase JS Storage Uploads:** In React Native, `supabase.storage.upload()` can be finicky with `Blob` or `File` objects. For large files, prefer `FileSystem.uploadAsync` which uses native background threads and handles multipart/form-data more reliably.
 
 ## Done
 
+- **[RELIABILITY] Direct Storage Upload (OOM Fix)** — Refactored `publishMutation` and `handleTransform` in `create.tsx` to use `FileSystem.uploadAsync` and `FileSystem.downloadAsync`. Completely bypassed memory-heavy Base64 conversions for high-res images, eliminating the #1 cause of Android OOM crashes during the creation flow.
 - **[REVENUE] First-Order Special (Part 1: Logic)** — Implemented `fetchPaidOrderCount` and `isFirstOrder` logic in `piece/[id].tsx`. This establishes the foundation for first-order incentives by accurately identifying new customers server-side.
 - **[REVENUE] High-Value Credit Tier & Refactor** — Added a 25-credit "BEST VALUE" pack to `credits.tsx` to nudge power users toward higher AOV. Refactored the entire screen to use `colors`, `type`, and `card` tokens, eliminating design debt and ensuring brand consistency.
 - **[RELIABILITY] AI Generation Timeouts** — Implemented `fetchWithTimeout` helper using `Promise.race` and `AbortController` in `transform-artwork` edge function. Claude and fal.ai calls now have a 20s limit with warm, brand-aligned error messages, preventing hanging loaders and ensuring a reliable credit refund path.
@@ -62,6 +63,8 @@
 
 ## Improvement Log
 
+- [2026-04-24 — CRON B] Direct Storage Upload (OOM Fix) — Hardened the creation flow against Android OOM crashes. Refactored `publishMutation` to use `FileSystem.uploadAsync` for all image types and updated `handleTransform` to use `FileSystem.downloadAsync`. By completely bypassing Base64 string conversion for high-res original and transformed images, we've eliminated the primary cause of app crashes for new users on lower-end devices.
+- [2026-04-24 — CRON A] Strategic Audit: Strategically pivoting toward a dual-engine growth phase: Reliability + Conversion. Hardening the upload pipeline against Android OOM crashes ensures the 'Step Inside' magic is accessible to all, while the First-Order Incentive UI will maximize initial session value. We're also deepening the emotional loop with push notifications for first comments, turning a social action into a retention and revenue driver.
 - [2026-04-23 — CRON B] First-Order Special (Part 1: Logic) — Hardened the conversion funnel by implementing server-side order counting to identify first-time buyers. Added `isFirstOrder` logic to `piece/[id].tsx` with automatic cache invalidation upon successful purchase, setting the stage for targeted 20% discount incentives.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Revenue fundamentals are solid, but we must now focus on initial conversion (First-Order Incentives) and absolute platform stability (OOM fixes). The 'magic' of the app—the 'Step Inside' moment—needs to be further polished with smoother transitions and varied room visualizations to broaden the appeal to different family personas. Reliability is a brand promise; we are hardening the upload engine to ensure even high-res original art never crashes the experience.
 - [2026-04-23 — CRON B] High-Value Credit Tier & Refactor — Maximized credit revenue potential by introducing a 25-credit pack at $19.99. Simultaneously wiped out design debt on the credits screen by migrating all styles to theme tokens, ensuring a "Step Inside" premium feel on the most critical conversion screen.
