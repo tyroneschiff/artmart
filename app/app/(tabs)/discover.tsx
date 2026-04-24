@@ -93,12 +93,12 @@ export default function DiscoverScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.header}>Discover</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={styles.headerBlock}>
+        <View style={styles.headerRow}>
+          <Text style={styles.header}>Discover</Text>
           <CreditsChip />
-          <View style={styles.badge}><Text style={styles.badgeText}>✦ Top worlds</Text></View>
         </View>
+        <View style={styles.badge}><Text style={styles.badgeText}>✦ Top worlds</Text></View>
       </View>
       <FlatList
         data={pieces}
@@ -150,7 +150,8 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 20 },
+  headerBlock: { paddingHorizontal: 20, marginBottom: 20 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   header: { ...type.h1 },
   badge: { backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5 },
   badgeText: { ...type.label, color: colors.goldDark, fontWeight: '700' },

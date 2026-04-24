@@ -55,9 +55,9 @@ Deno.serve(async (req) => {
         amount: priceCents,
         currency: 'usd',
         metadata: {
-          user_id: userId,
+          user_id: String(userId),
           type: 'credits',
-          amount: creditAmount,
+          amount: String(creditAmount),
         },
       },
       { idempotencyKey: `credits-${userId}-${creditAmount}-${Date.now()}` }

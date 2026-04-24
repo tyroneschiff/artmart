@@ -9,6 +9,7 @@ import { colors, type, btn, card } from '../lib/theme'
 export default function CreditsScreen() {
   const session = useAuthStore((s) => s.session)
   const { data: credits, isLoading } = useCredits()
+  const invalidateCredits = useInvalidateCredits()
   const [purchasing, setPurchasing] = useState<string | null>(null)
 
   async function handleBuy(amount: number, packTitle: string) {
@@ -17,6 +18,11 @@ export default function CreditsScreen() {
     try {
       const { data: { session: currentSession } } = await (await import('../lib/supabase')).supabase.auth.getSession()
       await purchaseCredits(currentSession!.access_token, amount)
+      
+      if (session?.user.id) {
+        invalidateCredits(session.user.id)
+      }
+
       Alert.alert('Success!', `${amount} credits have been added to your account.`)
       router.back()
     } catch (e: any) {
