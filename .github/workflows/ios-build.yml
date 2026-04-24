@@ -69,7 +69,7 @@ jobs:
 
       - name: EAS Build
         working-directory: app
-        run: eas build --platform ios --profile preview --non-interactive
+        run: eas build --platform ios --profile preview --non-interactive --clear-cache
 
       - name: EAS Submit
         working-directory: app
