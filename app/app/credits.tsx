@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native'
 import { router } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../hooks/useAuthStore'
-import { useCredits, useInvalidateCredits } from '../lib/useCredits'
+import { useCredits } from '../lib/useCredits'
 import { purchaseCredits } from '../lib/checkout'
 import { colors, type, btn, card } from '../lib/theme'
 
 export default function CreditsScreen() {
   const session = useAuthStore((s) => s.session)
+  const queryClient = useQueryClient()
   const { data: credits, isLoading } = useCredits()
-  const invalidateCredits = useInvalidateCredits()
   const [purchasing, setPurchasing] = useState<string | null>(null)
 
   async function handleBuy(amount: number, packTitle: string) {
@@ -17,11 +18,10 @@ export default function CreditsScreen() {
     setPurchasing(packTitle)
     try {
       const { data: { session: currentSession } } = await (await import('../lib/supabase')).supabase.auth.getSession()
-      await purchaseCredits(currentSession!.access_token, amount)
-      
-      if (session?.user.id) {
-        invalidateCredits(session.user.id)
-      }
+      const newBalance = await purchaseCredits(currentSession!.access_token, amount)
+
+      // Server confirmed the grant — set the authoritative balance immediately
+      queryClient.setQueryData<number>(['credits', session.user.id], newBalance)
 
       Alert.alert('Success!', `${amount} credits have been added to your account.`)
       router.back()

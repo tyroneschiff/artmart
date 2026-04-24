@@ -121,7 +121,7 @@ export async function purchasePiece(
   }
 }
 
-export async function purchaseCredits(userToken: string, amount?: number): Promise<void> {
+export async function purchaseCredits(userToken: string, amount?: number): Promise<number> {
   const res = await fetchWithTimeout(
     `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/purchase-credits`,
     {
@@ -152,9 +152,8 @@ export async function purchaseCredits(userToken: string, amount?: number): Promi
   const { error: presentError } = await presentPaymentSheet()
   if (presentError) {
     if (presentError.code === 'Canceled') throw new Error('Canceled')
-    
-    // Log the failure for reliability tracking
-    const payment_intent_id = json.client_secret.split('_secret')[0]
+
+    const payment_intent_id = json.payment_intent_id
     logCheckoutError({
       error_code: presentError.code,
       error_message: presentError.message,
@@ -164,4 +163,27 @@ export async function purchaseCredits(userToken: string, amount?: number): Promi
 
     throw new Error(presentError.message)
   }
+
+  // Payment confirmed on client — verify server-side and grant credits atomically
+  const confirmRes = await fetchWithTimeout(
+    `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/purchase-credits`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`,
+      },
+      body: JSON.stringify({ payment_intent_id: json.payment_intent_id }),
+    }
+  )
+
+  if (!confirmRes.ok) {
+    const body = await confirmRes.text()
+    throw new Error(`Failed to confirm credits: ${body}`)
+  }
+
+  const confirmJson = await confirmRes.json()
+  if (confirmJson.error) throw new Error(confirmJson.error)
+
+  return confirmJson.credits as number
 }

@@ -75,14 +75,14 @@ export default function MyStoresScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.header}>My Stores</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <CreditsChip />
+      <View style={styles.headerBlock}>
+        <View style={styles.headerRow}>
+          <Text style={styles.header}>My Stores</Text>
           <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
             <Text style={styles.addBtnText}>+ New</Text>
           </TouchableOpacity>
         </View>
+        <CreditsChip />
       </View>
 
       {showUpsell && (
@@ -172,7 +172,8 @@ export default function MyStoresScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
+  headerBlock: { paddingHorizontal: 20, marginBottom: 20 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   header: { ...type.h1 },
   addBtn: { ...btn.primary, paddingVertical: 9, paddingHorizontal: 16 },
   addBtnText: { ...btn.primaryText, fontSize: 14 },
