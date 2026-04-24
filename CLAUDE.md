@@ -119,6 +119,8 @@ The crons must reason from user experience, not code. These are the three people
 
 **Family member (gifter)** — Grandparent, aunt, uncle. Gets a WhatsApp link. Not tech-savvy. Has 90 seconds of attention. Needs to see the artwork and tap Buy with minimal thought. Any confusion — missing price, unclear button, broken image — and they close the tab and never return.
 
+**Child (the artist)** — The drawing is theirs. They are eagerly waiting to see their world come to life and to hear someone describe it back to them. The description read aloud is a magic moment — it must speak directly to them, name specific things they drew, and make them feel seen. If the transformation looks nothing like their drawing or the description feels generic, the magic is gone. This is as much for them as for the adults.
+
 **Visitor (voter)** — Another parent on Discover. Casual, zero commitment. Votes if it's beautiful and one tap. Won't scroll past a broken or empty screen.
 
 ---
