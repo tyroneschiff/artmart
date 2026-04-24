@@ -104,7 +104,6 @@ export default function MyStoresScreen() {
             <View style={styles.storeIcon}><Text style={styles.storeIconText}>{item.child_name[0].toUpperCase()}</Text></View>
             <View style={styles.storeInfo}>
               <Text style={styles.storeName}>{item.child_name}'s Gallery</Text>
-              <Text style={styles.storeSlug}>drawup.art/store/{item.slug}</Text>
             </View>
             <Text style={styles.storeArrow}>›</Text>
           </TouchableOpacity>

@@ -85,7 +85,7 @@ export default function StoreScreen() {
             {data.pieces.length > 1 && (
               <View style={styles.sortRow}>
                 <TouchableOpacity style={styles.sortDropdown} onPress={() => setDropdownOpen(true)}>
-                  <Text style={styles.sortDropdownText}>{sort === 'top' ? '♥ Top worlds' : '✦ New worlds'}</Text>
+                  <Text style={styles.sortDropdownText}>{sort === 'top' ? '♥ Most loved' : '✦ Newest'}</Text>
                   <Text style={styles.sortCaret}>▾</Text>
                 </TouchableOpacity>
               </View>
@@ -130,6 +130,10 @@ export default function StoreScreen() {
           <Text style={styles.navIcon}>🎨</Text>
           <Text style={styles.navLabel}>My Galleries</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(tabs)/profile')}>
+          <Text style={styles.navIcon}>◉</Text>
+          <Text style={styles.navLabel}>Profile</Text>
+        </TouchableOpacity>
       </View>
 
       <Modal visible={dropdownOpen} transparent animationType="fade">
@@ -142,7 +146,7 @@ export default function StoreScreen() {
                 onPress={() => { setSort(mode); setDropdownOpen(false) }}
               >
                 <Text style={[styles.dropdownItemText, sort === mode && styles.dropdownItemTextActive]}>
-                  {mode === 'top' ? '♥ Top worlds' : '✦ New worlds'}
+                  {mode === 'top' ? '♥ Most loved' : '✦ Newest'}
                 </Text>
               </TouchableOpacity>
             ))}

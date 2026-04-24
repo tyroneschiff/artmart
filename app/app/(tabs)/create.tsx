@@ -469,7 +469,7 @@ export default function CreateScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
-  content: { padding: 24, paddingTop: 56 },
+  content: { padding: 20, paddingTop: 56 },
   header: { fontSize: 32, fontWeight: '900', color: colors.dark, letterSpacing: -1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   pickArea: { gap: 16 },

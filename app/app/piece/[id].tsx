@@ -264,7 +264,7 @@ export default function PieceScreen() {
         <View style={styles.titleRow}>
           <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
           <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
-            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Store →</Text>
+            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Gallery →</Text>
           </TouchableOpacity>
         </View>
 
@@ -289,19 +289,16 @@ export default function PieceScreen() {
           <Text style={styles.voteBtnText}>♥ {piece.vote_count} {piece.vote_count === 1 ? 'vote' : 'votes'}</Text>
         </TouchableOpacity>
 
-        <View style={styles.purchaseSection}>
-          <Text style={[type.h3, { marginBottom: 12 }]}>
-            {myDigitalOrder ? "Upgrade to Physical Print" : "Bring this world home"}
-          </Text>
-
-          {(isOwner || myDigitalOrder) && (
+        {(isOwner || myDigitalOrder) && (
+          <View style={styles.purchaseSection}>
+            <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
             <TouchableOpacity
               style={[card, styles.purchaseCard]}
               onPress={handleRedownload}
               disabled={downloading || purchasing !== null}
             >
               <View>
-                <Text style={styles.purchaseType}>Keep the high-res vision</Text>
+                <Text style={styles.purchaseType}>Keep the high-res version</Text>
                 <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>
                   {isOwner ? "Free for you as the creator" : "You own this · Download again"}
                 </Text>
@@ -310,42 +307,8 @@ export default function PieceScreen() {
                 ? <ActivityIndicator color={colors.gold} />
                 : <Text style={styles.redownloadLabel}>{isOwner ? 'Download' : 'Re-download'}</Text>}
             </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[card, styles.purchaseCard]}
-            onPress={() => handlePurchase('print')}
-            disabled={purchasing !== null}
-          >
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={styles.purchaseType}>Physical Print</Text>
-                {myDigitalOrder && (
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountBadgeText}>10% OFF</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>11×14" matte poster, shipped to you</Text>
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              {purchasing === 'print' ? (
-                <ActivityIndicator color={colors.gold} />
-              ) : (
-                <>
-                  <Text style={styles.purchasePrice}>
-                    ${((myDigitalOrder ? piece.price_print * 0.9 : piece.price_print) / 100).toFixed(2)}
-                  </Text>
-                  {myDigitalOrder && (
-                    <Text style={[type.label, { fontSize: 10, textDecorationLine: 'line-through' }]}>
-                      ${(piece.price_print / 100).toFixed(2)}
-                    </Text>
-                  )}
-                </>
-              )}
-            </View>
-          </TouchableOpacity>
-        </View>
+          </View>
+        )}
 
         <View style={styles.commentSection}>
           <Text style={[type.h3, { marginBottom: 16 }]}>Comments</Text>

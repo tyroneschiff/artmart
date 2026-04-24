@@ -42,8 +42,8 @@ async function fetchUserVotes(userId: string): Promise<string[]> {
 }
 
 const SORT_OPTIONS: { value: SortMode; label: string; icon: string }[] = [
-  { value: 'top', label: 'Top worlds', icon: '✦' },
-  { value: 'new', label: 'New worlds', icon: '🌱' },
+  { value: 'top', label: 'Most loved', icon: '♥' },
+  { value: 'new', label: 'Newest', icon: '✦' },
 ]
 
 export default function DiscoverScreen() {
@@ -149,14 +149,10 @@ export default function DiscoverScreen() {
           const canVote = !isVoted && !isVoting
           return (
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
-              <View style={styles.imagePlaceholder}>
+              <View style={styles.imageWrap}>
                 <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
-              </View>
-              <View style={styles.cardBody}>
-                <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-                <Text style={styles.childName}>{item.stores?.child_name}</Text>
                 <TouchableOpacity
-                  style={[styles.voteBtn, !canVote && styles.voteBtnDone]}
+                  style={[styles.voteBadge, !canVote && styles.voteBadgeDone]}
                   onPress={() => {
                     if (!session) {
                       router.push({ pathname: '/(auth)/login', params: { returnTo: '/(tabs)/discover' } })
@@ -166,8 +162,12 @@ export default function DiscoverScreen() {
                   }}
                   disabled={isVoted || isVoting}
                 >
-                  <Text style={styles.voteText}>♥ {item.vote_count}</Text>
+                  <Text style={styles.voteBadgeText}>♥ {item.vote_count}</Text>
                 </TouchableOpacity>
+              </View>
+              <View style={styles.cardBody}>
+                <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.childName}>{item.stores?.child_name}</Text>
               </View>
             </TouchableOpacity>
           )
@@ -188,7 +188,7 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
-  headerBlock: { paddingHorizontal: 20, marginBottom: 16 },
+  headerBlock: { paddingHorizontal: 20, marginBottom: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   header: { ...type.h1 },
   sortBtn: {
@@ -225,14 +225,14 @@ const styles = StyleSheet.create({
   dropdownCheck: { color: colors.gold, fontWeight: '700', fontSize: 16 },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   card: { flex: 1, ...card, overflow: 'hidden' },
-  imagePlaceholder: { width: '100%', aspectRatio: 1, backgroundColor: colors.border },
+  imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 4 },
+  voteBadgeDone: { opacity: 0.6 },
+  voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },
   title: { ...type.h3, fontSize: 13, letterSpacing: -0.2 },
   childName: { ...type.label, marginTop: 2 },
-  voteBtn: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
-  voteBtnDone: { opacity: 0.45 },
-  voteText: { fontSize: 13, color: colors.gold, fontWeight: '700' },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { ...type.h2, fontSize: 18, marginBottom: 8 },

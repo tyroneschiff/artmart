@@ -68,11 +68,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={[type.h1, { paddingHorizontal: 20, paddingTop: 60, marginBottom: 32 }]}>Profile</Text>
+      <Text style={[type.h1, { paddingHorizontal: 20, paddingTop: 56, marginBottom: 32 }]}>Profile</Text>
 
       {/* Credits */}
       <View style={styles.section}>
-        <Text style={type.label}>IMAGINATION CREDITS</Text>
+        <Text style={type.label}>CREDITS</Text>
         <View style={[card, { overflow: 'hidden' }]}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Remaining</Text>

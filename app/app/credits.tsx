@@ -46,7 +46,7 @@ export default function CreditsScreen() {
     },
     {
       id: 'imagination',
-      title: 'Imagination Pack',
+      title: 'Creator Pack',
       amount: 12,
       price: '$9.99',
       detail: '~$0.83 per transformation',
@@ -70,7 +70,7 @@ export default function CreditsScreen() {
         <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
           <Text style={styles.closeText}>✕</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Step Inside</Text>
+        <Text style={styles.title}>Get Credits</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
