@@ -1,10 +1,7 @@
 name: Gemini Autonomous Engineering Team
 
 on:
-  schedule:
-    # Run every 15 minutes
-    - cron: '*/15 * * * *'
-  workflow_dispatch: # Allow manual triggers
+  workflow_dispatch: # Allow only manual triggers
 
 concurrency:
   group: git-push-sync
