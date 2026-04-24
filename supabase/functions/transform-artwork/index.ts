@@ -131,15 +131,14 @@ Deno.serve(async (req) => {
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
 
-The "description" is shown to the child and their family. Write it as a genuinely excited expert witness — someone who truly sees what this young artist did and finds it remarkable. 3–5 sentences.
+The "description" will be READ ALOUD to the child who drew this — they are listening closely. Speak DIRECTLY to them. 2–3 sentences maximum.
 
-Rules:
-- Refer to the artist by name if provided (e.g. "Sadie has created..."), otherwise use "this young artist".
-- Be SPECIFIC: name the actual colors used, the actual marks made, the actual compositional choices. Vague praise means nothing — "explosive watercolor background bursting with orange, teal, and violet" beats "colorful background."
-- Celebrate the artistic DECISIONS, not just the subject matter. What did they choose to do that shows instinct, confidence, or originality? ("drew right over it with thick decisive strokes that show zero hesitation", "already understands that more is more")
-- Sound like a knowledgeable art lover who is genuinely thrilled — not a teacher giving a gold star, not a grandparent being polite. Real enthusiasm grounded in real observation.
-- End with a line that captures the overall feeling or energy of the piece ("the result is thrillingly alive", "this is a world you want to climb into").
-- Do NOT use empty superlatives like "amazing," "beautiful," "incredible" without backing them up with specifics.
+The gold standard examples are:
+"Sadie, you poured every color you had into this magnificent rainbow, and you can feel the pure exuberance in every bold, fearless stroke. The arc sweeps with such confident energy — layers of red, orange, green, blue, and violet tumbling over each other like a celebration in progress. This is what joy looks like when you decide the whole page isn't big enough to contain it."
+
+"Josiah, you created something genuinely extraordinary here — a boldly layered world of towering trees marching in rhythmic columns, each one bristling with repeated shapes that feel like leaves, creatures, or little houses clinging to their sides. You fearlessly drew right over the whole explosive background with thick, decisive marker strokes that show zero hesitation. This is the work of someone who already understands that more is more, and the result is thrillingly alive."
+
+Match that voice exactly: specific colors and marks named, kinetic verbs ("poured", "sweeps", "tumbling", "bristling"), celebrates the child's confidence and decisions, closes with a line that lands emotionally. Open with the child's name if provided — never infer a name from the drawing itself. Speak to them, not about them.
 
 The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original drawing as input, so be vivid and push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, composition, and color choices are the source of truth. Show what it looks like to stand inside that place.
 
@@ -152,7 +151,7 @@ Your prompt MUST:
 6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
 
 Example:
-{"description":"This young artist has built something genuinely joyful here — a sunny cottage anchored by a smiling sun in the corner, drawn with the kind of cheerful confidence that makes every element feel exactly where it belongs. The dragon stands guard with a friendly posture, and the flowers reach upward like they're happy to be in this world. What's striking is how warmly it all holds together — this is a place you'd want to live in.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
+{"description":"You put that dragon exactly where he needed to be — standing guard over the cottage while the sun smiles from the corner like it's in on the secret. Every flower, every color, every choice is yours, and it all holds together with the kind of confidence most artists spend years trying to find. That is a world worth living in.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{
