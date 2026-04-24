@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useCredits } from '../lib/useCredits'
 import { colors } from '../lib/theme'
@@ -10,13 +10,22 @@ export default function CreditsChip() {
 
   if (typeof credits !== 'number') return null
 
+  const handleGetMore = () => {
+    try {
+      router.push('/credits')
+    } catch (err) {
+      console.error('Navigation error:', err)
+      Alert.alert('Navigation Error', 'Could not open credits screen.')
+    }
+  }
+
   return (
     <View style={styles.creditsContainer}>
       <View style={styles.creditsChip}>
         <Text style={styles.creditsChipText}>✨ {credits} {credits === 1 ? 'credit' : 'credits'}</Text>
       </View>
       {credits <= 1 && (
-        <TouchableOpacity style={styles.getMoreBtn} onPress={() => router.push('/credits')}>
+        <TouchableOpacity style={styles.getMoreBtn} onPress={handleGetMore}>
           <Text style={styles.getMoreBtnText}>Get more</Text>
         </TouchableOpacity>
       )}
