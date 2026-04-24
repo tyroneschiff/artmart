@@ -138,6 +138,30 @@ export default function PieceScreen() {
       onError: (e: any) => Alert.alert('Error', e.message),
     })
   
+    const deleteMutation = useMutation({
+      mutationFn: async () => {
+        const { error } = await supabase.from('pieces').delete().eq('id', id)
+        if (error) throw error
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['store', piece!.stores?.slug] })
+        queryClient.invalidateQueries({ queryKey: ['discover'] })
+        router.replace(`/store/${piece!.stores?.slug}`)
+      },
+      onError: (e: any) => Alert.alert('Delete failed', e.message),
+    })
+
+    function handleDelete() {
+      Alert.alert(
+        'Delete this world?',
+        'This can\'t be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => deleteMutation.mutate() },
+        ]
+      )
+    }
+
     const reportMutation = useMutation({
       mutationFn: async (commentId: string) => {
         const { error } = await supabase.from('reports').insert({
@@ -221,11 +245,18 @@ export default function PieceScreen() {
             <Text style={styles.back}>‹</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>{piece.title}</Text>
-          <TouchableOpacity style={[btn.primary, { paddingVertical: 8, paddingHorizontal: 16 }]} onPress={() =>
-            setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
-          }>
-            <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            {isOwner && (
+              <TouchableOpacity onPress={handleDelete} disabled={deleteMutation.isPending} style={styles.deleteBtn}>
+                <Text style={styles.deleteBtnText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[btn.primary, { paddingVertical: 8, paddingHorizontal: 16 }]} onPress={() =>
+              setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
+            }>
+              <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
@@ -431,4 +462,6 @@ voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldL
   commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   commentAuthor: { fontWeight: '700', color: colors.dark, fontSize: 14 },
   reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
+  deleteBtn: { paddingVertical: 8, paddingHorizontal: 12 },
+  deleteBtnText: { fontSize: 13, fontWeight: '600', color: colors.muted },
 })

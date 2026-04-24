@@ -288,34 +288,35 @@ export default function CreateScreen() {
               </View>
             ) : null}
             
-            <TouchableOpacity 
-              style={[btn.primary, { backgroundColor: colors.gold, width: '100%', paddingVertical: 18, marginBottom: 12 }]} 
+            <View style={{ width: '100%', gap: 10, marginTop: 8, alignItems: 'center' }}>
+              <TouchableOpacity
+                style={[btn.primary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
+                onPress={() => {
+                  resetCreate()
+                  router.push(`/store/${selectedStore?.slug}`)
+                }}
+              >
+                <Text style={btn.primaryText}>{selectedStore?.child_name}'s Store</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[btn.secondary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
+                onPress={resetCreate}
+              >
+                <Text style={btn.secondaryText}>Create another</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={{ paddingVertical: 14, width: '100%', alignItems: 'center' }}
               onPress={() => {
                 const grandmaMessage = `Look what ${selectedStore?.child_name || 'Artist'} just created! ✨ I stepped inside their drawing and found this: ${sharePayload.url}`
                 shareToWhatsApp(grandmaMessage)
               }}
             >
-              <Text style={[btn.primaryText, { fontSize: 16, fontWeight: '800' }]}>Send to Grandma</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[btn.secondary, { width: '100%', paddingVertical: 18, marginBottom: 12 }]} 
-              onPress={() => exportStoryCard(transformedUri!, title, selectedStore?.child_name || 'Artist')}
-            >
-              <Text style={[btn.secondaryText, { fontSize: 16, fontWeight: '800' }]}>Export for Instagram Story</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={{ paddingVertical: 12, width: '100%', alignItems: 'center' }} 
-              onPress={() => shareNative(sharePayload)}
-            >
-              <Text style={[type.label, { color: colors.muted, fontWeight: '600' }]}>Other Sharing Options</Text>
+              <Text style={[type.label, { color: colors.muted, fontWeight: '600' }]}>Send to Grandma via WhatsApp</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.startOverBtn} onPress={resetCreate}>
-            <Text style={[type.body, { color: colors.goldDark, fontWeight: '700' }]}>Step inside another drawing →</Text>
-          </TouchableOpacity>
         </ScrollView>
       </View>
     )
@@ -386,11 +387,9 @@ export default function CreateScreen() {
         <View>
           <View style={styles.compareRow}>
             <View style={styles.compareItem}>
-              <Text style={[type.label, { marginBottom: 4, textAlign: 'center' }]}>The Drawing</Text>
               <Image source={{ uri: imageUri! }} style={styles.compareImage} />
             </View>
             <View style={styles.compareItem}>
-              <Text style={[type.label, { marginBottom: 4, textAlign: 'center' }]}>The World</Text>
               <Image source={{ uri: transformedUri }} style={styles.compareImage} />
             </View>
           </View>

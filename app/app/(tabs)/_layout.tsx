@@ -17,7 +17,7 @@ export default function TabsLayout() {
     }}>
       <Tabs.Screen name="discover" options={{ title: 'Discover', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>✦</Text> }} />
       <Tabs.Screen name="create" options={{ title: 'Create', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>✨</Text> }} />
-      <Tabs.Screen name="mystores" options={{ title: 'My Stores', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🎨</Text> }} />
+      <Tabs.Screen name="mystores" options={{ title: 'My Galleries', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>🎨</Text> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>◉</Text> }} />
     </Tabs>
   )

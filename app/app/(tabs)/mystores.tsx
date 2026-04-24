@@ -7,7 +7,7 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
-import CreditsChip from '../../components/CreditsChip'
+
 import { useCredits } from '../../lib/useCredits'
 
 type Store = { id: string; child_name: string; slug: string; created_at: string }
@@ -65,7 +65,7 @@ export default function MyStoresScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Failed to load stores</Text>
+        <Text style={styles.errorText}>Failed to load galleries</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
           <Text style={styles.retryBtnText}>Try again</Text>
         </TouchableOpacity>
@@ -77,12 +77,11 @@ export default function MyStoresScreen() {
     <View style={styles.container}>
       <View style={styles.headerBlock}>
         <View style={styles.headerRow}>
-          <Text style={styles.header}>My Stores</Text>
+          <Text style={styles.header}>My Galleries</Text>
           <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
             <Text style={styles.addBtnText}>+ New</Text>
           </TouchableOpacity>
         </View>
-        <CreditsChip />
       </View>
 
       {showUpsell && (
@@ -104,7 +103,7 @@ export default function MyStoresScreen() {
           <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/store/${item.slug}`)}>
             <View style={styles.storeIcon}><Text style={styles.storeIconText}>{item.child_name[0].toUpperCase()}</Text></View>
             <View style={styles.storeInfo}>
-              <Text style={styles.storeName}>{item.child_name}'s Store</Text>
+              <Text style={styles.storeName}>{item.child_name}'s Gallery</Text>
               <Text style={styles.storeSlug}>drawup.art/store/{item.slug}</Text>
             </View>
             <Text style={styles.storeArrow}>›</Text>
@@ -118,7 +117,7 @@ export default function MyStoresScreen() {
             <Text style={styles.emptyTitle}>Step inside their imagination</Text>
             <Text style={styles.emptyBody}>Create a dedicated space for each child to share the worlds they've imagined through their art.</Text>
             <TouchableOpacity style={styles.emptyBtn} onPress={() => setModalVisible(true)}>
-              <Text style={styles.emptyBtnText}>Create first store</Text>
+              <Text style={styles.emptyBtnText}>Create first gallery</Text>
             </TouchableOpacity>
           </View>
         }
@@ -133,7 +132,7 @@ export default function MyStoresScreen() {
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Create a store</Text>
+          <Text style={styles.modalTitle}>Create a gallery</Text>
           <Text style={styles.modalSub}>Each child gets a dedicated space to share the worlds they've imagined.</Text>
           <Text style={styles.inputLabel}>Child's name</Text>
           <TextInput
@@ -143,7 +142,7 @@ export default function MyStoresScreen() {
             value={childName}
             onChangeText={(v) => { setChildName(v); setSlug(v.trim().toLowerCase().replace(/\s+/g, '-')) }}
           />
-          <Text style={styles.inputLabel}>Store URL slug</Text>
+          <Text style={styles.inputLabel}>Gallery URL slug</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. emma"
@@ -158,7 +157,7 @@ export default function MyStoresScreen() {
             onPress={() => createStore.mutate()}
             disabled={!childName || !slug || createStore.isPending}
           >
-            <Text style={styles.buttonText}>{createStore.isPending ? 'Creating…' : 'Create store'}</Text>
+            <Text style={styles.buttonText}>{createStore.isPending ? 'Creating…' : 'Create gallery'}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setModalVisible(false)}>
             <Text style={styles.cancel}>Cancel</Text>
