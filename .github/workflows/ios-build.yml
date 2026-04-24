@@ -77,8 +77,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name "Gemini Build Bot"
-          git config --global user.email "bot@geminicli.com"
+          git config --global user.name "Claude Build Bot"
+          git config --global user.email "bot@anthropic.com"
           git add app/app.json
           git commit -m "chore: bump ios build number [skip ci]"
           git pull --rebase origin main

@@ -1,0 +1,62 @@
+name: Claude Autonomous Engineering Team
+
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Every 2 hours
+  workflow_dispatch:
+
+concurrency:
+  group: claude-engineering
+  cancel-in-progress: false
+
+jobs:
+  engineering-cycle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install App Dependencies
+        working-directory: app
+        run: npm install --legacy-peer-deps
+
+      - name: CRON A — Strategic Reviewer
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          chmod +x ./scripts/cron-review.sh
+          ./scripts/cron-review.sh
+
+      - name: CRON B — Implementer
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          chmod +x ./scripts/cron-implement.sh
+          ./scripts/cron-implement.sh
+
+      - name: Commit & Push Changes
+        run: |
+          git config --global user.name "Claude Engineering Team"
+          git config --global user.email "bot@anthropic.com"
+          git add .
+
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "🤖 Automated improvement by Claude Engineering Team"
+            git pull --rebase origin main
+            git push --force-with-lease origin main
+          else
+            echo "No changes to commit this cycle."
+          fi

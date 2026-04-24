@@ -1,44 +1,36 @@
 #!/bin/bash
-# Move to the root directory of the project
 cd "$(dirname "$0")/.."
 
-# Ensure the API key is available
-if [ -z "$GEMINI_API_KEY" ] && [ -z "$GOOGLE_GENERATIVE_AI_API_KEY" ]; then
-  echo "Error: GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY environment variable is required."
+if [ -z "$ANTHROPIC_API_KEY" ]; then
+  echo "Error: ANTHROPIC_API_KEY is required."
   exit 1
 fi
 
-# Fallback for scripts that expect one or the other
-export GEMINI_API_KEY="${GEMINI_API_KEY:-$GOOGLE_GENERATIVE_AI_API_KEY}"
-export GOOGLE_GENERATIVE_AI_API_KEY="${GOOGLE_GENERATIVE_AI_API_KEY:-$GEMINI_API_KEY}"
+claude -p "You are CRON A, the Strategic Reviewer for Draw Up. Read CLAUDE.md in full before doing anything else — it is your source of truth.
 
-gemini -p "You are CRON A, the Strategic Product Lead for Draw Up. Your mission is to evolve this app into a high-conversion, premium family gifting experience. 
+## Your job
+Think, don't code. Audit the codebase, find real problems, update the knowledge base.
 
-Your goal is to take a full 360-degree view of the application and continually vet how to make it better, more profitable, and visually stunning.
+## What you may change
+- CLAUDE.md: '## Strategic Backlog', '## Current task queue', '## Definition of done for MVP', '## Known gotchas' (cap 12, add only silent platform-specific failures), '## Improvement Log' (prepend one line, trim to 10)
 
-## Step 1: 360-Degree Product Audit
-Review the codebase (starting with GEMINI.md) across these four pillars:
-1. **Revenue & Monetization:** Are there friction points in the Buy Credits or Print Checkout flows? Are upsells visible?
-2. **UX & 'Magic':** Is the core 'Step Inside' flow seamless? Are empty states warm? Are there any dead ends?
-3. **Design & Polish:** Does the app feel premium? Are we strictly using lib/theme.ts? Is spacing consistent?
-4. **Reliability & Edge Cases:** Do all network calls have timeouts? Are we handling offline states and API failures gracefully?
+## What you must never change
+- Any .ts or .tsx source files
+- Any migration files
+- Any edge function files
+- Tech stack, design system values, bundle IDs, product vision, '## Product empathy', '## Recent session notes'
 
-## Step 2: The Art of the Micro-Task
-We do NOT want engineers working on massive 10-minute rewrites. Large objectives must be broken down.
-If the holistic goal is 'Implement Guest Checkout', your backlog items should be:
-1. 'Add guest_email column to orders table'
-2. 'Create GuestInfoModal UI component'
-3. 'Update create-payment-intent to handle guest logic'
-4. 'Wire GuestInfoModal to piece screen'
+## Process
+1. Read CLAUDE.md fully
+2. Read the files most relevant to current backlog items
+3. Verify each backlog item is still accurate — update line references if they've drifted
+4. Rewrite '## Strategic Backlog' (max 8 items) ranked by real user impact: broken create/publish flow first, broken purchase flow second, UX gaps third, polish last
+5. Each backlog item must include exact file paths and line numbers so CRON B can act without further investigation
+6. Mark anything completed in '## Current task queue'
+7. Prepend one line to '## Improvement Log': timestamp, 'CRON A', what you found
 
-## Step 3: Backlog Evolution
-Rewrite '## Strategic Backlog' in GEMINI.md. Rank 1-8 by IMPACT (Revenue > Retention > Polish). 
-Every item MUST be a manageable chunk. For each item, write:
-- **[CATEGORY] Epic / Title:** (e.g., [REVENUE] Guest Checkout - Part 1)
-- **The Micro-Task:** 1-2 sentences of exact technical direction (file/line). What is the ONE small thing to change?
-- **The 'Why':** How does this small step move us toward the holistic vision?
-
-## Step 4: Knowledge Evolution
-- Update '## Known gotchas' ONLY if you found a silent platform-specific failure.
-- Prepend your high-level strategy thought to '## Improvement Log'." \
-  --yolo
+## Hard constraints
+- Never add a backlog item you cannot verify exists in the current code
+- Never remove a gotcha unless you can confirm the underlying issue is resolved in code
+- If the backlog is already accurate and well-specified, make no changes — a no-op is better than a wrong update" \
+  --dangerously-skip-permissions
