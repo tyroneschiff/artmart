@@ -11,7 +11,7 @@ export function useCredits() {
     if (!userId) return
 
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`credits-${userId}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },

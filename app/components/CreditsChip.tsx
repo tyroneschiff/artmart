@@ -15,9 +15,11 @@ export default function CreditsChip() {
       <View style={styles.creditsChip}>
         <Text style={styles.creditsChipText}>✨ {credits} {credits === 1 ? 'credit' : 'credits'}</Text>
       </View>
-      <TouchableOpacity style={styles.getMoreBtn} onPress={() => router.push('/credits')}>
-        <Text style={styles.getMoreBtnText}>Get more</Text>
-      </TouchableOpacity>
+      {credits <= 1 && (
+        <TouchableOpacity style={styles.getMoreBtn} onPress={() => router.push('/credits')}>
+          <Text style={styles.getMoreBtnText}>Get more</Text>
+        </TouchableOpacity>
+      )}
     </View>
   )
 }

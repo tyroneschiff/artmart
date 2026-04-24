@@ -111,7 +111,9 @@ export default function DiscoverScreen() {
           const canVote = !isVoted && !isVoting
           return (
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
-              <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
+              <View style={styles.imagePlaceholder}>
+                <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
+              </View>
               <View style={styles.cardBody}>
                 <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.childName}>{item.stores?.child_name}</Text>
@@ -154,6 +156,7 @@ const styles = StyleSheet.create({
   badgeText: { ...type.label, color: colors.goldDark, fontWeight: '700' },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   card: { flex: 1, ...card, overflow: 'hidden' },
+  imagePlaceholder: { width: '100%', aspectRatio: 1, backgroundColor: colors.border },
   image: { width: '100%', aspectRatio: 1 },
   cardBody: { padding: 12 },
   title: { ...type.h3, fontSize: 13, letterSpacing: -0.2 },

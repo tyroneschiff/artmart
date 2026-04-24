@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -58,21 +58,12 @@ async function fetchMyDigitalOrder(pieceId: string, userId: string) {
   return data
 }
 
-async function fetchPaidOrderCount(userId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('buyer_id', userId)
-    .eq('status', 'paid')
-  
-  if (error) throw error
-  return count || 0
-}
 
 export default function PieceScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, vote } = useLocalSearchParams<{ id: string; vote?: string }>()
   const session = useAuthStore((s) => s.session)
   const queryClient = useQueryClient()
+  const autoVoteFired = useRef(false)
     const [purchasing, setPurchasing] = useState<'digital' | 'print' | null>(null)
     const [downloading, setDownloading] = useState(false)
     const [giftingModalVisible, setGiftingModalVisible] = useState(false)
@@ -92,14 +83,6 @@ export default function PieceScreen() {
       queryFn: () => fetchMyDigitalOrder(id, session!.user.id),
       enabled: !!session,
     })
-
-    const { data: paidOrderCount } = useQuery({
-      queryKey: ['paidOrderCount', session?.user.id],
-      queryFn: () => fetchPaidOrderCount(session!.user.id),
-      enabled: !!session,
-    })
-
-    const isFirstOrder = !!session && paidOrderCount === 0
 
     const showHighRes = isOwner || !!myDigitalOrder
     const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
@@ -123,7 +106,14 @@ export default function PieceScreen() {
       },
       onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })
-  
+
+    useEffect(() => {
+      if (vote === '1' && session && !autoVoteFired.current && !voteMutation.isPending) {
+        autoVoteFired.current = true
+        voteMutation.mutate()
+      }
+    }, [vote, session])
+
     const commentMutation = useMutation({
       mutationFn: async (content: string) => {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
@@ -261,7 +251,7 @@ export default function PieceScreen() {
           style={styles.voteBtn}
           onPress={() => {
             if (!session) {
-              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
+              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}`, vote: '1' } })
             } else {
               voteMutation.mutate()
             }
@@ -275,15 +265,6 @@ export default function PieceScreen() {
           <Text style={[type.h3, { marginBottom: 12 }]}>
             {myDigitalOrder ? "Upgrade to Physical Print" : "Bring this world home"}
           </Text>
-
-          {!session && (
-            <TouchableOpacity 
-              style={styles.firstOrderTeaser}
-              onPress={() => router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })}
-            >
-              <Text style={styles.teaserText}>✨ First order? Save 20% when you sign in</Text>
-            </TouchableOpacity>
-          )}
 
           {(isOwner || myDigitalOrder) && (
             <TouchableOpacity
@@ -311,11 +292,6 @@ export default function PieceScreen() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={styles.purchaseType}>Physical Print</Text>
-                {isFirstOrder && (
-                  <View style={[styles.discountBadge, { backgroundColor: colors.gold }]}>
-                    <Text style={styles.discountBadgeText}>1st ORDER: 20% OFF</Text>
-                  </View>
-                )}
                 {myDigitalOrder && (
                   <View style={styles.discountBadge}>
                     <Text style={styles.discountBadgeText}>10% OFF</Text>
@@ -330,9 +306,9 @@ export default function PieceScreen() {
               ) : (
                 <>
                   <Text style={styles.purchasePrice}>
-                    ${((isFirstOrder ? piece.price_print * 0.8 : (myDigitalOrder ? piece.price_print * 0.9 : piece.price_print)) / 100).toFixed(2)}
+                    ${((myDigitalOrder ? piece.price_print * 0.9 : piece.price_print) / 100).toFixed(2)}
                   </Text>
-                  {(isFirstOrder || myDigitalOrder) && (
+                  {myDigitalOrder && (
                     <Text style={[type.label, { fontSize: 10, textDecorationLine: 'line-through' }]}>
                       ${(piece.price_print / 100).toFixed(2)}
                     </Text>
@@ -454,23 +430,7 @@ const styles = StyleSheet.create({
     gap: 4
   },
   viewInRoomBtnText: { color: colors.mid, fontWeight: '700', fontSize: 12 },
-  firstOrderTeaser: {
-    backgroundColor: colors.goldLight,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: colors.goldMid,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  teaserText: {
-    color: colors.goldDark,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
+voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
   purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
