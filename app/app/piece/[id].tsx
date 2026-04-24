@@ -279,7 +279,7 @@ export default function PieceScreen() {
           style={styles.voteBtn}
           onPress={() => {
             if (!session) {
-              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}`, vote: '1' } })
+              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}?vote=1` } })
             } else {
               voteMutation.mutate()
             }

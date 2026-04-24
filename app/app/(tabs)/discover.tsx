@@ -155,7 +155,7 @@ export default function DiscoverScreen() {
                   style={[styles.voteBadge, !canVote && styles.voteBadgeDone]}
                   onPress={() => {
                     if (!session) {
-                      router.push({ pathname: '/(auth)/login', params: { returnTo: '/(tabs)/discover' } })
+                      router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${item.id}?vote=1` } })
                     } else if (canVote) {
                       voteMutation.mutate(item.id)
                     }
