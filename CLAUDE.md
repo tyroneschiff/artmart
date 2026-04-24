@@ -236,6 +236,34 @@ The most dangerous bugs look like success but do nothing:
 
 **Response style:** Maximum signal, minimum words. Code over prose.
 
+<<<<<<< HEAD
+=======
+## Current task queue
+
+**Done (recent):**
+- ✅ Product reframe rollout (step 1) — Claude system prompt in `transform-artwork/index.ts` rewritten from "art director elevating" to "visual collaborator stepping inside a child's imagination"; user-text "Step inside this child's drawing"; app copy updated (tagline `login.tsx:38`, transform button + status + compare labels `create.tsx`, share messages `share.ts`). Deployed to edge function; client changes need EAS rebuild.
+- ✅ Transform ES256 JWT fix — `transform-artwork/index.ts` deployed with `--no-verify-jwt` (gateway skips), function verifies via `jose.createRemoteJWKSet` against Supabase JWKS endpoint. Unblocks every transform on current asymmetric-JWT project config.
+- ✅ Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation` with a 90s `Promise.race`
+- ✅ Transformed image download timeout — 30s AbortController around `fetch(transformedUrl)` + `arrayBuffer()` in `create.tsx:107–120`
+- ✅ Re-download path — `piece/[id].tsx` queries existing digital orders; card swaps to "Re-download" when `status=paid` exists
+- ✅ Re-download column fix — `fetchMyDigitalOrder` in `piece/[id].tsx` corrected from `.eq('user_id')/.eq('type')` to `.eq('buyer_id')/.eq('order_type')` to match what the edge function actually inserts; re-download CTA now appears for paying customers
+
+**Pending (reframe + monetization pivot — see Recent Session Notes 2026-04-23):**
+- ✅ Reframe pass 2 — updated `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, and `piece/[id].tsx` to match "step inside" framing; replaced "gallery / piece / art" with "world" where appropriate; updated empty states and icons.
+- ✅ Profile display name fix — `profile.tsx` now fetches and pre-fills the display name via `useQuery`; no longer write-only and doesn't clear on save.
+- ✅ Error handling with retry — added `isError`/`refetch` with a "Try again" pill to `store/[slug].tsx`, `discover.tsx`, `mystores.tsx`, and `piece/[id].tsx` to handle transient network failures.
+- ✅ Store empty state — replaced bare text in `store/[slug].tsx` with a warm centered block (icon + possessive copy) matching the app's pattern.
+- ✅ Anonymous vote redirect — `discover.tsx:157-163` and `piece/[id].tsx:281-287` both redirect to login when `!session`; `disabled` no longer includes `!session`; verified in code.
+- ✅ Login return redirect — `login.tsx:27-30` reads `returnTo` param and redirects there on success; verified in code.
+- ✅ Credits schema + 3-free tier — `useCredits.ts` queries `profiles.credits`; `transformArtwork.ts` returns `credits` after deduct; `OutOfCreditsError` (402) handled in `create.tsx:151-153` with upsell modal; code evidence confirms done.
+- ✅ Buy Credits screen + Stripe flow — `credits.tsx` screen with 3 packs; `purchaseCredits()` in `checkout.ts:124` calls `purchase-credits` edge function (exists at `supabase/functions/purchase-credits/index.ts`); `stripe-webhook/index.ts` exists; code evidence confirms done.
+- ✅ Comments with Claude Haiku pre-moderation — `piece/[id].tsx:313-368` has full comments UI; 300-char limit enforced (`maxLength={300}`); auth-only posting; report button calls `reportMutation` inserting to `reports` table; `moderate-comment/index.ts` edge function exists; code evidence confirms done.
+- ✅ Purchase CTA for new visitors — `piece/[id].tsx:313-343` added `{!isOwner && !myDigitalOrder && (...)}` block with Print ($30) and Digital ($5) cards; both call `handlePurchase()` → `GiftingModal` with `isGuest={!session}` for grandparent guest checkout; also fixed "Gallery" → "Store" at line 267.
+- [ ] Accept TestFlight invite — appstoreconnect.apple.com/apps/6762963488/testflight/ios
+- [ ] Deploy landing page to Vercel on drawup.art (domain not registered)
+- [ ] OG meta tags for piece/store public URLs
+
+>>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
 ---
 
 ## Autonomous improvement system
@@ -302,6 +330,7 @@ The most dangerous bugs look like success but do nothing:
 
 *(Rewritten each run by CRON A — Implementer reads this to pick next task)*
 
+<<<<<<< HEAD
 1. **[CONFIRMED] Anonymous vote button silently no-ops — missed signup funnel** — `discover.tsx` vote handler fires `canVote && voteMutation.mutate(item.id)` which silently does nothing when unauthenticated; `piece/[id].tsx` vote handler fires `session && voteMutation.mutate()` which also silently does nothing. Fix requires two changes per button: (1) `onPress` must call `router.push('/(auth)/login')` when no session, AND (2) remove `!session` from `disabled` prop — React Native swallows the tap before `onPress` fires if `disabled` is true.
 
 2. **[CONFIRMED] Login always redirects to Discover — breaks vote conversion funnel** — `login.tsx` hardcodes `router.replace('/(tabs)/discover')` on success. When item 1 routes an anonymous voter to login, they complete signup but land on Discover instead of the piece. Pass originating route as param and redirect there on success.
@@ -363,16 +392,34 @@ The most dangerous bugs look like success but do nothing:
 - [ ] OG meta tags for piece/gallery public URLs
 
 ---
+=======
+1. **Discover vote tap redirects to discover, not the voted piece — vote silently lost** `[Growth]` `[UX]` — `discover.tsx:158` — `returnTo: '/(tabs)/discover'` sends user back to the discover feed after login; discover has no auto-vote logic, so the intended vote is silently dropped. `piece/[id].tsx:109-114` already has the auto-vote mechanism (`vote=1` param fires `voteMutation` on mount). Fix: change `discover.tsx:158` from `params: { returnTo: '/(tabs)/discover' }` to `params: { returnTo: \`/piece/${item.id}\`, vote: '1' }` — after login the piece page auto-votes and the user lands on the piece they cared about. Impact: converts the discover vote tap into a real vote-after-signup instead of a confusing dead end.
+
+2. **"Gallery" copy violations in store/[slug].tsx** `[Copy]` `[Reframe]` — Five locations in `store/[slug].tsx` still say "Gallery": line 50 ("Failed to load gallery" → "Failed to load store"); line 58 ("Gallery not found." → "Store not found."); line 82 (header "{store.child_name}'s Gallery" → "{store.child_name}'s Store"); line 132 (bottom nav "My Galleries" → "My Stores"); line 134 (same). Note: `piece/[id].tsx:267` was fixed this run. Impact: inconsistent with the reframe on a high-traffic screen.
+>>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
 
 ## Improvement Log
 
 *(One line per run, newest first)*
 
+<<<<<<< HEAD
 - [2026-04-24 Human] Migrated cron system to Claude Code CLI; added Decision filter, What we've tried and rejected, Known production errors, Recent user feedback sections to CLAUDE.md.
+=======
+- [2026-04-24 CRON B] Purchase CTA for grandparents — added `{!isOwner && !myDigitalOrder}` block with Print/Digital cards + prices; both route through `GiftingModal` with `isGuest={!session}`; also fixed "Gallery"→"Store" at `piece/[id].tsx:267`. File: `app/app/piece/[id].tsx`.
+- [2026-04-24 CRON A] Backlog items 1 & 2 confirmed done in code; marked 7 task queue items ✅ (vote redirect, login return, credits, buy credits, comments); found critical: `piece/[id].tsx:292` purchase CTA gated to owner/existing-buyer — grandparent can't buy; discover vote redirect sends to discover not piece so vote lost; 6 "Gallery" copy violations remain; rewrote backlog with 3 verified items.
+>>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
 - [2026-04-22 CRON B] Reframe pass 2 & critical UX fixes — updated 5 screens with "step inside" copy; fixed write-only profile name; added network error retry UI; improved store empty state. Files: `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, `piece/[id].tsx`.
 - [2026-04-22 CRON B] Re-download column fix — `fetchMyDigitalOrder` corrected from `user_id`/`type` to `buyer_id`/`order_type`; paying customers can now re-download. File: `app/app/piece/[id].tsx`.
 - [2026-04-22 CRON B] Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation`; 90s `Promise.race` prevents permanent "Publishing…" state on cellular drop. File: `app/app/(tabs)/create.tsx`.
 - [2026-04-22 CRON B] Transformed image download timeout — 30s AbortController wraps `fetch`+`arrayBuffer()` at `create.tsx:107–120`; AbortError → user-readable message via existing error box; spinner no longer hangs forever on CDN drop. File: `app/app/(tabs)/create.tsx`.
+<<<<<<< HEAD
 - [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog item; line refs updated.
 - [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists. File: `app/app/piece/[id].tsx`.
 - [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails. File: `supabase/functions/create-payment-intent/index.ts`.
+=======
+- [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog #3; all 7 prior items verified still broken; line refs updated.
+- [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists; `maybeSingle()` used so no-order case returns null without throwing. File: `app/app/piece/[id].tsx`.
+- [2026-04-22 CRON A] Verified all 8 backlog items — all confirmed still broken; sharpened item 4 to document that `disabled` prop on vote buttons must also change (not just `onPress`), or the login-redirect will be swallowed by React Native before firing; fixed item 6 line reference (27, not 28).
+- [2026-04-22 CRON A] Verified all 7 prior backlog items — all confirmed still broken; found new #3: `publishMutation` storage uploads (`create.tsx:158–170`) have no timeout, parent permanently stuck on "Publishing…" on cellular drop; added to Known gotchas (Supabase Storage upload no timeout); renumbered backlog to 8 items.
+- [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails; prevents silent Stripe capture with no order row. File: `supabase/functions/create-payment-intent/index.ts`.
+>>>>>>> c46e37d7c3835da7a806ddd581ada8531c469b7f
