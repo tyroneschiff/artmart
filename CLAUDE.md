@@ -265,9 +265,11 @@ The most dangerous bugs look like success but do nothing:
 
 **May update:**
 - `## Strategic Backlog` — rewrite entirely each run, max 8 items
-- `## Current task queue` — mark done if codebase confirms it
+- `## Current task queue` — mark done if codebase confirms it; trim Done list to 10 (remove oldest)
 - `## Definition of "done" for MVP` — check off verifiably complete items
 - `## Known gotchas` — hard cap 12; add only silent platform-specific failures; remove stale items to make room
+- `## Recent session notes` — keep max 3 entries; trim oldest to make room
+- `## What we've tried and rejected` — keep max 10 items; trim least-relevant to make room
 - `## Improvement Log` — prepend one line per run, trim to 10
 
 **Never change:** tech stack, design system values, bundle IDs, product vision, `## Product empathy`, `## Recent session notes`, `## What we've tried and rejected`, `## Known production errors`, `## Recent user feedback`
@@ -345,11 +347,6 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
-- ✅ Product reframe — Claude system prompt rewritten; app copy updated throughout
-- ✅ Transform JWT fix — ES256 JWKS verification in edge function
-- ✅ Upload timeouts — 90s Promise.race on both storage uploads in publishMutation
-- ✅ Transformed image download timeout — 30s AbortController in create.tsx
-- ✅ Re-download path + column fix — piece/[id].tsx queries existing digital orders, correct field names
 - ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
 - ✅ Read Aloud — OpenAI TTS nova voice via edge function, expo-av playback
 - ✅ Delete piece — owner-only, confirmation alert, RLS DELETE policy migration
@@ -359,7 +356,7 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Physical print hidden — removed from piece detail pending Printful verification
 - ✅ Digital download CTA for non-owners — `piece/[id].tsx` shows purchase section to visitors
 - ✅ Autonomous crons migrated to Claude Code CLI
-- ✅ CLAUDE.md merge conflicts resolved
+- ✅ CLAUDE.md merge conflicts resolved, trim rules added
 
 **Pending:**
 - [ ] Discover vote → login redirect to piece (backlog item 1)
