@@ -2,25 +2,24 @@
 
 ## What this is
 
-Parents photograph their children's artwork, AI transforms it into gallery-quality art, and it publishes to a personal store. Family buys digital downloads or physical prints. Voting surfaces the best pieces. Primary driver: family gifting and sentimental preservation — not a stranger art marketplace.
+Parents photograph their children's artwork, AI transforms it into a vivid scene from the world the child imagined, and it publishes to a personal gallery. Family votes, buys digital downloads, and eventually physical prints. Primary driver: family gifting and sentimental preservation — not a stranger art marketplace.
 
 ## Core user flows
 
 1. **Create** — Snap photo → AI describes & transforms → name & publish piece
-2. **Share** — Each child gets a store link (drawup.art/store/emma) parents send to family
-3. **Purchase** — Family visits link, buys digital download or physical print (Printful drop-ship)
-4. **Discover** — Browse all stores, vote on pieces, top-voted rise in ranking
-5. **Social** — Share to WhatsApp/iMessage/Instagram; every piece has a public URL with OG preview
+2. **Share** — Each child gets a gallery link (drawup.art/store/emma) parents send to family
+3. **Purchase** — Family visits link, buys digital download
+4. **Discover** — Browse all galleries, vote on pieces, most-loved rise in ranking
+5. **Social** — Share to WhatsApp/iMessage; every piece has a public URL with OG preview
 
 ## Social & sharing strategy
 
 Every share is a free acquisition channel:
-- Each piece and store has a shareable URL with rich OG preview
-- In-app share sheet (WhatsApp, native, copy link) on every piece and store
+- Each piece and gallery has a shareable URL with rich OG preview
+- In-app share sheet (WhatsApp, native, copy link) on every piece and gallery
 - Post-publish prompt: pre-written message to family WhatsApp group
 - Post-vote notification: tell the parent when their piece gets love (not yet built)
 - Instagram Stories export: 9:16 card with branded watermark (not yet built)
-- Watermark on free shares; clean version for buyers (not yet built)
 
 ## Tech stack (locked for MVP)
 
@@ -30,21 +29,23 @@ Every share is a free acquisition channel:
 | Backend / DB | Supabase | Postgres + Auth + Storage + Edge Functions |
 | AI — description | Claude API (claude-sonnet-4-6, vision) | Server-side via Edge Function |
 | AI — transform | fal.ai (Flux Kontext img2img) | Server-side via Edge Function; pay-per-use |
-| Payments | Stripe | Digital purchases + Printful order initiation |
-| Print fulfillment | Printful API | Drop-ship physical prints, no inventory |
+| Payments | Stripe | Digital purchases |
+| Print fulfillment | Printful API | Configured but hidden until Printful account verified |
 | Landing page | Single HTML file | Deployed to Vercel/Netlify |
 
 ## Database schema (core tables)
 
-- `profiles` — display name, avatar (extends Supabase Auth users)
+- `profiles` — display name, avatar, credits (extends Supabase Auth users)
 - `stores` — one per child; slug, child_name, owner_id
 - `pieces` — store_id, original_image_url, transformed_image_url, title, ai_description, price_digital, price_print
 - `votes` — user_id, piece_id, unique constraint
 - `orders` — user_id, piece_id, type (digital|print), stripe_payment_intent, printful_order_id, status
+- `comments` — piece_id, user_id, content, created_at
+- `reports` — comment_id, reporter_id, reason
 
 ## AI pipeline
 
-Client sends image URI → Edge Function compresses → Claude vision generates gallery prompt → fal.ai Flux Kontext transforms → both URLs returned to client → client downloads transformed image locally → publishes both to Supabase Storage on confirm.
+Client sends image URI → Edge Function compresses → Claude vision generates description + image prompt → fal.ai Flux Kontext transforms → both URLs returned to client → client downloads transformed image locally → publishes both to Supabase Storage on confirm.
 
 ## Design system
 
@@ -76,11 +77,11 @@ Aesthetic blend: ucals.com layout discipline + tincan.kids warmth. Premium but a
 
 ## Key constraints
 
-- MVP scope only — no DMs, no comments, voting is the only social feature
-- No inventory — all fulfillment via Printful drop-ship
 - API keys in Supabase secrets only — never in app bundle or eas.json
 - Stripe webhooks must verify signature; Supabase RLS must be set before any table goes live
 - Prompt caching headers on all Claude API calls
+- Physical print flow exists in code but is hidden from non-owners — Printful variant ID and API key must be verified before enabling
+- Comments are built with Claude Haiku moderation — auth-only, 300 char limit, 1-per-5min rate limit
 
 ## Coding conventions
 
@@ -94,15 +95,17 @@ Aesthetic blend: ucals.com layout discipline + tincan.kids warmth. Premium but a
 
 ## Definition of "done" for MVP
 
-- [x] Sign up, create a store for a child
+- [x] Sign up, create a gallery for a child
 - [x] Photograph art, receive AI-transformed version
-- [x] Publish piece to store
+- [x] Publish piece to gallery
 - [x] Visitor can vote on a piece
 - [x] Visitor can purchase digital download (Stripe + signed URL)
-- [x] Visitor can order physical print (Stripe → Printful)
 - [x] Top-voted pieces discoverable in browse screen
-- [ ] Store accessible via public shareable URL (web routes not deployed)
+- [x] Credits system — spend on transform, refund on failure
+- [x] Comments with Claude Haiku moderation
+- [ ] Gallery accessible via public shareable URL (web routes not deployed)
 - [ ] Landing page live on drawup.art
+- [ ] Physical print flow verified end-to-end (Printful account + variant ID)
 - [ ] Android APK deployable via EAS Build
 
 ---
@@ -116,6 +119,17 @@ The crons must reason from user experience, not code. These are the three people
 **Family member (gifter)** — Grandparent, aunt, uncle. Gets a WhatsApp link. Not tech-savvy. Has 90 seconds of attention. Needs to see the artwork and tap Buy with minimal thought. Any confusion — missing price, unclear button, broken image — and they close the tab and never return.
 
 **Visitor (voter)** — Another parent on Discover. Casual, zero commitment. Votes if it's beautiful and one tap. Won't scroll past a broken or empty screen.
+
+---
+
+## Decision filter
+
+Before implementing or recommending anything, answer all three:
+1. Does this make it more likely a parent completes a transform?
+2. Does this make it more likely a family member buys or shares?
+3. Does this increase emotional impact at a moment that matters?
+
+If the answer to all three is "no" or "unclear", don't do it. This prevents polishing things that are already good enough while real friction goes unresolved.
 
 ---
 
@@ -133,12 +147,14 @@ Lessons learned from running the app on real devices. Apply these before analyzi
 - `.update().eq('id', x)` silently succeeds with 0 rows if the row doesn't exist. Use `.upsert()` for any row that may not exist (profiles, settings).
 - Deleting from the DB doesn't clear React Query's in-memory cache. Always call `queryClient.invalidateQueries()` after mutations.
 - Edge Function timeout is 150 seconds. Polling loops must use synchronous endpoints or abort before that limit.
+- RLS policies must explicitly include DELETE — Supabase silently drops deletes with no error if no DELETE policy exists, calling onSuccess as if it worked.
 
 **Platform / third-party:**
 - `Linking.canOpenURL('whatsapp://')` returns false on iOS without `LSApplicationQueriesSchemes`. Use `wa.me/?text=` universal link instead.
 - Stripe idempotency keys lock for 24 hours. A failed payment with the same key returns the same failed intent — user cannot retry.
 - Supabase Edge Function CORS headers must be returned on OPTIONS preflight or all app requests fail silently.
 - `supabase.storage.from('bucket').upload()` has no built-in timeout and exposes no AbortController in the JS v2 API. A 4–15MB original image upload on 3G can hang indefinitely — wrap with `Promise.race` against a timeout rejection to prevent a permanent pending state.
+- `btoa(String.fromCharCode(...new Uint8Array(buffer)))` throws stack overflow on audio/image buffers in Deno. Use a for-loop: `for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])`.
 
 ---
 
@@ -158,8 +174,8 @@ Follow the full path through every function, network call, and state update. At 
 ### 2. Apply worst-case conditions to every flow
 - **Slow cellular** — 3G, 5–10s round trips, mid-operation drops
 - **Large files** — iPhone 15 Pro photo, not a small test image
-- **Empty database** — new user, no stores, no pieces
-- **Returning user** — has purchases, prior votes, existing stores
+- **Empty database** — new user, no galleries, no pieces
+- **Returning user** — has purchases, prior votes, existing galleries
 - **Non-tech user** — grandparent on a WhatsApp link with no account
 
 ### 3. Hunt for silent failures
@@ -169,18 +185,20 @@ The most dangerous bugs look like success but do nothing:
 - React Query cache showing deleted DB records as if present
 - fal.ai URL expired before user taps Publish
 - Edge Function returning HTTP 200 with `{ "error": "..." }` in body
+- RLS DELETE policy missing → delete silently no-ops, onSuccess fires anyway
 
 ### 4. Prioritize by real user impact
 1. Permanently loses user's photo or payment — fix first
 2. Create flow broken (photo → transform → publish) — fix first
 3. Purchase funnel broken (grandparent can't buy) — fix first
-4. Empty/error states on high-traffic screens (Discover, Store, Piece detail)
+4. Empty/error states on high-traffic screens (Discover, Gallery, Piece detail)
 5. Design consistency, copy, edge cases
 
 ### 5. Before recommending or implementing
 - Read `## Recent session notes` first — user-reported issues outrank code analysis
 - Read `## Known gotchas` — don't re-solve understood problems
 - Check `## Strategic Backlog` — is it already tracked? If yes, verify the description is still accurate
+- Apply the `## Decision filter` — if the change doesn't pass, don't make it
 
 ---
 
@@ -188,20 +206,25 @@ The most dangerous bugs look like success but do nothing:
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
+**2026-04-24:**
+- Physical print flow hidden from all users pending Printful account verification (correct variant ID unknown). Only download CTA remains on piece detail page.
+- "Store" renamed to "Gallery" throughout — tabs, screens, copy, modal text. Route paths (`/store/[slug]`) unchanged.
+- Sort labels changed from "Top worlds / New worlds" to "Most loved / Newest" — cleaner, less forced.
+- Vote badge moved from below-card text to image overlay on both Discover and Gallery pages — consistent treatment.
+- Gallery page bottom nav added (Discover / Create / My Galleries / Profile) for navigation from shared links.
+- Autonomous cron system migrated from Gemini CLI to Claude Code CLI. Scripts rewritten. Supabase auto-deploy removed from workflow — deploy remains manual. Migration files and edge functions explicitly prohibited for CRON B.
+- Delete functionality added to piece detail (owner-only). Root cause of silent no-op: missing RLS DELETE policy on `pieces` table — fixed in `012_pieces_delete_policy.sql`.
+
 **2026-04-23 — BUSINESS MODEL PIVOT (decided, not yet implemented):**
-- **Product reframe: "Step inside your child's drawing" — NOT "transform art into gallery pieces."** The drawing IS the vision; the AI is the door into that world. Never say "elevate," "improve," "gallery-worthy," "fine art print," or treat the original as raw material. Description is the hero product — written as a witness to the world the child built, not as a curator praising technique. All new copy, prompts, and product decisions must flow from this framing.
-- **Monetization pivot to hybrid: credits + keep prints.** 3 free transforms on signup → one credit pack ($9.99 / 12 credits, ~$0.83/gen, ~$0.05 marginal cost → ~85% margin) → prints remain as high-ARPU gift upsell. Retire per-piece `price_digital` and `price_print`. No subscription until month 2 usage data.
-- **Grandparent is the buyer for prints, not the parent.** Purchase path is: parent generates → shares to family WhatsApp → grandparent buys print as gift-for-themselves. Rebuild checkout for guest purchase from `/store/[slug]` and add a "send as gift" email flow. This is the highest-ARPU lever and prior plan to retire prints was wrong.
-- **Comments are retention, not monetization.** Auth-only, 300 char limit, Claude Haiku pre-moderation, report button, 1-per-5min rate limit. Kid safety non-negotiable. Ship after the credits/paywall loop works.
-- **Implementation sequence:** (1) reframe copy + Claude system prompt [DONE this session], (2) credits + 3-free tier + Buy Credits screen, (3) grandparent-optimized guest checkout + gift-a-print, (4) comments with Haiku mod. Social-fame/upvote loop is deprioritized as monetization driver — it only works at 10k+ active users; keep votes as retention not as a revenue hook.
-- Claude system prompt in `transform-artwork/index.ts` rewritten to "visual collaborator stepping inside a child's imagination"; fal.ai `guidance_scale: 6.0`. In-app copy reframed: tagline "Step inside your child's imagination", transform button "✨ Step Inside", compare labels "The Drawing" / "The World", share messages rewritten around "imagined a world, come take a look."
+- **Product reframe: "Step inside your child's drawing"** — the drawing IS the vision; the AI is the door into that world. Never say "elevate," "improve," "gallery-worthy," or treat the original as raw material.
+- **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs. Stripe takes ~$0.59/transaction.
+- **Grandparent is the print buyer.** Parent generates → shares to family WhatsApp → grandparent buys print as gift. This is the highest-ARPU lever.
+- **Implementation sequence:** (1) reframe copy [DONE], (2) credits + paywall [DONE], (3) grandparent guest checkout + gift-a-print, (4) comments [DONE].
 
 **2026-04-22:**
-- Transform failing with "invalid request error — could not process image." Root cause: iPhone photos 4–15MB, Claude rejects >5MB. Fixed by adding `expo-image-manipulator` compression (1200px, 70% JPEG) in `handleTransform()`. Had to `npx expo install expo-image-manipulator` — was not in package.json.
-- Profile display name silently failing for new users. Root cause: `.update()` on `profiles` when no row existed yet. Fixed by switching to `.upsert()`.
-- Anthropic API key rotated — new key set in Supabase secrets and both cron scripts.
-- Crons were running every 3 minutes, hitting 30k TPM rate limit. Slowed to 15-minute cadence; upgraded to `claude-opus-4-7`; rewrote prompts with specific file reading order and investigation checklists.
-- CLAUDE.md restructured: added Product empathy, Known gotchas, Reasoning protocols, Recent session notes — so crons have ground truth instead of just static code analysis.
+- Transform failing: iPhone photos 4–15MB, Claude rejects >5MB. Fixed with `expo-image-manipulator` compression.
+- Profile display name silently failing for new users: `.update()` on non-existent row. Fixed with `.upsert()`.
+- Crons hitting 30k TPM rate limit at 3-minute cadence. Slowed; upgraded model; rewrote prompts.
 
 ---
 
@@ -213,60 +236,40 @@ The most dangerous bugs look like success but do nothing:
 
 **Response style:** Maximum signal, minimum words. Code over prose.
 
-## Current task queue
-
-**Done (recent):**
-- ✅ Product reframe rollout (step 1) — Claude system prompt in `transform-artwork/index.ts` rewritten from "art director elevating" to "visual collaborator stepping inside a child's imagination"; user-text "Step inside this child's drawing"; app copy updated (tagline `login.tsx:38`, transform button + status + compare labels `create.tsx`, share messages `share.ts`). Deployed to edge function; client changes need EAS rebuild.
-- ✅ Transform ES256 JWT fix — `transform-artwork/index.ts` deployed with `--no-verify-jwt` (gateway skips), function verifies via `jose.createRemoteJWKSet` against Supabase JWKS endpoint. Unblocks every transform on current asymmetric-JWT project config.
-- ✅ Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation` with a 90s `Promise.race`
-- ✅ Transformed image download timeout — 30s AbortController around `fetch(transformedUrl)` + `arrayBuffer()` in `create.tsx:107–120`
-- ✅ Re-download path — `piece/[id].tsx` queries existing digital orders; card swaps to "Re-download" when `status=paid` exists
-- ✅ Re-download column fix — `fetchMyDigitalOrder` in `piece/[id].tsx` corrected from `.eq('user_id')/.eq('type')` to `.eq('buyer_id')/.eq('order_type')` to match what the edge function actually inserts; re-download CTA now appears for paying customers
-
-**Pending (reframe + monetization pivot — see Recent Session Notes 2026-04-23):**
-- ✅ Reframe pass 2 — updated `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, and `piece/[id].tsx` to match "step inside" framing; replaced "gallery / piece / art" with "world" where appropriate; updated empty states and icons.
-- ✅ Profile display name fix — `profile.tsx` now fetches and pre-fills the display name via `useQuery`; no longer write-only and doesn't clear on save.
-- ✅ Error handling with retry — added `isError`/`refetch` with a "Try again" pill to `store/[slug].tsx`, `discover.tsx`, `mystores.tsx`, and `piece/[id].tsx` to handle transient network failures.
-- ✅ Store empty state — replaced bare text in `store/[slug].tsx` with a warm centered block (icon + possessive copy) matching the app's pattern.
-- [ ] Credits schema + 3-free tier — `profiles.credits` int default 3, atomic deduct inside `transform-artwork` edge function (refund on fal.ai fail), block transform with low-credit paywall when 0 remaining
-- [ ] Buy Credits screen + Stripe flow — single $9.99 / 12-credit pack, `purchase-credits` edge function, webhook handler increments balance
-- [ ] Grandparent guest checkout — allow buy from `/store/[slug]` without login + "send print as gift" email flow; this is the highest-ARPU lever
-- [ ] Comments with Claude Haiku pre-moderation — auth-only, 300 char limit, 1-per-5min rate limit, report button, `comments` + `reports` tables
-- [ ] Accept TestFlight invite — appstoreconnect.apple.com/apps/6762963488/testflight/ios
-- [ ] Deploy landing page to Vercel on drawup.art (domain not registered)
-- [ ] OG meta tags for piece/store public URLs
-
 ---
 
 ## Autonomous improvement system
 
-**Two automated Claude cron processes read this file.** Each must read the full file first, follow its instructions, update the relevant sections, then exit.
+**Two automated Claude cron processes read this file every 2 hours.** Each must read the full file first, follow its instructions, update the relevant sections, then exit.
 
-**Meta-principle:** Every action should make the next run more effective. If instructions are unclear or producing poor results, update them. If backlog items are too vague to implement, sharpen them. This system compounds in quality over time.
+**Meta-principle:** Every run should leave the system smarter, not just the codebase. If CLAUDE.md is inaccurate, fix it. If backlog items are too vague to implement, sharpen them. If a previous decision turned out to be wrong, log it in `## What we've tried and rejected`. This compounds in quality over time.
 
 ---
 
-### CRON A — Strategic Reviewer (runs every 15 minutes)
+### CRON A — Strategic Reviewer
 
 **Job: think, not code.** Read the codebase, find real problems, update the knowledge base.
+
+**Process:**
+1. Read `## Known production errors` — real failures outrank hypotheses
+2. Read `## Recent user feedback` — actual user confusion outranks code analysis
+3. Read the current `## Strategic Backlog` — verify every line reference still exists in code
+4. Audit the create → transform → publish flow end to end
+5. Audit the credits purchase flow end to end
+6. Apply `## Decision filter` to any candidate improvements
 
 **May update:**
 - `## Strategic Backlog` — rewrite entirely each run, max 8 items
 - `## Current task queue` — mark done if codebase confirms it
 - `## Definition of "done" for MVP` — check off verifiably complete items
-- `## Known gotchas` — see evolution rules below
-- `## Reasoning protocols` — see evolution rules below
+- `## Known gotchas` — hard cap 12; add only silent platform-specific failures; remove stale items to make room
 - `## Improvement Log` — prepend one line per run, trim to 10
 
-**Never change:** tech stack, design system values, bundle IDs, API keys, product vision, `## Product empathy`, `## Recent session notes`
-
-**Evolution rules (focused, not accumulative):**
-- `## Known gotchas` has a hard cap of 12 bullet points. To add one: it must describe a non-obvious platform-specific failure that would bite silently, AND you must remove a stale or resolved item to make room. Do not add things that are obvious from the code or already implied by existing entries.
-- `## Reasoning protocols` — you may add one clarifying question to an *existing* protocol if investigation revealed a gap. Never add a new protocol section. Never remove existing ones.
+**Never change:** tech stack, design system values, bundle IDs, product vision, `## Product empathy`, `## Recent session notes`, `## What we've tried and rejected`, `## Known production errors`, `## Recent user feedback`
 
 ---
 
-### CRON B — Implementer (runs every 15 minutes)
+### CRON B — Implementer
 
 **Job: ship one small, complete, correct change per run.**
 
@@ -278,19 +281,20 @@ The most dangerous bugs look like success but do nothing:
 5. Error handling and edge case recovery
 6. Everything else
 
-**Scope rules:**
-- One focused change per run, 1–3 files max
-- Prefer refinements over features — these compound and never half-ship
-- Never start what you can't finish. Split large items; implement the smallest useful slice
-- No partial implementations — a button with no handler is worse than nothing
+**Hard constraints — never violate:**
+- Never create or modify files in `supabase/migrations/`
+- Never create or modify files in `supabase/functions/`
+- Never modify `app.json`, `eas.json`, `package.json`, or any config files
+- Never modify `CLAUDE.md` directly — that is CRON A's job
+- Maximum 3 files changed per run, `app/` directory only
+- Never start what you can't finish — a button with no handler is worse than nothing
+- Use only tokens from `app/lib/theme.ts`, never raw hex values
+- Apply `## Decision filter` before implementing — if it doesn't pass, pick the next backlog item
 
 **After implementing:**
 1. Move completed item to `## Current task queue` Done ✅ with one-line summary
 2. If split, add remainder back to backlog at appropriate rank
-3. If implementation revealed a non-obvious platform gotcha not in `## Known gotchas`, add it — but only if it caused a real silent failure and the cap (12 items) has room or a stale item can be removed
-4. Prepend one line to `## Improvement Log` (timestamp, "CRON B", what changed, which files). Trim to 10 entries.
-
-**Never implement:** anything requiring secrets, App Store submission, domain registration, third-party account setup, or new dependencies not in package.json.
+3. Prepend one line to `## Improvement Log`: timestamp, "CRON B", what changed, which files. Trim to 10.
 
 ---
 
@@ -298,22 +302,77 @@ The most dangerous bugs look like success but do nothing:
 
 *(Rewritten each run by CRON A — Implementer reads this to pick next task)*
 
-1. **Anonymous vote button silently no-ops — missed signup funnel** `[Growth]` `[UX]` — `discover.tsx:104` (`onPress={() => canVote && voteMutation.mutate(item.id)}`) and `piece/[id].tsx:140` (`onPress={() => session && voteMutation.mutate()}`), all silently do nothing when unauthenticated; fix requires TWO changes per button: (1) change `onPress` to call `router.push('/(auth)/login')` when `!session`, AND (2) update `disabled` — change `discover.tsx:105` from `disabled={!canVote}` to `disabled={isVoted || isVoting}`, and `piece/[id].tsx:141` from `disabled={!session || voteMutation.isPending}` to `disabled={voteMutation.isPending}` — if `disabled` still includes `!session`, React Native swallows the tap before `onPress` fires and the login redirect silently never happens. Impact: converts the highest-intent anonymous tap into a signup prompt instead of a confusing freeze.
+1. **[CONFIRMED] Anonymous vote button silently no-ops — missed signup funnel** — `discover.tsx` vote handler fires `canVote && voteMutation.mutate(item.id)` which silently does nothing when unauthenticated; `piece/[id].tsx` vote handler fires `session && voteMutation.mutate()` which also silently does nothing. Fix requires two changes per button: (1) `onPress` must call `router.push('/(auth)/login')` when no session, AND (2) remove `!session` from `disabled` prop — React Native swallows the tap before `onPress` fires if `disabled` is true.
 
-2. **Login always redirects to Discover — breaks vote conversion funnel** `[Growth]` `[UX]` — `login.tsx:25` hardcodes `router.replace('/(tabs)/discover')` regardless of entry point; when item 2 routes an anonymous voter to login, they complete signup but land on Discover instead of the piece they tapped; pass the originating route as a param and redirect there on success. Impact: without this, item 2's funnel improvement stalls — the vote is still lost after signup.
+2. **[CONFIRMED] Login always redirects to Discover — breaks vote conversion funnel** — `login.tsx` hardcodes `router.replace('/(tabs)/discover')` on success. When item 1 routes an anonymous voter to login, they complete signup but land on Discover instead of the piece. Pass originating route as param and redirect there on success.
+
+---
+
+## What we've tried and rejected
+
+*(Maintained by Claude — log any revert or deliberate decision not to implement, with reason. Prevents re-suggesting the same ideas.)*
+
+- **Subscription model (monthly)** — Rejected in favour of credit packs. Not enough usage data to price a subscription. Revisit after month 2.
+- **"Imagination Credits" as label** — Replaced with plain "Credits". "Imagination" felt decorative on transactional UI; reserved for emotional moments (descriptions, share messages, empty states).
+- **"Top worlds / New worlds" sort labels** — Replaced with "Most loved / Newest". "Worlds" in a UI label felt forced; the word earns its place as the noun for pieces, not as a sort filter.
+- **Compare labels ("The Drawing" / "The World")** — Removed entirely. Two images side by side is self-explanatory; any label risked implying the drawing isn't a world too.
+- **Physical print card visible to all users** — Hidden pending Printful variant ID verification. Showing a purchasable option that can't fulfil is worse than not showing it.
+- **Auto-deploy Supabase functions from cron** — Removed from GitHub Actions. A bad edge function deploying automatically breaks production transforms for all users. Manual deploy only.
+
+---
+
+## Known production errors
+
+*(Paste Supabase edge function errors or crash logs here — CRON A reads this first. Highest-signal input.)*
+
+*(Empty — no known production errors at time of writing)*
+
+---
+
+## Recent user feedback
+
+*(Raw notes from real device testing — paste reactions directly. CRON A weights decisions against this.)*
+
+*(Empty — TestFlight not yet distributed to external testers)*
+
+---
+
+## Current task queue
+
+**Done (recent):**
+- ✅ Product reframe — Claude system prompt rewritten; app copy updated throughout
+- ✅ Transform JWT fix — ES256 JWKS verification in edge function
+- ✅ Upload timeouts — 90s Promise.race on both storage uploads in publishMutation
+- ✅ Transformed image download timeout — 30s AbortController in create.tsx
+- ✅ Re-download path — piece/[id].tsx queries existing digital orders, swaps CTA
+- ✅ Re-download column fix — corrected buyer_id/order_type field names
+- ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
+- ✅ Read Aloud — OpenAI TTS nova voice via edge function, expo-av playback
+- ✅ Child name in descriptions — passed through transform flow, used in Claude prompt
+- ✅ Delete piece — owner-only, confirmation alert, RLS DELETE policy migration
+- ✅ Gallery rename — "Store" → "Gallery" throughout UI
+- ✅ Gallery bottom nav — Discover / Create / My Galleries / Profile
+- ✅ Vote badge overlay — consistent image overlay on Discover and Gallery pages
+- ✅ Physical print hidden — removed from piece detail pending Printful verification
+- ✅ Autonomous crons migrated to Claude Code CLI
+
+**Pending:**
+- [ ] Anonymous vote → login redirect (backlog item 1 + 2)
+- [ ] Grandparent guest checkout — buy from gallery without login
+- [ ] Web gallery deployment — drawup.art domain + public routes
+- [ ] OG meta tags for piece/gallery public URLs
+
+---
 
 ## Improvement Log
 
 *(One line per run, newest first)*
 
+- [2026-04-24 Human] Migrated cron system to Claude Code CLI; added Decision filter, What we've tried and rejected, Known production errors, Recent user feedback sections to CLAUDE.md.
 - [2026-04-22 CRON B] Reframe pass 2 & critical UX fixes — updated 5 screens with "step inside" copy; fixed write-only profile name; added network error retry UI; improved store empty state. Files: `mystores.tsx`, `discover.tsx`, `store/[slug].tsx`, `profile.tsx`, `piece/[id].tsx`.
 - [2026-04-22 CRON B] Re-download column fix — `fetchMyDigitalOrder` corrected from `user_id`/`type` to `buyer_id`/`order_type`; paying customers can now re-download. File: `app/app/piece/[id].tsx`.
 - [2026-04-22 CRON B] Upload timeouts — `withUploadTimeout` wraps both `supabase.storage.upload()` calls in `publishMutation`; 90s `Promise.race` prevents permanent "Publishing…" state on cellular drop. File: `app/app/(tabs)/create.tsx`.
 - [2026-04-22 CRON B] Transformed image download timeout — 30s AbortController wraps `fetch`+`arrayBuffer()` at `create.tsx:107–120`; AbortError → user-readable message via existing error box; spinner no longer hangs forever on CDN drop. File: `app/app/(tabs)/create.tsx`.
-- [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog #3; all 7 prior items verified still broken; line refs updated.
-- [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists; `maybeSingle()` used so no-order case returns null without throwing. File: `app/app/piece/[id].tsx`.
-- [2026-04-22 CRON A] Verified all 8 backlog items — all confirmed still broken; sharpened item 4 to document that `disabled` prop on vote buttons must also change (not just `onPress`), or the login-redirect will be swallowed by React Native before firing; fixed item 6 line reference (27, not 28).
-- [2026-04-22 CRON A] Verified all 7 prior backlog items — all confirmed still broken; found new #3: `publishMutation` storage uploads (`create.tsx:158–170`) have no timeout, parent permanently stuck on "Publishing…" on cellular drop; added to Known gotchas (Supabase Storage upload no timeout); renumbered backlog to 8 items.
-- [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails; prevents silent Stripe capture with no order row. File: `supabase/functions/create-payment-intent/index.ts`.
-- [2026-04-22 CRON A] Verified all 8 backlog items against current code — all confirmed still broken; corrected item 4 line reference (canVote defined at discover.tsx:95, handler at :104); sharpened items 2 and 3 with exact line ranges from code read; no new issues meet the gotcha bar.
-- [2026-04-22 CRON A] Verified all 7 prior backlog items — all confirmed still broken in code; found new item 2: `create-payment-intent/index.ts:63` insert result never checked — if DB flakes after delete, Stripe captures payment but no order row exists and fulfillment is silently skipped; renumbered backlog 1–8.
+- [2026-04-22 CRON A] Found column mismatch: `fetchMyDigitalOrder` queries `user_id`/`type` but Edge Function inserts `buyer_id`/`order_type`; re-download CTA marked ✅ done is silently broken; added as backlog item; line refs updated.
+- [2026-04-22 CRON B] Re-download path — added `fetchMyDigitalOrder` query and `handleRedownload` to `piece/[id].tsx`; digital card swaps to "Re-download" CTA when `paid` digital order exists. File: `app/app/piece/[id].tsx`.
+- [2026-04-22 CRON B] Order insert error check — destructured `{ error: insertError }` from insert at `create-payment-intent/index.ts:63`; return 500 before sending `client_secret` if insert fails. File: `supabase/functions/create-payment-intent/index.ts`.
