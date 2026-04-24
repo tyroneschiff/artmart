@@ -2,7 +2,7 @@
 
 ## What this is
 
-Parents photograph their children's artwork, AI transforms it into a vivid scene from the world the child imagined, and it publishes to a personal gallery. The core job-to-be-done is **guilt-free disposal** — a child brings home 200 drawings before they turn 10, and parents can't keep them all. This app lets them preserve each one beautifully before throwing it away. The transformation is the keepsake. Sharing with family and occasional print purchases are bonuses, not the primary driver.
+Parents photograph their children's artwork, AI transforms it into a vivid scene from the world the child imagined, and it publishes to a personal gallery. The magic moment is the child seeing their drawing come to life and hearing it described back to them. Underlying value: parents accumulate hundreds of drawings they can't keep — this lets them preserve each one beautifully. Don't lead with preservation; lead with delight. The guilt-free disposal is a side effect, not the pitch.
 
 ## Core user flows
 
