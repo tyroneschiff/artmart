@@ -17,6 +17,7 @@ import { colors, btn, type, card } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
 import CreditsChip from '../../components/CreditsChip'
+import ReadAloudButton from '../../components/ReadAloudButton'
 
 const isWeb = Platform.OS === 'web'
 
@@ -133,7 +134,8 @@ export default function CreateScreen() {
         [{ resize: { width: 1200 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
       )
-      const { transformedUrl, description } = await transformArtwork(imageUri, compressed.base64 ?? undefined)
+      const { transformedUrl, description, credits: newCredits } = await transformArtwork(imageUri, compressed.base64 ?? undefined)
+      if (session?.user.id) queryClient.setQueryData<number>(['credits', session.user.id], newCredits)
       
       const localPath = FileSystem.documentDirectory + `transformed_${Date.now()}.jpg`
       const { uri: downloadedUri } = await withUploadTimeout(
@@ -274,9 +276,15 @@ export default function CreateScreen() {
           <View style={[card, styles.successCard]}>
             <Image source={{ uri: transformedUri! }} style={styles.successImage} />
             <Text style={[type.h1, { marginBottom: 8, textAlign: 'center' }]}>Published!</Text>
-            <Text style={[type.body, { textAlign: 'center', marginBottom: 32, color: colors.mid }]}>
+            <Text style={[type.body, { textAlign: 'center', marginBottom: 16, color: colors.mid }]}>
               "{title}" is now live in {selectedStore?.child_name}'s store.
             </Text>
+            {aiDescription ? (
+              <View style={{ width: '100%', marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.goldMid }}>
+                <Text style={{ fontSize: 14, color: colors.dark, lineHeight: 22, marginBottom: 12 }}>{aiDescription}</Text>
+                <ReadAloudButton text={aiDescription} compact />
+              </View>
+            ) : null}
             
             <TouchableOpacity 
               style={[btn.primary, { backgroundColor: colors.gold, width: '100%', paddingVertical: 18, marginBottom: 12 }]} 

@@ -10,23 +10,19 @@
     * **The Micro-Task:** Update `supabase/functions/moderate-comment/index.ts` to check `pieces` and `comments` tables; if it's the first comment, return `first_comment: true`.
     * **Why:** Enables the app to trigger a "Your first comment!" celebration and a limited-time print discount.
 
-3. **[UX] "View in Room" Variety**
-    * **The Micro-Task:** In `RoomPreviewModal.tsx`, add a horizontal `ScrollView` with 3 room options (Living Room, Nursery, Office). Update `ROOM_BG` dynamically based on selection.
-    * **Why:** Helps different personas (parents vs office-workers) visualize the art in their own specific environment.
-
-4. **[POLISH] Magic Artwork Fade-In**
+3. **[POLISH] Magic Artwork Fade-In**
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, wrap the main `Image` in an `Animated.View`. Use `useNativeDriver: true` to fade the opacity from 0 to 1 over 800ms when `onLoad` triggers.
     * **Why:** Makes the reveal feel like a premium, intentional "transformation" rather than a jumpy load.
 
-5. **[RELIABILITY] AI Engine Retries**
+4. **[RELIABILITY] AI Engine Retries**
     * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, wrap the `fal.ai` and `Claude` fetch calls in a simple `try/catch` with one retry attempt for 5xx errors.
     * **Why:** Handles transient API hiccups in the most critical and expensive user path.
 
-6. **[UX] Sample Store Empty State**
+5. **[UX] Sample Store Empty State**
     * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, update `ListEmptyComponent` to show a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
     * **Why:** Reduces the "cold start" problem by showing users what success looks like before they commit.
 
-7. **[REVENUE] Bulk Gift Checkout Feedback**
+6. **[REVENUE] Bulk Gift Checkout Feedback**
     * **The Micro-Task:** In `app/components/GiftingModal.tsx`, if `quantity > 1`, show a small "Bulk Discount Applied" text next to the total or quantity selector.
     * **Why:** Reinforces the value proposition at the moment of payment, reducing cart abandonment.
 
@@ -58,8 +54,7 @@
 - **[POLISH] Theme Token Adoption Pass** — Refactored `Piece Detail`, `Create`, and `Profile` screens to fully adopt the design system tokens (`type`, `btn`, `card`), removing over 300 lines of manual CSS.
 - **[UX] Android Navigation Pass** — Optimized `screenOptions` in `_layout.tsx` for Android to provide a more native feel with proper animations and gesture support.
 - **[REVENUE] Reliable Checkout Network Resilience** — Wrapped `fetch` calls in `app/lib/checkout.ts` with a 30s `AbortController` timeout and added warm error messages for offline/timeout states. Verified with new test cases.
-- **[REVENUE] High-Value Gift Message** — Polished `app/components/GiftingModal.tsx` by updating the character limit to 300 and adding a live "Gift Card Preview." Refactored styles to use `type` and `btn` tokens, removing design debt.
-- **[REVENUE] "View in Room" Visualization** — Implemented `RoomPreviewModal` with a warm living room background and dynamic artwork overlay. Added "View in Room" CTA to the Piece Detail screen.
+- **[REVENUE] High-Value Gift Message** — Polished `app/components/GiftingModal.tsx` by updating the character limit to 300 and adding a live "Gift Card Preview." Refactor styles to use `type` and `btn` tokens, removing design debt.
 - **[POLISH] Success UI Celebration** — Installed `react-native-confetti-cannon` and triggered it on successful publishing in `create.tsx`.
 
 ## Improvement Log
@@ -76,18 +71,14 @@
 - [2026-04-23 — CRON B] Multi-Item Print Quantity UI & Discount Badge — Completed the multi-item revenue loop by adding a high-polish quantity selector and a "SAVE 15%" incentive badge to the `GiftingModal`. This makes it effortless for users to buy prints for multiple family members, directly driving higher AOV.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] The foundation is rock solid, but the 'magic' needs to be more visceral. We've proven the revenue engine works with physical prints; now we must scale AOV through volume-based nudges (quantity selectors + badges) and broaden our appeal with diverse room contexts. Reliability is also a brand promise—stuck AI generations are the #1 killer of trust, so explicit timeouts in our edge functions are non-negotiable.
 - [2026-04-23 — CRON B] Multi-Item Print Discount (Logic) — Hardened the revenue engine by implementing a 15% bulk discount for physical prints. Added logic to `create-payment-intent` to apply the multiplier to the total amount when `quantity >= 2`, and updated the mobile checkout library to support multi-item orders.
-- [2026-04-23 — CRON A] Strategic Audit: The vision is expanding from "functional" to "premium". Identified "View in Room" as a major conversion lever that needs more variety to hit different buyer personas (office vs home). Multi-item print discounts are the #1 revenue priority to increase AOV. Also identified a reliability risk in `transform-artwork` where slow AI response times could lead to "hanging" credits; adding explicit timeouts to these edge functions is now in the backlog.
 - [2026-04-23 — CRON B] Multi-Item Print Quantity (DB & Edge) — Enabled multi-item print orders by adding a `quantity` column to the database and updating the `create-payment-intent` logic. This fundamental shift allows for higher AOVs and future volume discounts.
 - [2026-04-23 — CRON A] Strategic Audit: The 'Step Inside' vision is now shifting from 'Reliability' to 'Volume and Conversion'. We've hardened the core engine; now we must maximize the value of every session. By introducing multi-item print discounts and high-value credit packs, we're targeting a higher AOV. Simultaneously, we're deepening the emotional hook with push notifications and visual 'magic' (transitions and room contexts) to turn casual browsers into invested patrons.
 - [2026-04-23 — CRON B] Checkout Failure Recovery — Hardened the revenue funnel by implementing automated error logging for failed checkouts. Created `010_checkout_logs.sql` and `log-checkout-error` edge function to track `presentPaymentSheet` failures. This data-driven approach allows us to identify and resolve silent payment blockers for both piece purchases and credit top-ups.
 - [2026-04-23 — CRON B] Post-Purchase Print Upsell — Targeted digital owners with a 10% discount on physical prints. Updated `create-payment-intent` to handle the discount server-side and added a "10% OFF" badge and "Upgrade" messaging in the UI to drive print conversions.
-- [2026-04-23 — CRON A] Strategic Audit: Conducted a deep 360-degree audit. Identified a major revenue opportunity: post-purchase print upsells for digital buyers. Guest checkout is solid, but reliability can be further hardened by tracking payment failures. Shifted focus to a multi-background "View in Room" experience and a "Magic Transition" to enhance the premium feel.
 - [2026-04-23 — CRON B] Full "Step Inside" Polish & Retention Pass — Completed 5 major micro-tasks: implemented Push Token collection (DB & App), hardened social actions with timeouts, reframed sharing as "Send to Grandma", and achieved 100% theme token adoption across core screens. Added Android native navigation optimizations. The app now feels premium, resilient, and emotionally resonant.
 - [2026-04-23 — CRON A] Strategic Audit: The "Step Inside" vision is technically solid but lacks network resilience in the piece detail social actions and the emotional closure of push notifications. Shifting focus to reliability (timeouts for votes/comments) and the "Send to Grandma" emotional loop will solidify the platform's utility, while a multi-screen Theme Token Adoption pass will eradicate remaining design debt.
 - [2026-04-23 — CRON B] Reliable Checkout Network Resilience — Hardened the checkout engine by wrapping `fetch` calls in `app/lib/checkout.ts` with 30s timeouts. Added user-friendly, on-brand error messages for cellular drops and timeouts to prevent UI hangs and buyer frustration.
 - [2026-04-23 — CRON A] Strategic Audit: The "Step Inside" vision is technically solid but lacks network resilience in the checkout flow and the emotional closure of push notifications. Shifting focus to reliability and the creator-parent feedback loop (via push tokens) will solidify the platform's utility, while theme token adoption across core screens will ensure the "premium" promise is felt in every interaction.
 - [2026-04-23 — CRON B] High-Value Gift Message — Polished the gifting experience with a 300-character limit and a live premium "Gift Card Preview" in `GiftingModal.tsx`. Removed `StyleSheet.create` in favor of theme tokens to ensure brand alignment.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Conducted a 360-degree audit across Revenue, UX, Design, and Reliability. Uncovered a critical silent failure risk: checkout flows using raw `fetch` lack timeout handling and can hang indefinitely on cellular drops. Prioritized Network Resilience alongside Gifting UI Polish to solidify the revenue engine. Elevated Theme Token Adoption across top-level tabs to eradicate remaining design debt and unify the "Step Inside" premium feel.
-- [2026-04-23 — CRON B] "View in Room" Visualization — Implemented a premium room visualization feature. Users can now see their child's artwork in a realistic living room setting directly from the piece detail screen. Uses theme tokens and a high-quality background to maintain the "Step Inside" brand warmth.
-- [2026-04-23 — STRATEGIC AUDIT (CRON A)] Shifted focus to visualization as the primary revenue lever. Identified "View in Room" as the #1 priority to convert the grandparent buyer segment. Prioritized Push Notification infrastructure to close the emotional loop between buyers and creators. Refined design debt tasks to be more surgical, targeting Profile and Create screens for theme token compliance.
 - [2026-04-23 — CRON B] Success UI Celebration (Polish) — Integrated `react-native-confetti-cannon` into the creation flow. Users are now greeted with a burst of celebration upon publishing, reinforcing the emotional reward of creating.

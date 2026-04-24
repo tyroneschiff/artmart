@@ -7,10 +7,10 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { purchasePiece } from '../../lib/checkout'
 import { downloadPiece } from '../../lib/download'
 import GiftingModal, { GiftingData } from '../../components/GiftingModal'
-import ShareSheet from '../../components/ShareSheet'
-import RoomPreviewModal from '../../components/RoomPreviewModal'
-import { buildPieceShareMessage, SharePayload } from '../../lib/share'
+import ShareSheet from '../../../components/ShareSheet'
+import { buildPieceShareMessage, SharePayload } from '../../../lib/share'
 import { colors, type, btn, card } from '../../lib/theme'
+import ReadAloudButton from '../../components/ReadAloudButton'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
@@ -67,7 +67,6 @@ export default function PieceScreen() {
     const [purchasing, setPurchasing] = useState<'digital' | 'print' | null>(null)
     const [downloading, setDownloading] = useState(false)
     const [giftingModalVisible, setGiftingModalVisible] = useState(false)
-    const [roomModalVisible, setRoomModalVisible] = useState(false)
     const [modalOrderType, setModalOrderType] = useState<'digital' | 'print'>('print')
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
@@ -239,13 +238,15 @@ export default function PieceScreen() {
               ✨ Step inside {piece.stores?.child_name}'s imagination
             </Text>
           </View>
-          <TouchableOpacity style={styles.viewInRoomBtn} onPress={() => setRoomModalVisible(true)}>
-            <Text style={styles.viewInRoomBtnText}>🖼 View in Room</Text>
-          </TouchableOpacity>
         </View>
 
         <Text style={[type.h2, { fontSize: 26, padding: 16, paddingBottom: 8 }]}>{piece.title}</Text>
-        {piece.ai_description ? <Text style={[type.body, { fontSize: 14, paddingHorizontal: 16, paddingBottom: 8, lineHeight: 20 }]}>{piece.ai_description}</Text> : null}
+        {piece.ai_description ? (
+          <>
+            <Text style={[type.body, { fontSize: 14, paddingHorizontal: 16, paddingBottom: 12, lineHeight: 22 }]}>{piece.ai_description}</Text>
+            <ReadAloudButton text={piece.ai_description} />
+          </>
+        ) : null}
 
         <TouchableOpacity
           style={styles.voteBtn}
@@ -390,11 +391,6 @@ export default function PieceScreen() {
         }}
         onCancel={() => setGiftingModalVisible(false)}
       />
-      <RoomPreviewModal
-        visible={roomModalVisible}
-        imageUrl={piece.transformed_image_url}
-        onClose={() => setRoomModalVisible(false)}
-      />
       <ShareSheet
         visible={!!sharePayload}
         payload={sharePayload}
@@ -417,19 +413,6 @@ const styles = StyleSheet.create({
   mainImage: { width: '100%', aspectRatio: 1 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16 },
   magicLabel: { paddingHorizontal: 16, paddingTop: 12, flex: 1 },
-  viewInRoomBtn: { 
-    marginTop: 12,
-    backgroundColor: colors.white, 
-    borderRadius: 8, 
-    paddingVertical: 6, 
-    paddingHorizontal: 10, 
-    borderWidth: 1, 
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  viewInRoomBtnText: { color: colors.mid, fontWeight: '700', fontSize: 12 },
 voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
