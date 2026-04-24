@@ -10,32 +10,20 @@ export function useCredits() {
   useEffect(() => {
     if (!userId) return
 
-    let channel: any
-    try {
-      channel = supabase
-        .channel(`credits-${userId}`)
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
-          () => {
-            queryClient.invalidateQueries({ queryKey: ['credits', userId] })
-          }
-        )
+    const channelName = `credits-${userId}`
+    const existing = supabase.getChannels().find((c: any) => c.topic === `realtime:${channelName}`)
+    if (existing) supabase.removeChannel(existing)
 
-      channel.subscribe((status: string) => {
-        if (status === 'CHANNEL_ERROR') {
-          console.error('Realtime subscription error')
-        }
-      })
-    } catch (err) {
-      console.error('Failed to setup realtime subscription:', err)
-    }
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+        () => queryClient.invalidateQueries({ queryKey: ['credits', userId] })
+      )
+      .subscribe()
 
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel).catch((err) => console.error('Failed to remove channel:', err))
-      }
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [userId, queryClient])
 
   return useQuery({
