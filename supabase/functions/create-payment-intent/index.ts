@@ -70,8 +70,23 @@ Deno.serve(async (req) => {
 
     let amount = order_type === 'digital' ? piece.price_digital : piece.price_print
 
-    // Apply 10% discount for physical print if digital version is already owned
-    if (order_type === 'print') {
+    // Discount Logic
+    let isFirstOrder = false
+    if (buyerId) {
+      const { count } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('buyer_id', buyerId)
+        .eq('status', 'paid')
+      
+      isFirstOrder = count === 0
+    }
+
+    if (isFirstOrder) {
+      // First order special: 20% off
+      amount = Math.round(amount * 0.8)
+    } else if (order_type === 'print') {
+      // Apply 10% discount for physical print if digital version is already owned (only if not first order)
       const { data: digitalOrder } = await supabase
         .from('orders')
         .select('id')

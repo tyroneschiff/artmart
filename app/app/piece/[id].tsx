@@ -276,6 +276,15 @@ export default function PieceScreen() {
             {myDigitalOrder ? "Upgrade to Physical Print" : "Bring this world home"}
           </Text>
 
+          {!session && (
+            <TouchableOpacity 
+              style={styles.firstOrderTeaser}
+              onPress={() => router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })}
+            >
+              <Text style={styles.teaserText}>✨ First order? Save 20% when you sign in</Text>
+            </TouchableOpacity>
+          )}
+
           {(isOwner || myDigitalOrder) && (
             <TouchableOpacity
               style={[card, styles.purchaseCard]}
@@ -302,6 +311,11 @@ export default function PieceScreen() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={styles.purchaseType}>Physical Print</Text>
+                {isFirstOrder && (
+                  <View style={[styles.discountBadge, { backgroundColor: colors.gold }]}>
+                    <Text style={styles.discountBadgeText}>1st ORDER: 20% OFF</Text>
+                  </View>
+                )}
                 {myDigitalOrder && (
                   <View style={styles.discountBadge}>
                     <Text style={styles.discountBadgeText}>10% OFF</Text>
@@ -316,9 +330,9 @@ export default function PieceScreen() {
               ) : (
                 <>
                   <Text style={styles.purchasePrice}>
-                    ${((myDigitalOrder ? piece.price_print * 0.9 : piece.price_print) / 100).toFixed(2)}
+                    ${((isFirstOrder ? piece.price_print * 0.8 : (myDigitalOrder ? piece.price_print * 0.9 : piece.price_print)) / 100).toFixed(2)}
                   </Text>
-                  {myDigitalOrder && (
+                  {(isFirstOrder || myDigitalOrder) && (
                     <Text style={[type.label, { fontSize: 10, textDecorationLine: 'line-through' }]}>
                       ${(piece.price_print / 100).toFixed(2)}
                     </Text>
@@ -440,6 +454,22 @@ const styles = StyleSheet.create({
     gap: 4
   },
   viewInRoomBtnText: { color: colors.mid, fontWeight: '700', fontSize: 12 },
+  firstOrderTeaser: {
+    backgroundColor: colors.goldLight,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.goldMid,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teaserText: {
+    color: colors.goldDark,
+    fontWeight: '700',
+    fontSize: 14,
+  },
   voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },

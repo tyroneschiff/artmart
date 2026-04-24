@@ -2,33 +2,33 @@
 
 ## Strategic Backlog
 
-1. **[REVENUE] First-Order Special (Part 2: UI)**
-    * **The Micro-Task:** In `app/app/piece/[id].tsx`, display a high-contrast badge (using `colors.gold`) near the Print CTA if `isFirstOrder` is true, announcing a 20% discount.
-    * **Why:** Visual nudge to capture intent from new users who might be hesitating on price.
-
-2. **[RETENTION] Push Notification Function**
+1. **[RETENTION] Push Notification Function**
     * **The Micro-Task:** Create `supabase/functions/send-push-notification/index.ts` using direct `fetch` calls to the Expo Push API to send a notification when a piece receives its first comment.
     * **Why:** Re-engages the artist/child with immediate positive feedback, driving repeat app opens.
 
-3. **[REVENUE] Post-Comment Incentive Loop**
-    * **The Micro-Task:** In `supabase/functions/moderate-comment/index.ts`, if the piece has 0 previous comments, include a `first_comment: true` flag in the response to the app.
-    * **Why:** Lays the groundwork for the app to show a "Your first comment!" celebration and a limited-time print discount.
+2. **[REVENUE] Post-Comment Incentive Loop**
+    * **The Micro-Task:** Update `supabase/functions/moderate-comment/index.ts` to check `pieces` and `comments` tables; if it's the first comment, return `first_comment: true`.
+    * **Why:** Enables the app to trigger a "Your first comment!" celebration and a limited-time print discount.
 
-4. **[UX] "View in Room" Variety**
-    * **The Micro-Task:** In `RoomPreviewModal.tsx`, define a `ROOMS` array with 3 Unsplash URLs. Add a horizontal selector that lets users switch between Nursery, Office, and Living Room contexts.
-    * **Why:** Helps different buyers (parents, grandparents, office-dwellers) visualize the art in their own specific environment.
+3. **[UX] "View in Room" Variety**
+    * **The Micro-Task:** In `RoomPreviewModal.tsx`, add a horizontal `ScrollView` with 3 room options (Living Room, Nursery, Office). Update `ROOM_BG` dynamically based on selection.
+    * **Why:** Helps different personas (parents vs office-workers) visualize the art in their own specific environment.
 
-5. **[POLISH] Smooth Artwork Reveal**
+4. **[POLISH] Magic Artwork Fade-In**
     * **The Micro-Task:** In `app/app/piece/[id].tsx`, wrap the main `Image` in an `Animated.View`. Use `useNativeDriver: true` to fade the opacity from 0 to 1 over 800ms when `onLoad` triggers.
-    * **Why:** Elevates the "Step Inside" magic by making the transformation feel intentional and high-end rather than a jarring image pop.
+    * **Why:** Makes the reveal feel like a premium, intentional "transformation" rather than a jumpy load.
 
-6. **[RELIABILITY] Supabase Edge Function Retries**
-    * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, implement a simple retry loop (max 1 retry) for the Claude and fal.ai API calls to handle transient network hiccups.
-    * **Why:** Hardens the most expensive and complex part of the user journey, ensuring credits are never "wasted" on a random 502 error.
+5. **[RELIABILITY] AI Engine Retries**
+    * **The Micro-Task:** In `supabase/functions/transform-artwork/index.ts`, wrap the `fal.ai` and `Claude` fetch calls in a simple `try/catch` with one retry attempt for 5xx errors.
+    * **Why:** Handles transient API hiccups in the most critical and expensive user path.
 
-7. **[UX] Sample Store Empty State**
-    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, replace the generic `ListEmptyComponent` icon with a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
-    * **Why:** Demonstrates the end-state value to new users before they've committed to creating, reducing early-funnel abandonment.
+6. **[UX] Sample Store Empty State**
+    * **The Micro-Task:** In `app/app/(tabs)/mystores.tsx`, update `ListEmptyComponent` to show a "View Sample Store" button that routes to a mock store `/store/sample-emma`.
+    * **Why:** Reduces the "cold start" problem by showing users what success looks like before they commit.
+
+7. **[REVENUE] Bulk Gift Checkout Feedback**
+    * **The Micro-Task:** In `app/components/GiftingModal.tsx`, if `quantity > 1`, show a small "Bulk Discount Applied" text next to the total or quantity selector.
+    * **Why:** Reinforces the value proposition at the moment of payment, reducing cart abandonment.
 
 ## Known gotchas
 
@@ -42,6 +42,7 @@
 
 ## Done
 
+- **[REVENUE] First-Order Special (UI & Logic)** — Implemented high-contrast first-order incentive UI in `piece/[id].tsx` including a "20% OFF" badge and guest teaser. Hardened the revenue engine by implementing the corresponding 20% discount logic in the `create-payment-intent` edge function, ensuring a seamless conversion path for new users.
 - **[RELIABILITY] Direct Storage Upload (OOM Fix)** — Refactored `publishMutation` and `handleTransform` in `create.tsx` to use `FileSystem.uploadAsync` and `FileSystem.downloadAsync`. Completely bypassed memory-heavy Base64 conversions for high-res images, eliminating the #1 cause of Android OOM crashes during the creation flow.
 - **[REVENUE] First-Order Special (Part 1: Logic)** — Implemented `fetchPaidOrderCount` and `isFirstOrder` logic in `piece/[id].tsx`. This establishes the foundation for first-order incentives by accurately identifying new customers server-side.
 - **[REVENUE] High-Value Credit Tier & Refactor** — Added a 25-credit "BEST VALUE" pack to `credits.tsx` to nudge power users toward higher AOV. Refactored the entire screen to use `colors`, `type`, and `card` tokens, eliminating design debt and ensuring brand consistency.
@@ -63,8 +64,9 @@
 
 ## Improvement Log
 
+- [2026-04-24 — CRON B] First-Order Special (UI & Logic) — Maximized top-of-funnel conversion by implementing a 20% first-order discount across the stack. Added high-polish "1st ORDER" badges and guest teasers to the Piece Detail screen, and hardcoded the discount logic into the Stripe edge function to ensure brand promise matches reality.
+- [2026-04-24 — STRATEGIC AUDIT (CRON A)] Shifting from "Functional" to "High-Conversion & Emotional Resonance". We've hardened the core engine; now we must maximize the 'Step Inside' magic. Prioritizing First-Order Incentives (for both users and guests) and smooth visual transitions to elevate the premium feel. We're also closing the feedback loop between buyers and creators with push notifications, turning every comment into a retention event.
 - [2026-04-24 — CRON B] Direct Storage Upload (OOM Fix) — Hardened the creation flow against Android OOM crashes. Refactored `publishMutation` to use `FileSystem.uploadAsync` for all image types and updated `handleTransform` to use `FileSystem.downloadAsync`. By completely bypassing Base64 string conversion for high-res original and transformed images, we've eliminated the primary cause of app crashes for new users on lower-end devices.
-- [2026-04-24 — CRON A] Strategic Audit: Strategically pivoting toward a dual-engine growth phase: Reliability + Conversion. Hardening the upload pipeline against Android OOM crashes ensures the 'Step Inside' magic is accessible to all, while the First-Order Incentive UI will maximize initial session value. We're also deepening the emotional loop with push notifications for first comments, turning a social action into a retention and revenue driver.
 - [2026-04-23 — CRON B] First-Order Special (Part 1: Logic) — Hardened the conversion funnel by implementing server-side order counting to identify first-time buyers. Added `isFirstOrder` logic to `piece/[id].tsx` with automatic cache invalidation upon successful purchase, setting the stage for targeted 20% discount incentives.
 - [2026-04-23 — STRATEGIC AUDIT (CRON A)] Revenue fundamentals are solid, but we must now focus on initial conversion (First-Order Incentives) and absolute platform stability (OOM fixes). The 'magic' of the app—the 'Step Inside' moment—needs to be further polished with smoother transitions and varied room visualizations to broaden the appeal to different family personas. Reliability is a brand promise; we are hardening the upload engine to ensure even high-res original art never crashes the experience.
 - [2026-04-23 — CRON B] High-Value Credit Tier & Refactor — Maximized credit revenue potential by introducing a 25-credit pack at $19.99. Simultaneously wiped out design debt on the credits screen by migrating all styles to theme tokens, ensuring a "Step Inside" premium feel on the most critical conversion screen.
