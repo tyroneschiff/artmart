@@ -50,6 +50,20 @@ export const btn = {
     fontSize: 16,
     fontWeight: '600' as const,
   },
+  secondary: {
+    backgroundColor: colors.white,
+    borderRadius: 100,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    alignItems: 'center' as const,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  secondaryText: {
+    color: colors.dark,
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
 }
 
 export const card = {
