@@ -22,7 +22,7 @@ Notifications.setNotificationHandler({
 })
 
 async function registerForPushNotificationsAsync() {
-  if (Platform.OS === 'web' || !Device.isDevice) {
+  if (Platform.OS === 'web' || !Device.isDevice || Constants.appOwnership === 'expo') {
     return null
   }
 

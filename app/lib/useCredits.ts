@@ -21,11 +21,12 @@ export function useCredits() {
             queryClient.invalidateQueries({ queryKey: ['credits', userId] })
           }
         )
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Realtime subscription error')
-          }
-        })
+
+      channel.subscribe((status: string) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Realtime subscription error')
+        }
+      })
     } catch (err) {
       console.error('Failed to setup realtime subscription:', err)
     }
