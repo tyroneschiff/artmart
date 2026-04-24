@@ -11,6 +11,7 @@ export class OutOfCreditsError extends Error {
 export async function transformArtwork(
   localImageUri: string,
   precomputedBase64?: string,
+  childName?: string,
 ): Promise<{ transformedUrl: string; description: string; prompt: string; credits: number }> {
   const base64 = precomputedBase64 ?? await FileSystem.readAsStringAsync(localImageUri, { encoding: 'base64' })
   const mimeType = precomputedBase64
@@ -39,7 +40,7 @@ export async function transformArtwork(
         'apikey': supabaseKey,
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ imageBase64: base64, mimeType }),
+      body: JSON.stringify({ imageBase64: base64, mimeType, childName }),
       signal: controller.signal,
     }).catch((err: any) => {
       throw new Error(`Connection failed: ${err.message} (URL: ${supabaseUrl})`)

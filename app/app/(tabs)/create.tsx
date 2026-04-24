@@ -134,7 +134,9 @@ export default function CreateScreen() {
         [{ resize: { width: 1200 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true },
       )
-      const { transformedUrl, description, credits: newCredits } = await transformArtwork(imageUri, compressed.base64 ?? undefined)
+      const autoStore = selectedStore ?? (stores?.length === 1 ? stores[0] : null)
+      if (autoStore && !selectedStore) setSelectedStore(autoStore)
+      const { transformedUrl, description, credits: newCredits } = await transformArtwork(imageUri, compressed.base64 ?? undefined, autoStore?.child_name)
       if (session?.user.id) queryClient.setQueryData<number>(['credits', session.user.id], newCredits)
       
       const localPath = FileSystem.documentDirectory + `transformed_${Date.now()}.jpg`

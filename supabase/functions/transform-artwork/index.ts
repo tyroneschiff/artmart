@@ -39,19 +39,30 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
 }
 
 function extractJson(text: string): { description: string; prompt: string } {
-  try {
-    return JSON.parse(text)
-  } catch {}
-  const match = text.match(/\{[\s\S]*"description"[\s\S]*"prompt"[\s\S]*\}/)
-  if (match) {
-    try {
-      return JSON.parse(match[0])
-    } catch {}
+  // Strip markdown code fences if present
+  const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+
+  // Try direct parse first
+  try { return JSON.parse(stripped) } catch {}
+
+  // Find the outermost { } block and try parsing it
+  const start = stripped.indexOf('{')
+  const end = stripped.lastIndexOf('}')
+  if (start !== -1 && end !== -1) {
+    try { return JSON.parse(stripped.slice(start, end + 1)) } catch {}
   }
-  const desc = text.match(/"description"\s*:\s*"([^"]+)"/)
-  const prom = text.match(/"prompt"\s*:\s*"([^"]+)"/)
-  if (desc && prom) return { description: desc[1], prompt: prom[1] }
-  throw new Error(`Claude did not return valid JSON. Response: ${text.slice(0, 200)}`)
+
+  // Last resort: extract values with a regex that handles escaped quotes and newlines
+  const descMatch = stripped.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/s)
+  const promptMatch = stripped.match(/"prompt"\s*:\s*"((?:[^"\\]|\\.)*)"/s)
+  if (descMatch && promptMatch) {
+    return {
+      description: descMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"'),
+      prompt: promptMatch[1].replace(/\\n/g, ' ').replace(/\\"/g, '"'),
+    }
+  }
+
+  throw new Error(`Claude did not return valid JSON. Response: ${text.slice(0, 300)}`)
 }
 
 Deno.serve(async (req) => {
@@ -74,8 +85,9 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const { imageBase64, mimeType } = await req.json()
+    const { imageBase64, mimeType, childName } = await req.json()
     if (!imageBase64 || !mimeType) throw new Error('imageBase64 and mimeType required')
+    const artistName = childName ? childName : null
 
     const falKey = Deno.env.get('FAL_API_KEY')
     if (!falKey) throw new Error('Missing server-side API keys')
@@ -111,7 +123,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 512,
+        max_tokens: 1024,
         system: [{
           type: 'text',
           text: `You are an expert visual collaborator and master art director stepping inside a child's imagination. The drawing is a window into a world they invented — your job is to walk through that window and show what that world actually looks like in breathtaking, vivid detail. You are NOT fixing, improving, or elevating the drawing. The original drawing IS the vision. You are the door.
@@ -119,7 +131,15 @@ Deno.serve(async (req) => {
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
 
-The "description" is shown to the child and their family on the artwork's page. Write it as a warm witness who truly saw what the child was going for. 2–3 sentences. Reflect the child's intent back to them — name the characters, describe what's happening in the scene, name the feeling in the air of this world. Do NOT praise technique, skill, composition, or brushwork. Do NOT call it special or gallery-worthy. Do NOT treat the drawing as raw material. Celebrate the WORLD the child imagined, not the drawing itself. Sound like a grandparent reading it aloud while beaming at the kid. Begin with "In this world..." and frame it as a place the child built.
+The "description" is shown to the child and their family. Write it as a genuinely excited expert witness — someone who truly sees what this young artist did and finds it remarkable. 3–5 sentences.
+
+Rules:
+- Refer to the artist by name if provided (e.g. "Sadie has created..."), otherwise use "this young artist".
+- Be SPECIFIC: name the actual colors used, the actual marks made, the actual compositional choices. Vague praise means nothing — "explosive watercolor background bursting with orange, teal, and violet" beats "colorful background."
+- Celebrate the artistic DECISIONS, not just the subject matter. What did they choose to do that shows instinct, confidence, or originality? ("drew right over it with thick decisive strokes that show zero hesitation", "already understands that more is more")
+- Sound like a knowledgeable art lover who is genuinely thrilled — not a teacher giving a gold star, not a grandparent being polite. Real enthusiasm grounded in real observation.
+- End with a line that captures the overall feeling or energy of the piece ("the result is thrillingly alive", "this is a world you want to climb into").
+- Do NOT use empty superlatives like "amazing," "beautiful," "incredible" without backing them up with specifics.
 
 The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original drawing as input, so be vivid and push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, composition, and color choices are the source of truth. Show what it looks like to stand inside that place.
 
@@ -132,7 +152,7 @@ Your prompt MUST:
 6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
 
 Example:
-{"description":"In this world, a friendly dragon keeps watch over a cottage while the sun smiles from the corner like an old neighbor. Flowers stretch toward the sky because everyone in this place is happy to be awake. You can feel how safe and sunny it is here.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
+{"description":"This young artist has built something genuinely joyful here — a sunny cottage anchored by a smiling sun in the corner, drawn with the kind of cheerful confidence that makes every element feel exactly where it belongs. The dragon stands guard with a friendly posture, and the flowers reach upward like they're happy to be in this world. What's striking is how warmly it all holds together — this is a place you'd want to live in.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{
@@ -142,7 +162,7 @@ Example:
             source: { type: 'base64', media_type: mimeType, data: imageBase64 }
           }, {
             type: 'text',
-            text: 'Step inside this child\'s drawing. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.'
+            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.`
           }]
         }]
       }),

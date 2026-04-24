@@ -7,8 +7,8 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { purchasePiece } from '../../lib/checkout'
 import { downloadPiece } from '../../lib/download'
 import GiftingModal, { GiftingData } from '../../components/GiftingModal'
-import ShareSheet from '../../../components/ShareSheet'
-import { buildPieceShareMessage, SharePayload } from '../../../lib/share'
+import ShareSheet from '../../components/ShareSheet'
+import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
 
@@ -220,9 +220,7 @@ export default function PieceScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.back}>‹</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
-            <Text style={styles.storeLink}>{piece.stores?.child_name}'s Store</Text>
-          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>{piece.title}</Text>
           <TouchableOpacity style={[btn.primary, { paddingVertical: 8, paddingHorizontal: 16 }]} onPress={() =>
             setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
           }>
@@ -231,16 +229,14 @@ export default function PieceScreen() {
         </View>
 
         <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
-        
-        <View style={styles.actionRow}>
-          <View style={styles.magicLabel}>
-            <Text style={[type.label, { color: colors.gold, fontStyle: 'italic', fontSize: 13 }]}>
-              ✨ Step inside {piece.stores?.child_name}'s imagination
-            </Text>
-          </View>
+
+        <View style={styles.titleRow}>
+          <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
+          <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
+            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Store →</Text>
+          </TouchableOpacity>
         </View>
 
-        <Text style={[type.h2, { fontSize: 26, padding: 16, paddingBottom: 8 }]}>{piece.title}</Text>
         {piece.ai_description ? (
           <>
             <Text style={[type.body, { fontSize: 14, paddingHorizontal: 16, paddingBottom: 12, lineHeight: 22 }]}>{piece.ai_description}</Text>
@@ -407,9 +403,12 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
+  headerTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.gold, textAlign: 'center', paddingHorizontal: 8 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12 },
+  storeBtn: { paddingBottom: 4 },
+  storeBtnText: { fontSize: 13, fontWeight: '700', color: colors.gold },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
-  storeLink: { color: colors.gold, fontWeight: '700', fontSize: 14 },
   mainImage: { width: '100%', aspectRatio: 1 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16 },
   magicLabel: { paddingHorizontal: 16, paddingTop: 12, flex: 1 },
