@@ -2,7 +2,7 @@
 
 ## What this is
 
-Parents photograph their children's artwork, AI transforms it into a vivid scene from the world the child imagined, and it publishes to a personal gallery. Family votes, buys digital downloads, and eventually physical prints. Primary driver: family gifting and sentimental preservation — not a stranger art marketplace.
+Parents photograph their children's artwork, AI transforms it into a vivid scene from the world the child imagined, and it publishes to a personal gallery. The core job-to-be-done is **guilt-free disposal** — a child brings home 200 drawings before they turn 10, and parents can't keep them all. This app lets them preserve each one beautifully before throwing it away. The transformation is the keepsake. Sharing with family and occasional print purchases are bonuses, not the primary driver.
 
 ## Core user flows
 
@@ -115,9 +115,9 @@ Aesthetic: ucals.com layout discipline + tincan.kids warmth. Premium but approac
 
 The crons must reason from user experience, not code. These are the three people using this app:
 
-**Parent (creator)** — Time-poor, emotionally invested. They photographed their kid's drawing and want to share it with grandparents. The "wow" moment is seeing the AI transformation. Every step before and after must honor that. If Transform fails, they feel embarrassed and give up. If it works, they're excited and share immediately. Friction = they Instagram the photo instead and the app loses them forever.
+**Parent (creator)** — Time-poor, emotionally invested, and quietly guilty about throwing drawings away. They photographed the drawing because they couldn't keep it but couldn't bring themselves to bin it either. This app resolves that tension — once it's transformed and saved, they can let go. The "wow" moment is seeing the transformation and knowing it's preserved beautifully. If Transform fails, they feel embarrassed and give up. If it works, they feel relief and delight, and share immediately. Friction = they Instagram the photo instead and the app loses them forever.
 
-**Family member (gifter)** — Grandparent, aunt, uncle. Gets a WhatsApp link. Not tech-savvy. Has 90 seconds of attention. Needs to see the artwork and tap Buy with minimal thought. Any confusion — missing price, unclear button, broken image — and they close the tab and never return.
+**Family member (viewer)** — Grandparent, aunt, uncle. Gets a WhatsApp link from the parent. Not tech-savvy. Has 90 seconds of attention. They're here to see the child's world, feel something, maybe vote. A print purchase is possible but not the primary expectation — don't design the experience around selling to them.
 
 **Child (the artist)** — The drawing is theirs. They are eagerly waiting to see their world come to life and to hear someone describe it back to them. The description read aloud is a magic moment — it must speak directly to them, name specific things they drew, and make them feel seen. If the transformation looks nothing like their drawing or the description feels generic, the magic is gone. This is as much for them as for the adults.
 
@@ -223,7 +223,7 @@ The most dangerous bugs look like success but do nothing:
 **2026-04-23 — BUSINESS MODEL PIVOT:**
 - **Product reframe: "Step inside your child's drawing"** — the drawing IS the vision; the AI is the door. Never say "elevate," "improve," "gallery-worthy," or treat the original as raw material.
 - **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs.
-- **Grandparent is the print buyer.** Parent generates → shares to family WhatsApp → grandparent buys print as gift. Highest-ARPU lever.
+- **Core use case reframed (credit to Evan):** The parent is the buyer, not the grandparent. They're paying to preserve drawings guilt-free before throwing them away. Credits = permission to let go. Print purchases are a secondary bonus.
 
 **2026-04-22:**
 - Transform failing: iPhone photos 4–15MB, Claude rejects >5MB. Fixed with `expo-image-manipulator` compression.
