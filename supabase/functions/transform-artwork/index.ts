@@ -51,7 +51,7 @@ function extractJson(text: string): { description: string; prompt: string } {
   const desc = text.match(/"description"\s*:\s*"([^"]+)"/)
   const prom = text.match(/"prompt"\s*:\s*"([^"]+)"/)
   if (desc && prom) return { description: desc[1], prompt: prom[1] }
-  throw new Error(`Gemini did not return valid JSON. Response: ${text.slice(0, 200)}`)
+  throw new Error(`Claude did not return valid JSON. Response: ${text.slice(0, 200)}`)
 }
 
 Deno.serve(async (req) => {
@@ -106,6 +106,7 @@ Deno.serve(async (req) => {
       headers: {
         'x-api-key': anthropicKey,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
         'content-type': 'application/json',
       },
       body: JSON.stringify({
@@ -113,25 +114,27 @@ Deno.serve(async (req) => {
         max_tokens: 512,
         system: [{
           type: 'text',
-          text: `You are an art director reimagining a child's drawing as a museum-quality fine art print. Your job is to ELEVATE the piece, not just clean it up.
-You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
-The JSON must have exactly two keys: "description" and "prompt".
+          text: `You help a parent celebrate a moment with their child by gently polishing the child's drawing. Respond with ONLY a raw JSON object — no markdown, no code fences. Exactly two keys: "description" and "prompt".
 
-The "description" is shown to family on the artwork's page — write it like a warm gallery curator who genuinely loves children's art. Celebrate the imagination and energy in the piece. 2–3 sentences. Focus on what makes it special and alive, not just what objects are depicted. Sound like something a proud parent would read aloud to a grandparent.
+GOLDILOCKS RULE: the transformed image must feel like the SAME drawing, just a little more alive. Not a redesign. Not a different art style. Not cinematic, not photorealistic, not "gallery fine art." If a stranger saw the before/after, they'd say "oh, it's the same picture, just nicer." If the child saw it, they'd say "that's mine!" — not "who made that?"
 
-The "prompt" is sent to an AI image model. The model sees the original photo as input, so your prompt must push it HARD toward a transformation — otherwise the output looks like the input.
+THE "description" — written for a 4–8 year old, read aloud by the parent at bedtime or on the ride home.
+- 2 short sentences. Warm, curious, playful.
+- Tell a tiny story about what's happening in the drawing (the sun is smiling, the dog is running somewhere, the house has a red door).
+- No art vocabulary ("composition", "palette", "gallery", "whimsical", "vibrant"). No praise words ("amazing", "beautiful", "masterpiece").
+- Sound like a parent noticing something specific: "Look — your dragon has three toes on each foot, and one little tooth sticking out."
+- Never say "your child" or name anyone. Speak TO the kid ("you drew…", "look at…") or about the scene.
 
-Your prompt MUST:
-1. Pick ONE specific fine-art medium that suits the piece and commit to it fully (e.g. "lush watercolor with visible brushwork and pigment bloom", "thick impasto oil painting on linen canvas with palette-knife texture", "rich gouache illustration with soft paper grain", "screen-printed poster with bold flat color fields and halftone texture", "mixed-media collage with torn paper edges and ink outlines"). Never say "in the style of the drawing" — reinvent the surface.
-2. Preserve the child's composition, subjects, and spirit — the shapes they drew stay in the same places — but upgrade every stroke: refined line quality, richer saturated color palette with depth and shadow, painterly light, atmospheric background treatment, professional color grading.
-3. Add sensory detail the original lacks: texture of the medium, play of light, subtle gradients, ambient depth, a hint of artistic interpretation that makes this feel intentional and gallery-worthy.
-4. Full bleed edge-to-edge composition filling the entire frame, no paper edges, no borders, no scan artifacts, creases removed, pristine smooth surface.
-5. End with: "gallery quality fine art print, museum reproduction, 11x14 inch premium print, vivid color, crisp detail".
+THE "prompt" — sent to an img2img model that already sees the drawing. Keep it close to the original.
+MUST:
+1. Start by inventorying the SPECIFIC elements in the drawing — every shape, creature, object, color the child actually drew. The output must contain all of them, in the same positions, same relative sizes, same colors.
+2. Say "children's picture book illustration, in the spirit of Oliver Jeffers or Jon Klassen — hand-drawn warmth, soft texture, honest imperfect lines." Never say "fine art", "museum", "photorealistic", "cinematic", "3D", "digital painting", "masterpiece".
+3. Keep the child's linework and proportions. Clean up wobble only slightly. Do NOT add new characters, backgrounds, details, depth, shadows, or atmosphere the child didn't draw. An empty sky stays mostly empty.
+4. Gentle upgrades only: softer paper texture, slightly richer versions of the same colors the child used, a little more consistency in line weight, flatten creases, crop out paper edges so it's full-bleed.
+5. End with: "warm children's book illustration, soft paper texture, hand-drawn feel, full bleed, creases removed, clean edges."
 
-Do NOT just describe what's in the drawing. Describe the transformed artwork as a curator would describe a framed piece hanging in a boutique gallery.
-
-Example output:
-{"description":"There's a joyful confidence to the way Emma planted that bright yellow sun in the corner — like she knew exactly where the warmth should come from. The house sits bold and happy at the centre, surrounded by flowers that reach upward with real optimism. This one belongs on a wall.","prompt":"A whimsical countryside cottage scene rendered as a lush watercolor illustration with visible brushwork, pigment blooms, and soft paper grain. The cottage glows in warm ochre and terracotta tones under a luminous golden sun, surrounded by a meadow of painterly wildflowers in coral, violet, and buttercream. Atmospheric depth from soft gradient sky washes in peach and sky-blue, subtle shadows beneath each bloom, refined confident linework in sepia ink. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, pristine smooth surface. Gallery quality fine art print, museum reproduction, 11x14 inch premium print, vivid color, crisp detail."}`,
+Example:
+{"description":"Look — your sun is wearing a big happy smile right next to the house with the red door. And there's a tiny flower under the window, like it grew there just for you.","prompt":"A child's drawing of a square yellow house with a red door and one window, a round smiling sun in the top-left corner with rays, a small green flower beside the house, and green grass along the bottom. Keep every element in the same position, same size, same colors the child used. Children's picture book illustration, in the spirit of Oliver Jeffers or Jon Klassen — hand-drawn warmth, soft texture, honest imperfect lines. Preserve the child's linework and proportions; do not add new characters, backgrounds, shadows, or details. Warm children's book illustration, soft paper texture, hand-drawn feel, full bleed, creases removed, clean edges."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{
@@ -164,19 +167,9 @@ Example output:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt: `You are an art director reimagining a child's drawing as a museum-quality fine art print. Your job is to ELEVATE the piece, not just clean it up.
-
-Your prompt MUST:
-1. Pick ONE specific fine-art medium that suits the piece and commit to it fully (e.g. "lush watercolor with visible brushwork and pigment bloom", "thick impasto oil painting on linen canvas with palette-knife texture", "rich gouache illustration with soft paper grain", "screen-printed poster with bold flat color fields and halftone texture", "mixed-media collage with torn paper edges and ink outlines"). Never say "in the style of the drawing" — reinvent the surface.
-2. Preserve the child's composition, subjects, and spirit — the shapes they drew stay in the same places — but upgrade every stroke: refined line quality, richer saturated color palette with depth and shadow, painterly light, atmospheric background treatment, professional color grading.
-3. Add sensory detail the original lacks: texture of the medium, play of light, subtle gradients, ambient depth, a hint of artistic interpretation that makes this feel intentional and gallery-worthy.
-4. Full bleed edge-to-edge composition filling the entire frame, no paper edges, no borders, no scan artifacts, creases removed, pristine smooth surface.
-5. End with: "gallery quality fine art print, museum reproduction, 11x14 inch premium print, vivid color, crisp detail".
-
-Do NOT just describe what's in the drawing. Describe the transformed artwork as a curator would describe a framed piece hanging in a boutique gallery.
-Original drawing prompt: ${prompt}`,
+        prompt,
         image_url: 'data:' + mimeType + ';base64,' + imageBase64,
-        guidance_scale: 6.0,
+        guidance_scale: 4.5,
       }),
     }, 20000)
 
