@@ -327,24 +327,9 @@ The most dangerous bugs look like success but do nothing:
 
 *(Rewritten each run by CRON A — Implementer reads this to pick next task)*
 
-1. **[CONFIRMED, UPDATED] Vote after login is silently broken in both flows** — Two bugs, same root cause: `login.tsx:8` reads only `returnTo` from params; `login.tsx:27` does `router.replace(returnTo)`, discarding any other params.
-   - `discover.tsx:158`: routes to `{ returnTo: '/(tabs)/discover' }` — vote is lost entirely (user lands on Discover, not piece).
-   - `piece/[id].tsx:282`: routes to `{ returnTo: \`/piece/${id}\`, vote: '1' }` — `vote` is a separate login param, silently dropped by login.tsx.
-   - **Fix (2 files, no changes to login.tsx):** Encode `?vote=1` into the `returnTo` URL string so `router.replace(returnTo)` carries it through.
-     - `discover.tsx:158`: `params: { returnTo: '/(tabs)/discover' }` → `params: { returnTo: \`/piece/${item.id}?vote=1\` }`
-     - `piece/[id].tsx:282`: `params: { returnTo: \`/piece/${id}\`, vote: '1' }` → `params: { returnTo: \`/piece/${id}?vote=1\` }`
-   - `piece/[id].tsx:109-114` auto-vote mechanism fires when `vote === '1'` in `useLocalSearchParams` — this will work once the param is in the URL.
+1. **[PENDING] Grandparent guest checkout** — `GiftingModal` collects guest email when `isGuest=true`; `checkout.ts:purchasePiece` accepts optional `userToken`. Client-side looks complete. Needs end-to-end test: edge function `create-payment-intent` must accept unauthenticated requests. Cannot implement via CRON B.
 
-2. **[NEW] "Store" → "Gallery" copy violations in create.tsx** — Parent's success screen and publish step still say "Store". CLAUDE.md requires all UI copy to say "Gallery".
-   - `create.tsx:283`: `'s store.` → `'s gallery.`
-   - `create.tsx:299`: `{selectedStore?.child_name}'s Store` (success button) → `'s Gallery`
-   - `create.tsx:409`: `${selectedStore.child_name}'s Store ✓` → `'s Gallery ✓`
-   - `create.tsx:444`: `'Publish to Store'` → `'Publish to Gallery'`
-   - `create.tsx:459`: `{item.child_name}'s Store` → `{item.child_name}'s Gallery`
-
-3. **[PENDING] Grandparent guest checkout** — `GiftingModal` collects guest email when `isGuest=true`; `checkout.ts:purchasePiece` accepts optional `userToken`. Client-side looks complete. Needs end-to-end test: edge function `create-payment-intent` must accept unauthenticated requests. Cannot implement via CRON B.
-
-4. **[PENDING] Web gallery + OG meta tags** — MVP checkbox; requires web route deployment outside `app/` directory scope. Cannot implement via CRON B.
+3. **[PENDING] Web gallery + OG meta tags** — MVP checkbox; requires web route deployment outside `app/` directory scope. Cannot implement via CRON B.
 
 ---
 
@@ -381,6 +366,7 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ "Store" → "Gallery" copy in create.tsx — all 5 violations confirmed fixed (gallery picker, success screen, publish button, modal list)
 - ✅ Vote-after-login fixed — `?vote=1` encoded into returnTo in discover.tsx and piece/[id].tsx
 - ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
 - ✅ Read Aloud — OpenAI TTS nova voice via edge function, expo-av playback
@@ -390,10 +376,9 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Vote badge overlay — consistent image overlay on Discover and Gallery pages
 - ✅ Physical print hidden — removed from piece detail pending Printful verification
 - ✅ Digital download CTA for non-owners — `piece/[id].tsx` shows purchase section to visitors
-- ✅ Autonomous crons migrated to Claude Code CLI
+- ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
 **Pending:**
-- [ ] "Store" → "Gallery" copy violations in create.tsx (backlog item 2)
 - [ ] Grandparent guest checkout — buy from gallery without login
 - [ ] Web gallery deployment — drawup.art domain + public routes
 - [ ] OG meta tags for piece/gallery public URLs
@@ -404,6 +389,8 @@ The most dangerous bugs look like success but do nothing:
 
 *(One line per run, newest first)*
 
+- [2026-04-25 CRON B] Vote button "already voted" state fixed — `myVote` query + `hasVoted` disables and dims button; cache invalidated on vote success. File: `app/app/piece/[id].tsx`.
+- [2026-04-25 CRON A] Confirmed items 1 & 2 done in code; found vote button on piece detail always tappable even after voting (error alert breaks delight moment); rewrote backlog with 1 new item + 2 pending.
 - [2026-04-24 CRON B] Vote-after-login fixed in both flows — `?vote=1` encoded into returnTo URL so login.tsx carries it through. Files: `app/(tabs)/discover.tsx`, `app/piece/[id].tsx`.
 - [2026-04-24 CRON A] Found vote param silently dropped by login.tsx in both discover and piece flows; found 5 "Store"→"Gallery" copy violations in create.tsx; updated backlog item 1 with correct 2-file fix, added item 2.
 - [2026-04-24 Human] Resolved CLAUDE.md merge conflicts from Gemini sync; added Gallery/Store rename protection and print card rejection to What we've tried and rejected; fixed piece/[id].tsx Gallery→Store revert and print card re-add from cron run.
@@ -413,4 +400,3 @@ The most dangerous bugs look like success but do nothing:
 - [2026-04-22 CRON B] Reframe pass 2 & critical UX fixes — updated 5 screens with "step inside" copy; fixed write-only profile name; added network error retry UI; improved store empty state.
 - [2026-04-22 CRON B] Re-download column fix — `fetchMyDigitalOrder` corrected from `user_id`/`type` to `buyer_id`/`order_type`.
 - [2026-04-22 CRON B] Upload timeouts — `withUploadTimeout` wraps both storage uploads; 90s Promise.race prevents permanent "Publishing…" state.
-- [2026-04-22 CRON B] Transformed image download timeout — 30s AbortController; AbortError → user-readable message.

@@ -84,6 +84,16 @@ export default function PieceScreen() {
       enabled: !!session,
     })
 
+    const { data: myVote } = useQuery({
+      queryKey: ['vote', id, session?.user.id],
+      queryFn: async () => {
+        const { data } = await supabase.from('votes').select('id').eq('piece_id', id).eq('user_id', session!.user.id).maybeSingle()
+        return data
+      },
+      enabled: !!session,
+    })
+    const hasVoted = !!myVote
+
     const showHighRes = isOwner || !!myDigitalOrder
     const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
   
@@ -103,6 +113,7 @@ export default function PieceScreen() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['piece', id] })
         queryClient.invalidateQueries({ queryKey: ['discover'] })
+        queryClient.invalidateQueries({ queryKey: ['vote', id, session?.user.id] })
       },
       onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })
@@ -279,15 +290,15 @@ export default function PieceScreen() {
         ) : null}
 
         <TouchableOpacity
-          style={styles.voteBtn}
+          style={[styles.voteBtn, hasVoted && styles.voteBtnDone]}
           onPress={() => {
             if (!session) {
               router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}?vote=1` } })
-            } else {
+            } else if (!hasVoted) {
               voteMutation.mutate()
             }
           }}
-          disabled={voteMutation.isPending}
+          disabled={voteMutation.isPending || hasVoted}
         >
           <Text style={styles.voteBtnText}>♥ {piece.vote_count} {piece.vote_count === 1 ? 'vote' : 'votes'}</Text>
         </TouchableOpacity>
@@ -441,6 +452,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16 },
   magicLabel: { paddingHorizontal: 16, paddingTop: 12, flex: 1 },
 voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
+  voteBtnDone: { opacity: 0.6 },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
   purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
   purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
