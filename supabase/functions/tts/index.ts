@@ -4,7 +4,7 @@ const corsHeaders = {
 }
 
 const VOICE_ID = 'SuZjJOmejdKQNzQbif43'
-const MODEL_ID = 'eleven_flash_v2_5'
+const MODEL_ID = 'eleven_multilingual_v2'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
