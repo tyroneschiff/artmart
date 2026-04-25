@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput, Modal } from 'react-native'
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput, Modal, Image } from 'react-native'
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
@@ -10,16 +10,24 @@ import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
 import { useCredits } from '../../lib/useCredits'
 
-type Store = { id: string; child_name: string; slug: string; created_at: string }
+type StorePiece = { transformed_image_url: string | null; watermarked_image_url: string | null; created_at: string; published: boolean }
+type Store = { id: string; child_name: string; slug: string; created_at: string; pieces: StorePiece[] }
 
 async function fetchMyStores(userId: string): Promise<Store[]> {
   const { data, error } = await supabase
     .from('stores')
-    .select('id, child_name, slug, created_at')
+    .select('id, child_name, slug, created_at, pieces(transformed_image_url, watermarked_image_url, created_at, published)')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data
+  return data as unknown as Store[]
+}
+
+function galleryCover(pieces: StorePiece[]): { coverUrl: string | null; count: number } {
+  const published = (pieces ?? []).filter((p) => p.published && (p.transformed_image_url || p.watermarked_image_url))
+  if (published.length === 0) return { coverUrl: null, count: 0 }
+  const sorted = [...published].sort((a, b) => b.created_at.localeCompare(a.created_at))
+  return { coverUrl: sorted[0].transformed_image_url || sorted[0].watermarked_image_url, count: published.length }
 }
 
 export default function MyStoresScreen() {
@@ -99,15 +107,25 @@ export default function MyStoresScreen() {
       <FlatList
         data={stores}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/store/${item.slug}`)}>
-            <View style={styles.storeIcon}><Text style={styles.storeIconText}>{item.child_name[0].toUpperCase()}</Text></View>
-            <View style={styles.storeInfo}>
-              <Text style={styles.storeName}>{item.child_name}'s Gallery</Text>
-            </View>
-            <Text style={styles.storeArrow}>›</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const { coverUrl, count } = galleryCover(item.pieces)
+          return (
+            <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/store/${item.slug}`)}>
+              {coverUrl ? (
+                <Image source={{ uri: coverUrl }} style={styles.storeCover} />
+              ) : (
+                <View style={styles.storeIcon}><Text style={styles.storeIconText}>{item.child_name[0].toUpperCase()}</Text></View>
+              )}
+              <View style={styles.storeInfo}>
+                <Text style={styles.storeName}>{item.child_name}'s Gallery</Text>
+                <Text style={styles.storeMeta}>
+                  {count === 0 ? 'First world coming soon' : count === 1 ? '1 world' : `${count} worlds`}
+                </Text>
+              </View>
+              <Text style={styles.storeArrow}>›</Text>
+            </TouchableOpacity>
+          )
+        }}
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <View style={styles.emptyPortal}>
@@ -176,10 +194,12 @@ const styles = StyleSheet.create({
   addBtn: { ...btn.primary, paddingVertical: 9, paddingHorizontal: 16 },
   addBtnText: { ...btn.primaryText, fontSize: 14 },
   storeCard: { ...card, flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, padding: 16 },
-  storeIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: colors.goldMid },
-  storeIconText: { fontSize: 22, fontWeight: '800', color: colors.goldDark },
+  storeIcon: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: colors.goldMid },
+  storeIconText: { fontSize: 24, fontWeight: '800', color: colors.goldDark },
+  storeCover: { width: 56, height: 56, borderRadius: 14, marginRight: 16, backgroundColor: colors.border },
   storeInfo: { flex: 1 },
   storeName: { fontSize: 17, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
+  storeMeta: { ...type.label, marginTop: 3, fontSize: 12 },
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   storeArrow: { fontSize: 20, color: colors.muted },
   upsellCard: {
