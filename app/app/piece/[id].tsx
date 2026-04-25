@@ -119,7 +119,12 @@ export default function PieceScreen() {
     })
 
     useEffect(() => {
-      supabase.rpc('increment_piece_views', { p_piece_id: id })
+      if (!id) return
+      ;(async () => {
+        const { error } = await supabase.rpc('increment_piece_views', { p_piece_id: id })
+        if (error) console.warn('[view_count] RPC failed:', error)
+        else console.log('[view_count] +1 for', id)
+      })()
     }, [id])
 
     useEffect(() => {
