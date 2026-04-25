@@ -12,14 +12,31 @@ Parents photograph their children's artwork, AI transforms it into a vivid scene
 4. **Discover** — Browse all galleries, vote on pieces, most-loved rise in ranking
 5. **Social** — Share to WhatsApp/iMessage; every piece has a public URL with OG preview
 
-## Social & sharing strategy
+## Acquisition strategy
 
-Every share is a free acquisition channel:
+At ~$42 LTV, paid ads do not work. The product must be viral by design or it does not grow. All acquisition planning lives in `growth/` — see `growth/README.md`.
+
+**Kill criterion:** if shares-per-completed-transform stays below 0.10 OR signups-per-share stays below 0.10, no marketing channel will save it. Fix the product first.
+
+**Channels ranked by leverage (do them in this order):**
+
+1. **Viral-by-design product surfaces** — every transform must produce a share artifact someone can't help posting. Auto-MP4 of the before→after reveal with watermark + URL; 9:16 IG Story export; watermarked free-tier downloads; OG-rich gallery URLs. This is engineering work in the `app/` and `supabase/functions/` codebases — drives every other channel.
+2. **Mom-influencer seeding** — micro-tier (5–50k followers, parenting niche), free credits not cash. ~15% post organically because the kid lights up.
+3. **TikTok / Instagram organic** — "AI turned my kid's drawing into THIS" is an existing proven format. Make our own and prime parents to make theirs.
+4. **ASO** — keywords, screenshots showing the magic moment, video preview. Compounds for free.
+5. **Holiday bursts** — Mother's Day, Father's Day, end-of-school-year, Christmas, Grandparents Day. Build 4 holiday landing pages a year.
+6. **Schools & teachers** — verified teachers get unlimited credits; one teacher email = 25 high-intent signups.
+7. **Reddit + parenting communities** — r/Parenting, r/Mommit, r/Daddit. ONE genuine post, never spam.
+
+**Do not bother with:** Meta/TikTok paid ads (LTV math fails), Google Ads (no search intent), TechCrunch (wrong audience), Product Hunt (wrong audience).
+
+**In-product share surfaces (built or planned):**
 - Each piece and gallery has a shareable URL with rich OG preview
 - In-app share sheet (WhatsApp, native, copy link) on every piece and gallery
 - Post-publish prompt: pre-written message to family WhatsApp group
 - Post-vote notification: tell the parent when their piece gets love (not yet built)
 - Instagram Stories export: 9:16 card with branded watermark (not yet built)
+- Auto before→after MP4 reveal export (not yet built — highest-leverage acquisition feature)
 
 ## Tech stack (locked for MVP)
 
