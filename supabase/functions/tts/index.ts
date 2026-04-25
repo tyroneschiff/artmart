@@ -3,6 +3,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const VOICE_ID = 'XB0fDUnXU5powFXDhCwa'
+const MODEL_ID = 'eleven_multilingual_v2'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -12,26 +15,31 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'text required' }), { status: 400, headers: corsHeaders })
     }
 
-    const apiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!apiKey) throw new Error('OPENAI_API_KEY not set')
+    const apiKey = Deno.env.get('ELEVENLABS_API_KEY')
+    if (!apiKey) throw new Error('ELEVENLABS_API_KEY not set')
 
-    const res = await fetch('https://api.openai.com/v1/audio/speech', {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'xi-api-key': apiKey,
         'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg',
       },
       body: JSON.stringify({
-        model: 'tts-1-hd',
-        voice: 'fable',
-        input: text,
-        speed: 0.92,
+        text,
+        model_id: MODEL_ID,
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.35,
+          use_speaker_boost: true,
+        },
       }),
     })
 
     if (!res.ok) {
       const err = await res.text()
-      throw new Error(`OpenAI TTS error: ${err}`)
+      throw new Error(`ElevenLabs TTS error: ${res.status} ${err}`)
     }
 
     const audioBuffer = await res.arrayBuffer()
