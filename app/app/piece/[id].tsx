@@ -163,6 +163,7 @@ export default function PieceScreen() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['store', piece!.stores?.slug] })
         queryClient.invalidateQueries({ queryKey: ['discover'] })
+        queryClient.invalidateQueries({ queryKey: ['mystores'] })
         router.replace(`/store/${piece!.stores?.slug}`)
       },
       onError: (e: any) => Alert.alert('Delete failed', e.message),
