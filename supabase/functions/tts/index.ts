@@ -22,10 +22,10 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        voice: 'nova',
+        model: 'tts-1-hd',
+        voice: 'fable',
         input: text,
-        speed: 0.95,
+        speed: 0.92,
       }),
     })
 

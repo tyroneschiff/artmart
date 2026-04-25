@@ -126,19 +126,29 @@ Deno.serve(async (req) => {
         max_tokens: 1024,
         system: [{
           type: 'text',
-          text: `You are an expert visual collaborator and master art director stepping inside a child's imagination. The drawing is a window into a world they invented — your job is to walk through that window and show what that world actually looks like in breathtaking, vivid detail. You are NOT fixing, improving, or elevating the drawing. The original drawing IS the vision. You are the door.
+          text: `You step inside a child's drawing and describe what you see in their world. The drawing IS the world — you are not fixing or improving it, you are walking into it.
 
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
 
-The "description" will be READ ALOUD to the child who drew this — they are listening closely. Speak DIRECTLY to them. 2–3 sentences maximum.
+The "description" is READ ALOUD to the child who drew this. They are 4–10 years old and listening closely. Write FOR THEM, not for adults.
 
-The gold standard examples are:
-"Sadie, you poured every color you had into this magnificent rainbow, and you can feel the pure exuberance in every bold, fearless stroke. The arc sweeps with such confident energy — layers of red, orange, green, blue, and violet tumbling over each other like a celebration in progress. This is what joy looks like when you decide the whole page isn't big enough to contain it."
+Hard rules for the description:
+- 2 short sentences. Maximum 35 words total.
+- Use simple, everyday words a 6-year-old understands. NEVER use words like: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, confident, composition, palette.
+- Name 2 or 3 specific things you can see in their drawing (the dragon, the red flower, the sun in the corner).
+- Speak to them: use "you" and "your". Open with their name if provided.
+- End with one warm, excited feeling — like "I love it" or "that's awesome" or "what a place".
+- Sound like a friendly grown-up talking, not a poet.
 
-"Josiah, you created something genuinely extraordinary here — a boldly layered world of towering trees marching in rhythmic columns, each one bristling with repeated shapes that feel like leaves, creatures, or little houses clinging to their sides. You fearlessly drew right over the whole explosive background with thick, decisive marker strokes that show zero hesitation. This is the work of someone who already understands that more is more, and the result is thrillingly alive."
+Good examples:
+"Sadie, look at all those colors in your rainbow — red, orange, green, blue, purple, all stacked up so big! It looks like a happy parade across the whole sky."
 
-Match that voice exactly: specific colors and marks named, kinetic verbs ("poured", "sweeps", "tumbling", "bristling"), celebrates the child's confidence and decisions, closes with a line that lands emotionally. Open with the child's name if provided — never infer a name from the drawing itself. Speak to them, not about them.
+"Josiah, your tall trees are everywhere, and there are little shapes all over them like tiny leaves and creatures hiding in the branches. What an amazing forest you made."
+
+"Hey, that dragon is right next to the cottage with the sun smiling in the corner — and look at all those flowers! I could spend a whole day in your world."
+
+Never infer a name from the drawing. If no childName is provided, just start with what you see.
 
 The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original drawing as input, so be vivid and push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, composition, and color choices are the source of truth. Show what it looks like to stand inside that place.
 
@@ -151,7 +161,7 @@ Your prompt MUST:
 6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
 
 Example:
-{"description":"You put that dragon exactly where he needed to be — standing guard over the cottage while the sun smiles from the corner like it's in on the secret. Every flower, every color, every choice is yours, and it all holds together with the kind of confidence most artists spend years trying to find. That is a world worth living in.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
+{"description":"Hey, that dragon is right next to the cozy cottage, and the sun is smiling from the corner! All those flowers around it — what an awesome place you made.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{
@@ -161,7 +171,7 @@ Example:
             source: { type: 'base64', media_type: mimeType, data: imageBase64 }
           }, {
             type: 'text',
-            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a witness description of the world you see, and a prompt that renders that world as a real place. Reply with only the JSON object.`
+            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a short, simple description spoken directly TO ${artistName ? artistName : 'the child'} (kid-friendly words, max 35 words, name 2–3 specific things you see), and a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
           }]
         }]
       }),

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native'
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput, Modal, Dimensions, StatusBar } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
@@ -70,6 +70,7 @@ export default function PieceScreen() {
     const [modalOrderType, setModalOrderType] = useState<'digital' | 'print'>('print')
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
+    const [lightboxUri, setLightboxUri] = useState<string | null>(null)
   
     const { data: piece, isLoading, error, refetch } = useQuery({ queryKey: ['piece', id], queryFn: () => fetchPiece(id) })
   
@@ -259,7 +260,9 @@ export default function PieceScreen() {
           </View>
         </View>
 
-        <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
+        <TouchableOpacity activeOpacity={0.9} onPress={() => displayImageUrl && setLightboxUri(displayImageUrl)}>
+          <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
+        </TouchableOpacity>
 
         <View style={styles.titleRow}>
           <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
@@ -387,8 +390,20 @@ export default function PieceScreen() {
         </View>
 
         <Text style={[type.label, { paddingHorizontal: 16, marginBottom: 8, fontSize: 13 }]}>The drawing</Text>
-        <Image source={{ uri: piece.original_image_url }} style={styles.originalImage} />
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(piece.original_image_url)}>
+          <Image source={{ uri: piece.original_image_url }} style={styles.originalImage} resizeMode="contain" />
+        </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)} statusBarTranslucent>
+        <StatusBar barStyle="light-content" />
+        <TouchableOpacity style={styles.lightboxBackdrop} activeOpacity={1} onPress={() => setLightboxUri(null)}>
+          <Image source={{ uri: lightboxUri || '' }} style={styles.lightboxImage} resizeMode="contain" />
+          <TouchableOpacity style={styles.lightboxClose} onPress={() => setLightboxUri(null)} hitSlop={12}>
+            <Text style={styles.lightboxCloseText}>×</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       <GiftingModal
         visible={giftingModalVisible}
@@ -434,7 +449,11 @@ voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldL
   discountBadge: { backgroundColor: colors.gold, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   discountBadgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
   redownloadLabel: { fontSize: 14, fontWeight: '700', color: colors.gold },
-  originalImage: { width: '100%', aspectRatio: 1, opacity: 0.7 },
+  originalImage: { width: '100%', aspectRatio: 1, backgroundColor: colors.cream, opacity: 0.85 },
+  lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
+  lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  lightboxCloseText: { color: colors.white, fontSize: 24, lineHeight: 28, fontWeight: '300' },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 16 },
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
