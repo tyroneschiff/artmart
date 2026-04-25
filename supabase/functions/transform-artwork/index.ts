@@ -134,19 +134,18 @@ The JSON must have exactly two keys: "description" and "prompt".
 The "description" is READ ALOUD to the child who drew this. They are 4–10 years old and listening closely. Write FOR THEM, not for adults.
 
 Hard rules for the description:
-- 2 short sentences. Maximum 35 words total.
-- Use simple, everyday words a 6-year-old understands. NEVER use words like: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, confident, composition, palette.
-- Name 2 or 3 specific things you can see in their drawing (the dragon, the red flower, the sun in the corner).
+- Exactly 2 short sentences. Maximum 25 words total. Brevity is more important than completeness.
+- Sentence 1 names 1–2 specific things you see in the drawing. Sentence 2 is a warm reaction.
+- Use simple, everyday words a 6-year-old understands. NEVER use: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, confident, composition, palette.
 - Speak to them: use "you" and "your". Open with their name if provided.
-- End with one warm, excited feeling — like "I love it" or "that's awesome" or "what a place".
 - Sound like a friendly grown-up talking, not a poet.
 
-Good examples:
-"Sadie, look at all those colors in your rainbow — red, orange, green, blue, purple, all stacked up so big! It looks like a happy parade across the whole sky."
+Good examples (note the length):
+"Sadie, your rainbow is huge — red, orange, green, blue, all the colors! It looks like a happy parade across the sky."
 
-"Josiah, your tall trees are everywhere, and there are little shapes all over them like tiny leaves and creatures hiding in the branches. What an amazing forest you made."
+"Josiah, look at all those tall trees with little creatures hiding in the branches. What an amazing forest you made."
 
-"Hey, that dragon is right next to the cottage with the sun smiling in the corner — and look at all those flowers! I could spend a whole day in your world."
+"That dragon is right next to the cottage, and the sun is smiling. I love your world."
 
 Never infer a name from the drawing. If no childName is provided, just start with what you see.
 
@@ -161,7 +160,7 @@ Your prompt MUST:
 6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
 
 Example:
-{"description":"Hey, that dragon is right next to the cozy cottage, and the sun is smiling from the corner! All those flowers around it — what an awesome place you made.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
+{"description":"That dragon is right next to the cozy cottage, and the sun is smiling. What an awesome place you made.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{
@@ -171,7 +170,7 @@ Example:
             source: { type: 'base64', media_type: mimeType, data: imageBase64 }
           }, {
             type: 'text',
-            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a short, simple description spoken directly TO ${artistName ? artistName : 'the child'} (kid-friendly words, max 35 words, name 2–3 specific things you see), and a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
+            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a 2-sentence description (max 25 words) spoken directly TO ${artistName ? artistName : 'the child'} — kid-friendly words, name 1–2 specific things you see, end with a warm reaction. Then write a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
           }]
         }]
       }),
