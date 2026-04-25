@@ -279,7 +279,7 @@ export default function CreateScreen() {
             <Image source={{ uri: transformedUri! }} style={styles.successImage} />
             <Text style={[type.h1, { marginBottom: 8, textAlign: 'center' }]}>Published!</Text>
             <Text style={[type.body, { textAlign: 'center', marginBottom: 16, color: colors.mid }]}>
-              "{title}" is now live in {selectedStore?.child_name}'s store.
+              "{title}" is now live in {selectedStore?.child_name}'s gallery.
             </Text>
             {aiDescription ? (
               <View style={{ width: '100%', marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.goldMid }}>
@@ -296,7 +296,7 @@ export default function CreateScreen() {
                   router.push(`/store/${selectedStore?.slug}`)
                 }}
               >
-                <Text style={btn.primaryText}>{selectedStore?.child_name}'s Store</Text>
+                <Text style={btn.primaryText}>{selectedStore?.child_name}'s Gallery</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -406,12 +406,12 @@ export default function CreateScreen() {
           {hasStores ? (
             <TouchableOpacity style={styles.storePicker} onPress={() => setStorePickerVisible(true)}>
               <Text style={[type.body, { color: colors.muted }, selectedStore && { color: colors.dark }]}>
-                {selectedStore ? `${selectedStore.child_name}'s Store ✓` : 'Select a store →'}
+                {selectedStore ? `${selectedStore.child_name}'s Gallery ✓` : 'Select a gallery →'}
               </Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.inlineStoreCreate}>
-              <Text style={styles.inlineStoreLabel}>No stores yet — create one to publish</Text>
+              <Text style={styles.inlineStoreLabel}>No galleries yet — create one to publish</Text>
               <View style={styles.inlineStoreRow}>
                 <TextInput
                   style={[styles.inlineStoreInput, type.body, { fontSize: 15 }]}
@@ -431,7 +431,7 @@ export default function CreateScreen() {
                 </TouchableOpacity>
               </View>
               {selectedStore && (
-                <Text style={styles.inlineStoreSuccess}>✓ {selectedStore.child_name}'s Store created</Text>
+                <Text style={styles.inlineStoreSuccess}>✓ {selectedStore.child_name}'s Gallery created</Text>
               )}
             </View>
           )}
@@ -441,7 +441,7 @@ export default function CreateScreen() {
             onPress={() => publishMutation.mutate()}
             disabled={!title || !selectedStore || publishMutation.isPending}
           >
-            <Text style={btn.primaryText}>{publishMutation.isPending ? 'Publishing...' : 'Publish to Store'}</Text>
+            <Text style={btn.primaryText}>{publishMutation.isPending ? 'Publishing...' : 'Publish to Gallery'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setStep('transform')}><Text style={styles.cancel}>← Retransform</Text></TouchableOpacity>
@@ -450,13 +450,13 @@ export default function CreateScreen() {
 
       <Modal visible={storePickerVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modal}>
-          <Text style={styles.modalTitle}>Select Store</Text>
+          <Text style={styles.modalTitle}>Select Gallery</Text>
           <FlatList
             data={stores}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity style={styles.storeOption} onPress={() => { setSelectedStore(item); setStorePickerVisible(false) }}>
-                <Text style={styles.storeOptionText}>{item.child_name}'s Store</Text>
+                <Text style={styles.storeOptionText}>{item.child_name}'s Gallery</Text>
               </TouchableOpacity>
             )}
           />
