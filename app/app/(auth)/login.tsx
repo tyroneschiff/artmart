@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../../lib/supabase'
 import { colors } from '../../lib/theme'
+
+const DEV_CREDS_KEY = '__dev_login_creds__'
 
 export default function LoginScreen() {
   const { returnTo } = useLocalSearchParams<{ returnTo?: string }>()
@@ -10,6 +13,18 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState<'login' | 'signup'>('login')
+
+  useEffect(() => {
+    if (!__DEV__) return
+    AsyncStorage.getItem(DEV_CREDS_KEY).then((raw) => {
+      if (!raw) return
+      try {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(raw)
+        if (savedEmail) setEmail(savedEmail)
+        if (savedPassword) setPassword(savedPassword)
+      } catch {}
+    })
+  }, [])
 
   async function handleSubmit() {
     if (!email || !password) return
@@ -23,7 +38,11 @@ export default function LoginScreen() {
         if (error) throw error
         Alert.alert('Check your email', 'We sent you a confirmation link.')
       }
-      
+
+      if (__DEV__) {
+        AsyncStorage.setItem(DEV_CREDS_KEY, JSON.stringify({ email, password })).catch(() => {})
+      }
+
       if (returnTo) {
         router.replace(returnTo as any)
       } else {
