@@ -52,7 +52,11 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoCorrect={false}
             keyboardType="email-address"
+            textContentType="username"
+            autoComplete="email"
+            returnKeyType="next"
           />
           <TextInput
             style={styles.input}
@@ -61,6 +65,12 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            textContentType={mode === 'login' ? 'password' : 'newPassword'}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
           />
 
           <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSubmit} disabled={loading}>
