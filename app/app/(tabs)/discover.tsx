@@ -7,7 +7,7 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
 import CreditsChip from '../../components/CreditsChip'
 
-type SortMode = 'top' | 'new'
+type SortMode = 'top' | 'new' | 'popular'
 
 type Piece = {
   id: string
@@ -15,18 +15,20 @@ type Piece = {
   transformed_image_url: string
   watermarked_image_url?: string
   vote_count: number
+  view_count: number
   store_id: string
   created_at: string
   stores: { child_name: string; slug: string }
 }
 
 async function fetchPieces(sort: SortMode): Promise<Piece[]> {
+  const orderCol = sort === 'top' ? 'vote_count' : sort === 'popular' ? 'view_count' : 'created_at'
   const { data, error } = await supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, store_id, created_at, stores(child_name, slug)')
+    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, view_count, store_id, created_at, stores(child_name, slug)')
     .eq('published', true)
     .not('transformed_image_url', 'is', null)
-    .order(sort === 'top' ? 'vote_count' : 'created_at', { ascending: false })
+    .order(orderCol, { ascending: false })
     .limit(50)
   if (error) throw error
   return data as unknown as Piece[]
@@ -43,6 +45,7 @@ async function fetchUserVotes(userId: string): Promise<string[]> {
 
 const SORT_OPTIONS: { value: SortMode; label: string; icon: string }[] = [
   { value: 'top', label: 'Most loved', icon: '♥' },
+  { value: 'popular', label: 'Most visited', icon: '◉' },
   { value: 'new', label: 'Newest', icon: '✦' },
 ]
 

@@ -119,6 +119,10 @@ export default function PieceScreen() {
     })
 
     useEffect(() => {
+      supabase.rpc('increment_piece_views', { p_piece_id: id })
+    }, [id])
+
+    useEffect(() => {
       if (vote === '1' && session && !autoVoteFired.current && !voteMutation.isPending) {
         autoVoteFired.current = true
         voteMutation.mutate()
