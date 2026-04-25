@@ -7,3 +7,5 @@ security definer
 as $$
   update public.pieces set view_count = view_count + 1 where id = p_piece_id;
 $$;
+
+grant execute on function public.increment_piece_views(uuid) to anon, authenticated;
