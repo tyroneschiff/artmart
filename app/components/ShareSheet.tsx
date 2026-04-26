@@ -19,7 +19,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
       // Closing the modal first deallocates the presenting view controller and silently cancels the share.
       await Share.share({
         title: payload!.title,
-        message: `${payload!.message}\n${payload!.url}`,
+        message: payload!.message,
         url: payload!.url,
       })
     } catch (e: any) {
