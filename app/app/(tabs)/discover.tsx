@@ -1,6 +1,7 @@
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useState, useEffect } from 'react'
+import { DiscoverSkeleton } from '../../components/Skeleton'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
@@ -99,7 +100,7 @@ export default function DiscoverScreen() {
 
   const activeOption = SORT_OPTIONS.find(o => o.value === sort)!
 
-  if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
+  if (isLoading) return <DiscoverSkeleton />
 
   if (error) {
     return (

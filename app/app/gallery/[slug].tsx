@@ -3,6 +3,7 @@ import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndi
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuery } from '@tanstack/react-query'
+import { GallerySkeleton } from '../../components/Skeleton'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
 import { supabase } from '../../lib/supabase'
@@ -131,7 +132,7 @@ export default function StoreScreen() {
     setSharePayload(buildStoreShareMessage(data.store.child_name, slug))
   }
 
-  if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
+  if (isLoading) return <GallerySkeleton />
 
   if (error) {
     return (

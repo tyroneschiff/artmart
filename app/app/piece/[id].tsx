@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import ShareSheet from '../../components/ShareSheet'
 import PreservedDrawing from '../../components/PreservedDrawing'
+import { PieceSkeleton } from '../../components/Skeleton'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card } from '../../lib/theme'
@@ -170,7 +171,7 @@ export default function PieceScreen() {
       onError: (e: any) => Alert.alert('Error', e.message),
     })
   
-  if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
+  if (isLoading) return <PieceSkeleton />
   
   if (error) {
     return (
