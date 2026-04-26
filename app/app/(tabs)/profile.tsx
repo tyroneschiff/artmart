@@ -8,7 +8,7 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { useCredits } from '../../lib/useCredits'
 import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
 import { track } from '../../lib/analytics'
-import { colors, type, btn, card } from '../../lib/theme'
+import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import Constants from 'expo-constants'
 
 type AllPiece = { id: string; original_image_url: string | null; stores: { child_name: string } | null }
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: 15, color: colors.mid, flex: 1, textAlign: 'right' },
 
   creditsValue: { fontSize: 18, fontWeight: '800', color: colors.gold },
-  buyBtn: { margin: 12, marginTop: 4, backgroundColor: colors.goldLight, borderRadius: 12, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
+  buyBtn: { margin: 12, marginTop: 4, backgroundColor: colors.goldLight, borderRadius: radius.sm, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   buyBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 14 },
 
   input: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: colors.dark, borderBottomWidth: 1, borderBottomColor: colors.border },
   saveBtn: { margin: 12, paddingVertical: 12 },
-  saveBtnDisabled: { opacity: 0.4 },
+  saveBtnDisabled: { opacity: opacity.disabled },
 
   // Quieter sign-out — destructive intent is communicated by the Alert, not the button.
-  signOutBtn: { backgroundColor: 'transparent', paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 100 },
+  signOutBtn: { backgroundColor: 'transparent', paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill },
   signOutText: { color: colors.muted, fontWeight: '700', fontSize: 14, letterSpacing: -0.1 },
 })

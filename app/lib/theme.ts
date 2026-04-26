@@ -1,3 +1,20 @@
+// Radius scale — intentional rather than arbitrary. sm=chips/inputs,
+// md=cards/standard, lg=large cards & sheets, xl=bottom-sheet tops,
+// pill=capsule buttons & badges. Use these instead of hardcoded numbers.
+export const radius = {
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 24,
+  pill: 100,
+} as const
+
+// Single source of truth for disabled-button opacity. Was split 0.4/0.5
+// across 6 files — 0.5 reads "off" without being too faint to see.
+export const opacity = {
+  disabled: 0.5,
+} as const
+
 export const colors = {
   cream: '#FEFAF3',
   creamDark: '#F5EDD8',
@@ -27,7 +44,7 @@ export const type = {
 export const btn = {
   primary: {
     backgroundColor: colors.dark,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 16,
     paddingHorizontal: 28,
     alignItems: 'center' as const,
@@ -38,7 +55,7 @@ export const btn = {
     fontWeight: '700' as const,
   },
   ghost: {
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 15,
     paddingHorizontal: 28,
     alignItems: 'center' as const,
@@ -52,7 +69,7 @@ export const btn = {
   },
   secondary: {
     backgroundColor: colors.white,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 16,
     paddingHorizontal: 28,
     alignItems: 'center' as const,
@@ -64,11 +81,12 @@ export const btn = {
     fontSize: 16,
     fontWeight: '600' as const,
   },
+  disabledOpacity: opacity.disabled,
 }
 
 export const card = {
   backgroundColor: colors.white,
-  borderRadius: 16,
+  borderRadius: radius.md,
   borderWidth: 1,
   borderColor: colors.border,
 }

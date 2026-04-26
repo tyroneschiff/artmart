@@ -5,7 +5,7 @@ import * as Linking from 'expo-linking'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../../lib/supabase'
 import { track } from '../../lib/analytics'
-import { colors } from '../../lib/theme'
+import { colors, radius, opacity } from '../../lib/theme'
 
 const DEV_CREDS_KEY = '__dev_login_creds__'
 
@@ -139,19 +139,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: radius.md,
     padding: 16,
     fontSize: 16,
     color: colors.dark,
   },
   button: {
     backgroundColor: colors.dark,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 17,
     alignItems: 'center',
     marginTop: 6,
   },
-  buttonDisabled: { opacity: 0.5 },
+  buttonDisabled: { opacity: opacity.disabled },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
   toggleBtn: { paddingVertical: 14, alignItems: 'center' },
   toggleText: { color: colors.mid, textAlign: 'center', fontSize: 14, fontWeight: '500' },

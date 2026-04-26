@@ -17,7 +17,7 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
 import { track } from '../../lib/analytics'
-import { colors, btn, type, card } from '../../lib/theme'
+import { colors, btn, type, card, radius, opacity } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
 import CreditsChip from '../../components/CreditsChip'
@@ -298,7 +298,7 @@ export default function CreateScreen() {
               "{title}" is now live in {selectedStore?.child_name}'s gallery.
             </Text>
             {aiDescription ? (
-              <View style={{ width: '100%', marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: colors.goldMid }}>
+              <View style={{ width: '100%', marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: radius.md, padding: 16, borderWidth: 1, borderColor: colors.goldMid }}>
                 <Text style={{ fontSize: 14, color: colors.dark, lineHeight: 22, marginBottom: 12 }}>{aiDescription}</Text>
                 <ReadAloudButton text={aiDescription} compact />
               </View>
@@ -442,7 +442,7 @@ export default function CreateScreen() {
                   onChangeText={setNewStoreName}
                 />
                 <TouchableOpacity
-                  style={[btn.primary, { borderRadius: 10, paddingHorizontal: 16 }, (!newStoreName.trim() || creatingStore) && styles.buttonDisabled]}
+                  style={[btn.primary, { borderRadius: radius.sm, paddingHorizontal: 16 }, (!newStoreName.trim() || creatingStore) && styles.buttonDisabled]}
                   onPress={handleCreateStoreInline}
                   disabled={!newStoreName.trim() || creatingStore}
                 >
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   takePhotoBtn: {
     width: '100%',
     backgroundColor: colors.dark,
-    borderRadius: 24,
+    borderRadius: radius.xl,
     paddingVertical: 36,
     alignItems: 'center',
     justifyContent: 'center',
@@ -521,13 +521,13 @@ const styles = StyleSheet.create({
   },
   libraryLabel: { color: colors.mid, fontSize: 14, fontWeight: '600' },
   prompt: { fontSize: 15, color: colors.mid, marginBottom: 16, textAlign: 'center' },
-  bigBtn: { backgroundColor: colors.dark, borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 },
+  bigBtn: { backgroundColor: colors.dark, borderRadius: radius.lg, padding: 24, alignItems: 'center', gap: 8 },
   bigBtnSecondary: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
   bigBtnIcon: { fontSize: 32 },
   bigBtnText: { fontSize: 16, fontWeight: '700', color: colors.white },
-  preview: { width: '100%', aspectRatio: 1, borderRadius: 16, marginBottom: 16 },
-  button: { backgroundColor: colors.dark, borderRadius: 100, padding: 16, alignItems: 'center', marginBottom: 12 },
-  buttonDisabled: { opacity: 0.4 },
+  preview: { width: '100%', aspectRatio: 1, borderRadius: radius.md, marginBottom: 16 },
+  button: { backgroundColor: colors.dark, borderRadius: radius.pill, padding: 16, alignItems: 'center', marginBottom: 12 },
+  buttonDisabled: { opacity: opacity.disabled },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
   cancel: { color: colors.muted, textAlign: 'center', fontSize: 14, marginTop: 8, marginBottom: 8 },
   center: { alignItems: 'center', gap: 12, marginVertical: 16 },
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   transformingSubtext: { color: colors.mid, fontSize: 13, textAlign: 'center' },
   upsellCard: {
     backgroundColor: colors.dangerBg,
-    borderRadius: 16,
+    borderRadius: radius.md,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   },
   upsellBtn: {
     backgroundColor: colors.dark,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 12,
     paddingHorizontal: 24,
   },
@@ -566,23 +566,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
-  errorBox: { backgroundColor: colors.dangerBg, borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 8 },
+  errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 8 },
   errorTitle: { fontSize: 14, fontWeight: '700', color: colors.dangerText },
   errorMessage: { fontSize: 13, color: colors.dangerText, lineHeight: 18, marginBottom: 4 },
-  webNotice: { backgroundColor: colors.goldLight, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.goldMid },
+  webNotice: { backgroundColor: colors.goldLight, borderRadius: radius.sm, padding: 16, borderWidth: 1, borderColor: colors.goldMid },
   webNoticeText: { color: colors.goldDark, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   compareRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   compareItem: { flex: 1 },
   compareLabel: { fontSize: 11, color: colors.muted, marginBottom: 8, textAlign: 'center', fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
-  compareImage: { width: '100%', aspectRatio: 1, borderRadius: 12 },
-  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, padding: 16, marginBottom: 12, fontSize: 16, color: colors.dark, backgroundColor: colors.white },
-  storePicker: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, padding: 16, marginBottom: 16, backgroundColor: colors.white },
+  compareImage: { width: '100%', aspectRatio: 1, borderRadius: radius.sm },
+  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 12, fontSize: 16, color: colors.dark, backgroundColor: colors.white },
+  storePicker: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 16, backgroundColor: colors.white },
   storePickerText: { fontSize: 16, color: colors.muted },
-  inlineStoreCreate: { backgroundColor: colors.goldLight, borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.goldMid },
+  inlineStoreCreate: { backgroundColor: colors.goldLight, borderRadius: radius.md, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.goldMid },
   inlineStoreLabel: { fontSize: 13, fontWeight: '700', color: colors.goldDark, marginBottom: 10 },
   inlineStoreRow: { flexDirection: 'row', gap: 8 },
-  inlineStoreInput: { flex: 1, backgroundColor: colors.white, borderRadius: 10, padding: 12, fontSize: 15, color: colors.dark, borderWidth: 1, borderColor: colors.border },
-  inlineStoreBtn: { backgroundColor: colors.dark, borderRadius: 10, paddingHorizontal: 16, justifyContent: 'center' },
+  inlineStoreInput: { flex: 1, backgroundColor: colors.white, borderRadius: radius.sm, padding: 12, fontSize: 15, color: colors.dark, borderWidth: 1, borderColor: colors.border },
+  inlineStoreBtn: { backgroundColor: colors.dark, borderRadius: radius.sm, paddingHorizontal: 16, justifyContent: 'center' },
   inlineStoreBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   inlineStoreSuccess: { color: colors.goldDark, fontSize: 13, fontWeight: '600', marginTop: 8 },
   modal: { flex: 1, padding: 32, paddingTop: 60, backgroundColor: colors.cream },
@@ -591,9 +591,9 @@ const styles = StyleSheet.create({
   storeOptionText: { fontSize: 16, fontWeight: '600', color: colors.dark },
   successContainer: { justifyContent: 'center' },
   successContent: { padding: 24, paddingTop: 60, alignItems: 'center' },
-  successCard: { 
-    backgroundColor: colors.white, 
-    borderRadius: 24, 
+  successCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
     padding: 24, 
     width: '100%', 
     alignItems: 'center',
@@ -605,12 +605,12 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 5,
   },
-  successImage: { width: '100%', aspectRatio: 1, borderRadius: 16, marginBottom: 24 },
+  successImage: { width: '100%', aspectRatio: 1, borderRadius: radius.md, marginBottom: 24 },
   successTitle: { fontSize: 28, fontWeight: '900', color: colors.dark, marginBottom: 8, letterSpacing: -1 },
   successSubtitle: { fontSize: 16, color: colors.mid, textAlign: 'center', marginBottom: 32, lineHeight: 22 },
   whatsappBtn: { 
     backgroundColor: colors.gold, 
-    borderRadius: 100, 
+    borderRadius: radius.pill, 
     paddingVertical: 18, 
     paddingHorizontal: 32, 
     width: '100%', 
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
   whatsappBtnText: { color: colors.white, fontSize: 16, fontWeight: '800' },
   instagramBtn: {
     backgroundColor: colors.white,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingVertical: 18,
     paddingHorizontal: 32,
     width: '100%',

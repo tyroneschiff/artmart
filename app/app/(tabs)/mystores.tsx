@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card } from '../../lib/theme'
+import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
@@ -202,8 +202,8 @@ const styles = StyleSheet.create({
   addBtnText: { ...btn.primaryText, fontSize: 14 },
   storeCard: { ...card, flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, padding: 16 },
   coverWrap: { width: 56, height: 56, marginRight: 16, position: 'relative' },
-  storeCover: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.border },
-  storeCoverEmpty: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid },
+  storeCover: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.border },
+  storeCoverEmpty: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid },
   initialBadge: { position: 'absolute', bottom: -4, right: -4, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.dark, borderWidth: 2, borderColor: colors.cream, alignItems: 'center', justifyContent: 'center' },
   initialBadgeText: { color: colors.white, fontWeight: '900', fontSize: 11, letterSpacing: -0.3 },
   storeInfo: { flex: 1 },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   upsellCard: {
     backgroundColor: colors.dangerBg,
-    borderRadius: 16,
+    borderRadius: radius.md,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dark,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 100,
+    borderRadius: radius.pill,
   },
   upsellBtnText: {
     color: colors.white,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   input: { ...card, padding: 16, fontSize: 16, color: colors.dark, marginBottom: 16, borderWidth: 1.5 },
   slugPreview: { fontSize: 13, color: colors.gold, fontWeight: '600', marginBottom: 16, marginTop: -8, marginLeft: 4 },
   button: { ...btn.primary, marginBottom: 12 },
-  buttonDisabled: { opacity: 0.4 },
+  buttonDisabled: { opacity: opacity.disabled },
   buttonText: { ...btn.primaryText },
   cancel: { ...type.body, color: colors.muted, textAlign: 'center', textDecorationLine: 'underline' },
 })

@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card } from '../../lib/theme'
+import { colors, type, btn, card, radius } from '../../lib/theme'
 import CreditsChip from '../../components/CreditsChip'
 
 type SortMode = 'top' | 'new' | 'popular'
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'flex-start', paddingTop: 140, paddingHorizontal: 20 },
   dropdown: {
     backgroundColor: colors.white,
-    borderRadius: 14,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
-  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeDone: { opacity: 0.92 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },

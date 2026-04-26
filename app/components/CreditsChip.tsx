@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useCredits } from '../lib/useCredits'
-import { colors } from '../lib/theme'
+import { colors, radius } from '../lib/theme'
 
 export default function CreditsChip() {
   const { data: credits } = useCredits()
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   getMoreBtn: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: colors.white,

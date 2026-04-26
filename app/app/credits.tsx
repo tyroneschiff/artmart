@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../hooks/useAuthStore'
 import { useCredits } from '../lib/useCredits'
 import { purchaseCredits } from '../lib/checkout'
-import { colors, type, btn, card } from '../lib/theme'
+import { colors, type, btn, card, radius } from '../lib/theme'
 
 type Pack = {
   id: string
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: colors.goldLight,
     borderWidth: 1, borderColor: colors.goldMid,
-    borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8,
     marginBottom: 24,
   },
   balancePillText: { fontSize: 13, fontWeight: '700', color: colors.goldDark, letterSpacing: -0.1 },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   packBadge: {
     position: 'absolute', top: -10, alignSelf: 'center',
     backgroundColor: colors.dark,
-    borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5,
+    borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 5,
   },
   packBadgeText: { color: colors.white, fontSize: 10, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
 

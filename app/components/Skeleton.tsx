@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Animated, View, StyleSheet, ViewStyle } from 'react-native'
-import { colors } from '../lib/theme'
+import { colors, radius } from '../lib/theme'
 
 type Props = {
   width?: number | `${number}%`
@@ -117,7 +117,7 @@ const s = StyleSheet.create({
   galleryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   galleryAvatarBlock: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 18, paddingHorizontal: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 10 },
-  card: { width: '48%', backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  card: { width: '48%', backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   cardBody: { padding: 12 },
   piece: { flex: 1, backgroundColor: colors.cream },
   pieceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },

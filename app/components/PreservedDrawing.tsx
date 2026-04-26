@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native'
-import { colors, type } from '../lib/theme'
+import { colors, type, radius } from '../lib/theme'
 
 type Props = {
   imageUri: string
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   },
   frame: {
     backgroundColor: colors.white,
-    borderRadius: 14,
+    borderRadius: radius.md,
     padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
@@ -73,6 +73,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: 8,
+    borderRadius: 8, // intentional 8 — slight inset under the 14 frame
   },
 })

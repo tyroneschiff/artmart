@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { GallerySkeleton } from '../../components/Skeleton'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card } from '../../lib/theme'
+import { colors, type, btn, card, radius } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
-  backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   shareBtn: { ...btn.primary, paddingHorizontal: 16, paddingVertical: 9 },
   shareBtnText: { ...btn.primaryText, fontSize: 13 },
-  saveAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderRadius: 100, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
+  saveAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderRadius: radius.pill, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
   saveAllBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
   galleryHeader: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 12, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
@@ -246,13 +246,13 @@ const styles = StyleSheet.create({
   galleryName: { ...type.h2 },
   pieceCount: { ...type.label, marginTop: 4 },
   sortRow: { paddingHorizontal: 16, marginBottom: 12 },
-  sortDropdown: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7, backgroundColor: colors.white, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
+  sortDropdown: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7, backgroundColor: colors.white, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
   sortDropdownText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
-  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },
   title: { ...type.h3, fontSize: 13 },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-start', paddingTop: 220, paddingHorizontal: 16 },
-  dropdownMenu: { backgroundColor: colors.white, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  dropdownMenu: { backgroundColor: colors.white, borderRadius: radius.md, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
   dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   dropdownItemActive: { backgroundColor: colors.goldLight },
   dropdownItemText: { fontSize: 15, fontWeight: '600', color: colors.dark },

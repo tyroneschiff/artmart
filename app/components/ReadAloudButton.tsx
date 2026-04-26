@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, Alert, ActivityIndicator } from 're
 import { Audio } from 'expo-av'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Ionicons } from '@expo/vector-icons'
-import { colors } from '../lib/theme'
+import { colors, radius } from '../lib/theme'
 
 export default function ReadAloudButton({ text, compact }: { text: string; compact?: boolean }) {
   const [state, setState] = useState<'idle' | 'loading' | 'playing'>('idle')
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 100,
+    borderRadius: radius.pill,
     backgroundColor: colors.goldLight,
     borderWidth: 1,
     borderColor: colors.goldMid,

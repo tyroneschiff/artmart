@@ -10,7 +10,7 @@ import PreservedDrawing from '../../components/PreservedDrawing'
 import { PieceSkeleton } from '../../components/Skeleton'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
-import { colors, type, btn, card } from '../../lib/theme'
+import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
 
 type Piece = {
@@ -362,19 +362,19 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
-  backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   dangerZone: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, alignItems: 'center' },
   dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   mainImage: { width: '100%', aspectRatio: 1 },
   titleBlock: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
   title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5, color: colors.dark, lineHeight: 32, marginBottom: 14 },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  galleryChip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 8, paddingRight: 14, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, flex: 1 },
+  galleryChip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 8, paddingRight: 14, borderRadius: radius.pill, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, flex: 1 },
   galleryAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, alignItems: 'center', justifyContent: 'center' },
   galleryAvatarText: { fontSize: 12, fontWeight: '900', color: colors.goldDark },
   galleryChipText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
   galleryChipArrow: { fontSize: 18, color: colors.muted, marginLeft: 4 },
-  voteChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 14, borderRadius: 100, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, minWidth: 60, justifyContent: 'center' },
+  voteChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, minWidth: 60, justifyContent: 'center' },
   voteChipDone: { opacity: 0.55 },
   voteChipText: { fontSize: 13, fontWeight: '800', color: colors.goldDark, letterSpacing: -0.1 },
   voteChipTextDone: { color: colors.goldDark },
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
   postBtn: { paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
-  postBtnDisabled: { opacity: 0.5 },
+  postBtnDisabled: { opacity: opacity.disabled },
   commentsList: { gap: 16 },
   commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   commentAuthor: { fontWeight: '700', color: colors.dark, fontSize: 14 },
