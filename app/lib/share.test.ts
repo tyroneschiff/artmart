@@ -7,13 +7,13 @@ describe('share lib', () => {
     const payload = buildPieceShareMessage('Starry Night', 'Emma', '123')
     expect(payload.title).toContain("Emma's world")
     expect(payload.message).toContain('"Starry Night"')
-    expect(payload.url).toBe('https://drawup.art/piece/123')
+    expect(payload.url).toBe('https://drawup.ink/piece/123')
   })
 
   it('builds store share message correctly', () => {
     const payload = buildStoreShareMessage('Emma', 'emma-store')
     expect(payload.title).toContain("Emma's imagination")
-    expect(payload.url).toBe('https://drawup.art/store/emma-store')
+    expect(payload.url).toBe('https://drawup.ink/store/emma-store')
   })
 
   it('calls Share.share in shareNative', async () => {

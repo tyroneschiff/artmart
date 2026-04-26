@@ -18,42 +18,63 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-  let title = "Draw Up — Step inside your child's imagination"
-  let description = "AI transforms children's drawings into a world you can step inside. Preserve the magic, share with family, and bring their imagination home."
-  let imageUrl = "https://artmart.drawup.app/og-default.png" // Placeholder
-  let redirectUrl = "https://drawup.art"
+  const APP_STORE_URL = "https://apps.apple.com/us/app/draw-up/id6762963488"
+  const canonicalUrl = pieceId
+    ? `https://drawup.ink/piece/${pieceId}`
+    : storeSlug
+    ? `https://drawup.ink/store/${storeSlug}`
+    : "https://drawup.ink"
+
+  let title = "Draw Up — Step inside your child's drawing"
+  let description = "Snap a photo of your kid's drawing and watch it come to life. Hear the world described back to them. Share the magic with family."
+  let imageUrl = "https://twwittitwwuuauhgrdaw.supabase.co/storage/v1/object/public/artwork/og-default.png"
+  let bodyHeadline = title
+  let bodySubtitle = description
+  let ctaLabel = "Get the app"
+  let bylineLabel: string | null = null
 
   if (pieceId) {
     const { data: piece, error } = await supabase
       .from('pieces')
-      .select('title, ai_description, transformed_image_url, stores(child_name, slug)')
+      .select('title, ai_description, transformed_image_url, watermarked_image_url, stores(child_name, slug)')
       .eq('id', pieceId)
       .single()
 
     if (piece && !error) {
       const childName = (piece.stores as any)?.child_name || 'a young artist'
-      title = `${piece.title || 'Untitled'} — by ${childName}`
-      description = piece.ai_description || description
-      imageUrl = piece.transformed_image_url
-      redirectUrl = `https://drawup.art/piece/${pieceId}`
+      const safeTitle = piece.title || 'A new world'
+      title = `${safeTitle} — a world by ${childName}`
+      description = piece.ai_description || `Step inside ${childName}'s drawing on Draw Up.`
+      imageUrl = piece.transformed_image_url || piece.watermarked_image_url || imageUrl
+      bodyHeadline = safeTitle
+      bodySubtitle = description
+      bylineLabel = `A world by ${childName}`
+      ctaLabel = "Step inside on Draw Up"
     }
   } else if (storeSlug) {
     const { data: store, error } = await supabase
       .from('stores')
-      .select('child_name, pieces(transformed_image_url)')
+      .select('child_name, pieces(transformed_image_url, watermarked_image_url, created_at, published)')
       .eq('slug', storeSlug)
-      .order('created_at', { foreignTable: 'pieces', ascending: false })
-      .limit(1, { foreignTable: 'pieces' })
       .single()
 
     if (store && !error) {
-      title = `${store.child_name}'s Art Store`
-      description = `Step inside ${store.child_name}'s imagination. Browse their artwork and bring their world home.`
-      const latestPiece = store.pieces?.[0]
+      const publishedPieces = (store.pieces ?? []).filter((p: any) => p.published)
+      const sorted = [...publishedPieces].sort((a: any, b: any) => (b.created_at || '').localeCompare(a.created_at || ''))
+      const latestPiece = sorted[0]
+      const count = publishedPieces.length
+
+      title = `${store.child_name}'s Gallery on Draw Up`
+      description = count > 0
+        ? `Step inside ${count} ${count === 1 ? 'world' : 'worlds'} dreamed up by ${store.child_name}.`
+        : `${store.child_name}'s drawings will live here. Step inside soon.`
+      bodyHeadline = `${store.child_name}'s Gallery`
+      bodySubtitle = description
+      bylineLabel = count > 0 ? `${count} ${count === 1 ? 'world' : 'worlds'}` : null
+      ctaLabel = "Visit the gallery on Draw Up"
       if (latestPiece) {
-        imageUrl = latestPiece.transformed_image_url
+        imageUrl = latestPiece.transformed_image_url || latestPiece.watermarked_image_url || imageUrl
       }
-      redirectUrl = `https://drawup.art/store/${storeSlug}`
     }
   }
 
@@ -71,7 +92,7 @@ Deno.serve(async (req) => {
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${url.href}">
+  <meta property="og:url" content="${canonicalUrl}">
   <meta property="og:site_name" content="Draw Up">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
@@ -79,81 +100,64 @@ Deno.serve(async (req) => {
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="${url.href}">
+  <meta property="twitter:url" content="${canonicalUrl}">
   <meta property="twitter:title" content="${title}">
   <meta property="twitter:description" content="${description}">
   <meta property="twitter:image" content="${imageUrl}">
 
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #FEFAF3; color: #1C1810; }
     body {
-      background-color: #FEFAF3;
-      color: #1C1810;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 32px 20px 48px;
     }
+    .wrap { max-width: 520px; margin: 0 auto; }
+    .brand { text-align: center; font-weight: 900; letter-spacing: -1px; font-size: 22px; margin-bottom: 24px; color: #1C1810; }
+    .brand span { color: #E8A020; }
     .card {
-      background: white;
+      background: #FFFFFF;
       border-radius: 24px;
-      padding: 32px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-      max-width: 500px;
-      width: 100%;
+      overflow: hidden;
       border: 1px solid #EDE4D0;
+      box-shadow: 0 12px 40px rgba(28,24,16,0.06);
     }
-    img {
-      width: 100%;
-      border-radius: 16px;
-      margin-bottom: 24px;
-      aspect-ratio: 1;
-      object-fit: cover;
-    }
-    h1 {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      letter-spacing: -1px;
-    }
-    p {
-      color: #6B5E4E;
-      line-height: 1.5;
-      margin-bottom: 32px;
-    }
-    .btn {
+    .hero { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #EDE4D0; }
+    .body { padding: 28px 24px 24px; text-align: center; }
+    .byline { color: #A89880; font-size: 13px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; }
+    h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.15; margin-bottom: 14px; }
+    p.desc { color: #6B5E4E; line-height: 1.55; font-size: 16px; margin-bottom: 28px; }
+    .cta {
       background: #1C1810;
-      color: white;
+      color: #FFFFFF;
       text-decoration: none;
-      padding: 16px 32px;
-      border-radius: 100px;
+      padding: 16px 28px;
+      border-radius: 999px;
       font-weight: 700;
       display: inline-block;
-      transition: transform 0.2s;
+      font-size: 16px;
+      transition: transform 0.15s ease;
     }
-    .btn:hover {
-      transform: scale(1.02);
-    }
+    .cta:hover { transform: scale(1.02); }
+    .footer { text-align: center; color: #A89880; font-size: 13px; margin-top: 24px; }
+    .footer a { color: #6B5E4E; text-decoration: none; border-bottom: 1px solid #EDE4D0; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <img src="${imageUrl}" alt="${title}">
-    <h1>${title}</h1>
-    <p>${description}</p>
-    <a href="${redirectUrl}" class="btn">View on Draw Up</a>
+  <div class="wrap">
+    <div class="brand">draw <span>up</span></div>
+    <div class="card">
+      <img class="hero" src="${imageUrl}" alt="${bodyHeadline}">
+      <div class="body">
+        ${bylineLabel ? `<div class="byline">${bylineLabel}</div>` : ''}
+        <h1>${bodyHeadline}</h1>
+        <p class="desc">${bodySubtitle}</p>
+        <a class="cta" href="${APP_STORE_URL}">${ctaLabel}</a>
+      </div>
+    </div>
+    <div class="footer">Made with <a href="${APP_STORE_URL}">Draw Up</a> — step inside your child's drawing.</div>
   </div>
-  <script>
-    // Optional: Auto-redirect to app if not a crawler
-    // const isCrawler = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
-    // if (!isCrawler) {
-    //   window.location.href = "${redirectUrl}";
-    // }
-  </script>
 </body>
 </html>
 `

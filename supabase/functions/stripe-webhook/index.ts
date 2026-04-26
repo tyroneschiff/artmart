@@ -133,7 +133,7 @@ async function sendPrintConfirmationEmail(order: any) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Draw Up <hello@drawup.art>',
+      from: 'Draw Up <hello@drawup.ink>',
       to: [email],
       subject,
       html: `
@@ -209,7 +209,7 @@ async function sendDigitalDownloadEmail(order: any, signedUrl: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Draw Up <hello@drawup.art>',
+      from: 'Draw Up <hello@drawup.ink>',
       to: [email],
       subject: '✨ Your digital artwork is ready!',
       html: `
@@ -256,7 +256,7 @@ async function sendDigitalGiftEmail(order: any, signedUrl: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Draw Up <hello@drawup.art>',
+      from: 'Draw Up <hello@drawup.ink>',
       to: [order.gift_recipient_email],
       subject: '🎁 You have a gift! ✨',
       html: `
@@ -305,7 +305,7 @@ async function sendGiftEmail(order: any) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Draw Up <hello@drawup.art>',
+      from: 'Draw Up <hello@drawup.ink>',
       to: [order.gift_recipient_email],
       subject: '✨ A gift is coming!',
       html: `

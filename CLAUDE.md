@@ -7,7 +7,7 @@ Parents photograph their children's artwork, AI transforms it into a vivid scene
 ## Core user flows
 
 1. **Create** — Snap photo → AI describes & transforms → name & publish piece
-2. **Share** — Each child gets a gallery link (drawup.art/store/emma) parents send to family
+2. **Share** — Each child gets a gallery link (drawup.ink/store/emma) parents send to family
 3. **Purchase** — Family visits link, buys digital download
 4. **Discover** — Browse all galleries, vote on pieces, most-loved rise in ranking
 5. **Social** — Share to WhatsApp/iMessage; every piece has a public URL with OG preview
@@ -122,7 +122,7 @@ Aesthetic: ucals.com layout discipline + tincan.kids warmth. Premium but approac
 - [x] Credits system — spend on transform, refund on failure
 - [x] Comments with Claude Haiku moderation
 - [ ] Gallery accessible via public shareable URL (web routes not deployed)
-- [ ] Landing page live on drawup.art
+- [ ] Landing page live on drawup.ink
 - [ ] Physical print flow verified end-to-end (Printful account + variant ID)
 - [ ] Android APK deployable via EAS Build
 
@@ -380,7 +380,7 @@ The most dangerous bugs look like success but do nothing:
 
 **Pending:**
 - [ ] Grandparent guest checkout — buy from gallery without login
-- [ ] Web gallery deployment — drawup.art domain + public routes
+- [ ] Web gallery deployment — drawup.ink domain + public routes
 - [ ] OG meta tags for piece/gallery public URLs
 
 ---

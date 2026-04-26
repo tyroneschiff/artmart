@@ -168,7 +168,7 @@ export default function MyStoresScreen() {
             onChangeText={setSlug}
             autoCapitalize="none"
           />
-          {slug ? <Text style={styles.slugPreview}>drawup.art/store/{slug}</Text> : null}
+          {slug ? <Text style={styles.slugPreview}>drawup.ink/store/{slug}</Text> : null}
           <TouchableOpacity
             style={[styles.button, (!childName || !slug) && styles.buttonDisabled]}
             onPress={() => createStore.mutate()}

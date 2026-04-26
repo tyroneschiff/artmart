@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.transform-artwork]
 verify_jwt = false
+
+[functions.serve-og-tags]
+verify_jwt = false
+
+[functions.tts]
+verify_jwt = false

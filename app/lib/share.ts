@@ -31,7 +31,7 @@ export function buildPieceShareMessage(title: string, childName: string, pieceId
   return {
     title: `Step inside ${childName}'s world — ${title}`,
     message: `${childName} imagined a whole world and called it "${title}". Come take a look 🌱`,
-    url: `https://drawup.art/piece/${pieceId}`,
+    url: `https://drawup.ink/piece/${pieceId}`,
   }
 }
 
@@ -39,6 +39,6 @@ export function buildStoreShareMessage(childName: string, slug: string): SharePa
   return {
     title: `Step inside ${childName}'s imagination`,
     message: `${childName} has been building worlds — take a walk through them here 🌱`,
-    url: `https://drawup.art/store/${slug}`,
+    url: `https://drawup.ink/store/${slug}`,
   }
 }

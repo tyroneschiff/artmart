@@ -128,7 +128,7 @@ export default function ProfileScreen() {
           </View>
           <View style={[styles.row, styles.rowBorder]}>
             <Text style={styles.rowLabel}>Support</Text>
-            <Text style={styles.rowValue}>hello@drawup.art</Text>
+            <Text style={styles.rowValue}>hello@drawup.ink</Text>
           </View>
         </View>
       </View>
