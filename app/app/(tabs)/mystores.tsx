@@ -211,13 +211,13 @@ const styles = StyleSheet.create({
   storeMeta: { ...type.label, marginTop: 3, fontSize: 12 },
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   upsellCard: {
-    backgroundColor: colors.dangerBg,
+    backgroundColor: colors.goldLight,
     borderRadius: radius.md,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: colors.dangerBorder,
+    borderColor: colors.goldMid,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -226,14 +226,14 @@ const styles = StyleSheet.create({
   upsellTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.dangerText,
+    color: colors.goldDark,
     marginBottom: 2,
     letterSpacing: -0.3,
   },
   upsellMessage: {
     fontSize: 13,
-    color: colors.dangerText,
-    opacity: 0.8,
+    color: colors.goldDark,
+    opacity: 0.85,
     lineHeight: 18,
   },
   upsellBtn: {

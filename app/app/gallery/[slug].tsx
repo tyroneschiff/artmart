@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
 import { useQuery } from '@tanstack/react-query'
 import { GallerySkeleton } from '../../components/Skeleton'
 import { supabase } from '../../lib/supabase'
@@ -74,6 +75,7 @@ export default function StoreScreen() {
     }
 
     track('original_saved', { storeId: data.store.id, metadata: { count: result.saved, total: result.total } })
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
 
     Alert.alert(
       result.saved === result.total ? 'Saved to Photos ✨' : 'Mostly saved',

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput, Modal, Dimensions, StatusBar } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
@@ -49,6 +51,7 @@ async function fetchComments(pieceId: string): Promise<Comment[]> {
 
 export default function PieceScreen() {
   const { id, vote } = useLocalSearchParams<{ id: string; vote?: string }>()
+  const insets = useSafeAreaInsets()
   const session = useAuthStore((s) => s.session)
   const queryClient = useQueryClient()
   const autoVoteFired = useRef(false)
@@ -92,6 +95,7 @@ export default function PieceScreen() {
         queryClient.invalidateQueries({ queryKey: ['discover'] })
         queryClient.invalidateQueries({ queryKey: ['vote', id, session?.user.id] })
         track('vote_cast', { pieceId: id })
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
       },
       onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })
@@ -340,7 +344,11 @@ export default function PieceScreen() {
         <StatusBar barStyle="light-content" />
         <TouchableOpacity style={styles.lightboxBackdrop} activeOpacity={1} onPress={() => setLightboxUri(null)}>
           <Image source={{ uri: lightboxUri || '' }} style={styles.lightboxImage} resizeMode="contain" />
-          <TouchableOpacity style={styles.lightboxClose} onPress={() => setLightboxUri(null)} hitSlop={12}>
+          <TouchableOpacity
+            style={[styles.lightboxClose, { top: insets.top + 12 }]}
+            onPress={() => setLightboxUri(null)}
+            hitSlop={12}
+          >
             <Ionicons name="close" size={22} color={colors.white} />
           </TouchableOpacity>
         </TouchableOpacity>
@@ -382,7 +390,7 @@ const styles = StyleSheet.create({
   descriptionText: { fontSize: 15, color: colors.mid, lineHeight: 23, marginBottom: 14, fontWeight: '500' },
   lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
-  lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  lightboxClose: { position: 'absolute', right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 0 },
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },

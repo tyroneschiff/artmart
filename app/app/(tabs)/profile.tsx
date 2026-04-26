@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
 import { router } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
@@ -118,6 +119,7 @@ export default function ProfileScreen() {
     }
 
     track('original_saved', { metadata: { scope: 'all', count: result.saved, total: result.total } })
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
 
     Alert.alert(
       result.saved === result.total ? 'Saved to Photos ✨' : 'Mostly saved',

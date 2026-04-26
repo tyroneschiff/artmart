@@ -1,5 +1,6 @@
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
 import { useState, useEffect } from 'react'
 import { DiscoverSkeleton } from '../../components/Skeleton'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -91,6 +92,7 @@ export default function DiscoverScreen() {
       setVotedIds((prev) => new Set([...prev, pieceId]))
       setVotingIds((prev) => { const next = new Set(prev); next.delete(pieceId); return next })
       queryClient.invalidateQueries({ queryKey: ['discover'] })
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
     },
     onError: (_, pieceId) => {
       setVotingIds((prev) => { const next = new Set(prev); next.delete(pieceId); return next })

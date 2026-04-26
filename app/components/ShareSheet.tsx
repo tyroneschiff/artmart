@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from 'expo-haptics'
 import { colors } from '../lib/theme'
 import { SharePayload, shareToWhatsApp } from '../lib/share'
 import { track } from '../lib/analytics'
@@ -35,6 +36,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
         url: payload!.url,
       })
       track('share_completed', { ...trackProps, metadata: { channel: 'native' } })
+      Haptics.selectionAsync().catch(() => {})
     } catch (e: any) {
       Alert.alert('Share failed', e?.message || 'Could not open share sheet')
     }
@@ -44,6 +46,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
   async function handleWhatsApp() {
     onClose()
     track('share_completed', { ...trackProps, metadata: { channel: 'whatsapp' } })
+    Haptics.selectionAsync().catch(() => {})
     await shareToWhatsApp(`${payload!.message}\n${payload!.url}`)
   }
 
@@ -54,6 +57,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
       Clipboard.setString(payload!.url)
     }
     track('share_completed', { ...trackProps, metadata: { channel: 'copy' } })
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
     onClose()
     Alert.alert('Copied!', 'Link copied to clipboard.')
   }
