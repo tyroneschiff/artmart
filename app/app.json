@@ -28,7 +28,7 @@
     "ios": {
       "bundleIdentifier": "art.drawup.app",
       "supportsTablet": false,
-      "buildNumber": "18",
+      "buildNumber": "19",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
