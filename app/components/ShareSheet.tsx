@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share, InteractionManager } from 'react-native'
 import { colors } from '../lib/theme'
-import { SharePayload, shareToWhatsApp, shareToSMS } from '../lib/share'
+import { SharePayload, shareToWhatsApp } from '../lib/share'
 
 type Props = {
   visible: boolean
@@ -13,9 +13,20 @@ type Props = {
 export default function ShareSheet({ visible, payload, onClose }: Props) {
   if (!payload) return null
 
-  async function handleMessages() {
+  async function handleNativeShare() {
     onClose()
-    await shareToSMS(`${payload!.message}\n${payload!.url}`)
+    // Wait for modal close animation before invoking system sheet — otherwise iOS cancels it.
+    InteractionManager.runAfterInteractions(() => {
+      setTimeout(() => {
+        Share.share({
+          title: payload!.title,
+          message: payload!.message,
+          url: payload!.url,
+        }).catch((e) => {
+          Alert.alert('Could not open share sheet', e.message)
+        })
+      }, 350)
+    })
   }
 
   async function handleWhatsApp() {
@@ -42,11 +53,11 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
         <Text style={styles.url} numberOfLines={1}>{payload.url}</Text>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.action} onPress={handleMessages}>
+          <TouchableOpacity style={styles.action} onPress={handleNativeShare}>
             <View style={[styles.actionIcon, { backgroundColor: '#E5F4FF' }]}>
-              <Text style={styles.actionEmoji}>💬</Text>
+              <Text style={styles.actionEmoji}>↑</Text>
             </View>
-            <Text style={styles.actionLabel}>Messages</Text>
+            <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.action} onPress={handleWhatsApp}>
