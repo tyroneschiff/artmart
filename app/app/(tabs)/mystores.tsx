@@ -73,7 +73,8 @@ export default function MyStoresScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Failed to load galleries</Text>
+        <Text style={styles.errorTitle}>That didn't load</Text>
+        <Text style={styles.errorText}>Check your connection and try again.</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
           <Text style={styles.retryBtnText}>Try again</Text>
         </TouchableOpacity>
@@ -136,8 +137,8 @@ export default function MyStoresScreen() {
             <View style={styles.emptyPortal}>
               <Text style={styles.emptyIcon}>✨</Text>
             </View>
-            <Text style={styles.emptyTitle}>Step inside their imagination</Text>
-            <Text style={styles.emptyBody}>Create a dedicated space for each child to share the worlds they've imagined through their art.</Text>
+            <Text style={styles.emptyTitle}>One gallery per kid</Text>
+            <Text style={styles.emptyBody}>Each child gets their own space. Family can visit anytime.</Text>
             <TouchableOpacity style={styles.emptyBtn} onPress={() => setModalVisible(true)}>
               <Text style={styles.emptyBtnText}>Create first gallery</Text>
             </TouchableOpacity>
@@ -253,7 +254,8 @@ const styles = StyleSheet.create({
   emptyBody: { ...type.body, textAlign: 'center', marginBottom: 32 },
   emptyBtn: { ...btn.primary, paddingHorizontal: 32 },
   emptyBtnText: { ...btn.primaryText },
-  errorText: { ...type.body, marginBottom: 16 },
+  errorTitle: { ...type.h2, fontSize: 22, marginBottom: 6, textAlign: 'center' },
+  errorText: { ...type.body, marginBottom: 20, textAlign: 'center', fontSize: 14 },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
   modal: { flex: 1, padding: 28, paddingTop: 52, backgroundColor: colors.cream },

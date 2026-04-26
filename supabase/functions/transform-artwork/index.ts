@@ -155,13 +155,22 @@ The "prompt" goes to a high-end AI image model (Flux) that will render this worl
 Your prompt MUST:
 1. Be extremely descriptive, evocative, and visually rich (at least 60–100 words). Use strong adjectives and explicitly specify lighting, texture, camera angle, and atmosphere.
 2. Describe the scene as a living world, not a drawing being redone. What's happening right now? Who's there? What time of day, what's the light like, what's the feeling in the air?
-3. Pick ONE specific warm illustration style that fits the scene's spirit — e.g. "soft dreamlike watercolor with glowing light and atmospheric haze", "warm storybook illustration with confident ink outlines and rich gouache fills", "twilight pastel palette with soft painterly texture", "bright saturated picture-book spread with crisp shapes and luminous color". Commit to it.
-4. Keep the child's key choices central and recognizable — the characters stay in the same places, the colors stay as the dominant palette, the sun or moon or landmarks stay where placed.
-5. Full bleed edge-to-edge composition filling the frame, no paper edges, no borders, no scan artifacts, creases removed, smooth clean surface.
-6. End exactly with: "warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches".
+3. Honor the child's hand. The output should still feel made by — or at least true to — a child. Keep wobbly lines, naive proportions, irregular shapes, and slightly off geometry visible. Do NOT over-perfect anatomy, foreshortening, or symmetry. The result should feel hand-rendered, not polished commercial art. Avoid: perfect circles, hyper-detailed faces, technical accuracy, sterile gradients.
+4. Pick ONE specific warm illustration style that fits the scene's spirit — e.g.
+   - "soft dreamlike watercolor with glowing light and atmospheric haze, slightly bleeding pigments"
+   - "warm storybook illustration with confident wobbly ink outlines and rich gouache fills"
+   - "twilight pastel palette with soft painterly texture and hand-smudged color"
+   - "bright saturated picture-book spread with crisp shapes and luminous color"
+   - "matte gouache spread, deep cool palette, dusk atmosphere, visible brushwork"
+   - "sun-bleached pastel painted on warm paper, hand-drawn linework with imperfect edges"
+   - "vintage paperback illustration, soft halftone, muted yet glowing, slightly faded ink"
+   Commit to it.
+5. Keep the child's key choices central and recognizable — the characters stay in the same places, the colors stay as the dominant palette, the sun or moon or landmarks stay where placed.
+6. Full bleed edge-to-edge composition filling the frame, no paper edges, no borders, no scan artifacts, creases removed, smooth clean surface.
+7. End exactly with: "warm hand-rendered storybook illustration, naive charm preserved, vivid color, soft texture, 8k resolution, ready for full-screen viewing on phone."
 
 Example:
-{"description":"That dragon is right next to the cozy cottage, and the sun is smiling. What an awesome place you made.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. Rendered as a breathtaking, warm storybook illustration with confident ink linework and incredibly rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and incredibly detailed. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm richly detailed storybook illustration, vivid color, crisp detail, 8k resolution, masterpiece, ready to print at 11x14 inches."}`,
+{"description":"That dragon is right next to the cozy cottage, and the sun is smiling. What an awesome place you made.","prompt":"Step inside this imagined world: a friendly dragon guarding a cozy cottage at the heart of a wildflower meadow, with a smiling golden sun glowing from the corner of the sky. It's mid-morning, the air is warm and drowsy, soft cinematic sunlight catches on every delicate petal, and the cottage windows glow softly from within. The dragon's body is slightly lumpy, his eyes a bit lopsided, the cottage windows wobble — preserving the original drawing's joyful imperfection. Rendered as a breathtaking, warm storybook illustration with confident wobbly ink linework and rich gouache fills — buttercup yellow, coral, sage green, warm terracotta. The atmosphere is magical, nostalgic, and lovingly hand-rendered. Full bleed edge-to-edge composition filling the entire frame, no paper edges or borders, creases and scan artifacts removed, smooth clean surface. warm hand-rendered storybook illustration, naive charm preserved, vivid color, soft texture, 8k resolution, ready for full-screen viewing on phone."}`,
           cache_control: { type: 'ephemeral' },
         }],
         messages: [{

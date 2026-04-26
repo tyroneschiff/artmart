@@ -135,7 +135,8 @@ export default function StoreScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Failed to load gallery</Text>
+        <Text style={styles.errorTitle}>That didn't load</Text>
+        <Text style={styles.errorText}>Check your connection and try again.</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
           <Text style={styles.retryBtnText}>Try again</Text>
         </TouchableOpacity>
@@ -209,8 +210,20 @@ export default function StoreScreen() {
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>✨</Text>
-            <Text style={styles.emptyTitle}>A world yet to be built</Text>
-            <Text style={styles.emptyBody}>{store.child_name} is still dreaming up their first world. Check back soon to step inside.</Text>
+            {isOwner ? (
+              <>
+                <Text style={styles.emptyTitle}>{store.child_name}'s first world is waiting</Text>
+                <Text style={styles.emptyBody}>Snap a photo of one of their drawings to start.</Text>
+                <TouchableOpacity style={styles.emptyCta} onPress={() => router.push('/(tabs)/create')}>
+                  <Text style={styles.emptyCtaText}>Create the first one</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.emptyTitle}>Just getting started</Text>
+                <Text style={styles.emptyBody}>{store.child_name} is dreaming up their first world. Check back soon.</Text>
+              </>
+            )}
           </View>
         }
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -273,9 +286,12 @@ const styles = StyleSheet.create({
   title: { ...type.h3, fontSize: 13 },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { ...type.h2, fontSize: 18, marginBottom: 8 },
-  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center' },
-  errorText: { ...type.body, marginBottom: 16 },
+  emptyTitle: { ...type.h2, fontSize: 20, marginBottom: 8, textAlign: 'center' },
+  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center', marginBottom: 24 },
+  emptyCta: { ...btn.primary, paddingHorizontal: 28, paddingVertical: 14 },
+  emptyCtaText: { ...btn.primaryText, fontSize: 15 },
+  errorTitle: { ...type.h2, fontSize: 22, marginBottom: 6, textAlign: 'center' },
+  errorText: { ...type.body, marginBottom: 20, textAlign: 'center', fontSize: 14 },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-start', paddingTop: 220, paddingHorizontal: 16 },

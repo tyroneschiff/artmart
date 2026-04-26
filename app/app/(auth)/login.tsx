@@ -69,8 +69,10 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
         <View style={styles.logoWrap}>
-          <Text style={styles.logo}>draw up</Text>
-          <Text style={styles.tagline}>Step inside your child's imagination.</Text>
+          <Text style={styles.logo}>
+            draw <Text style={styles.logoAccent}>up</Text>
+          </Text>
+          <Text style={styles.tagline}>Step inside your child's drawing.</Text>
         </View>
 
         <View style={styles.form}>
@@ -106,11 +108,19 @@ export default function LoginScreen() {
             <Text style={styles.buttonText}>{loading ? 'Loading…' : mode === 'login' ? 'Sign in' : 'Create account'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-            <Text style={styles.toggle}>
-              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          <TouchableOpacity style={styles.toggleBtn} onPress={() => setMode(mode === 'login' ? 'signup' : 'login')}>
+            <Text style={styles.toggleText}>
+              {mode === 'login' ? (
+                <>Don't have an account? <Text style={styles.toggleAccent}>Sign up</Text></>
+              ) : (
+                <>Already have an account? <Text style={styles.toggleAccent}>Sign in</Text></>
+              )}
             </Text>
           </TouchableOpacity>
+
+          <Text style={styles.fineprint}>
+            Free to try · Your first three drawings are on us
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -119,10 +129,11 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
-  inner: { flex: 1, justifyContent: 'center', padding: 28, minHeight: '100%' },
-  logoWrap: { alignItems: 'center', marginBottom: 52 },
-  logo: { fontSize: 42, fontWeight: '900', color: colors.dark, letterSpacing: -2, marginBottom: 8 },
-  tagline: { fontSize: 16, color: colors.muted, fontWeight: '500' },
+  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 56, minHeight: '100%' },
+  logoWrap: { alignItems: 'center', marginBottom: 56 },
+  logo: { fontSize: 48, fontWeight: '900', color: colors.dark, letterSpacing: -2.5, marginBottom: 14 },
+  logoAccent: { color: colors.gold },
+  tagline: { fontSize: 17, color: colors.mid, fontWeight: '500', textAlign: 'center', letterSpacing: -0.3 },
   form: { gap: 12 },
   input: {
     backgroundColor: colors.white,
@@ -136,11 +147,14 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.dark,
     borderRadius: 100,
-    padding: 16,
+    paddingVertical: 17,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  toggle: { color: colors.muted, textAlign: 'center', fontSize: 14, marginTop: 8 },
+  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
+  toggleBtn: { paddingVertical: 14, alignItems: 'center' },
+  toggleText: { color: colors.mid, textAlign: 'center', fontSize: 14, fontWeight: '500' },
+  toggleAccent: { color: colors.gold, fontWeight: '700' },
+  fineprint: { textAlign: 'center', color: colors.muted, fontSize: 13, fontWeight: '500', marginTop: 4 },
 })

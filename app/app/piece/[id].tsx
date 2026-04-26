@@ -174,15 +174,26 @@ export default function PieceScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={type.body}>Failed to load world</Text>
-        <TouchableOpacity style={[btn.primary, { marginTop: 16, paddingHorizontal: 24 }]} onPress={() => refetch()}>
+        <Text style={[type.h2, { fontSize: 22, marginBottom: 6, textAlign: 'center' }]}>That didn't load</Text>
+        <Text style={[type.body, { fontSize: 14, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32 }]}>
+          Check your connection and give it another go.
+        </Text>
+        <TouchableOpacity style={[btn.primary, { paddingHorizontal: 28, paddingVertical: 14 }]} onPress={() => refetch()}>
           <Text style={btn.primaryText}>Try again</Text>
         </TouchableOpacity>
       </View>
     )
   }
 
-  if (!piece) return <View style={styles.center}><Text style={type.body}>Not found.</Text></View>
+  if (!piece) return (
+    <View style={styles.center}>
+      <Text style={[type.h2, { fontSize: 22, marginBottom: 6 }]}>Can't find this world</Text>
+      <Text style={[type.body, { fontSize: 14, marginBottom: 20 }]}>It may have been removed.</Text>
+      <TouchableOpacity style={[btn.primary, { paddingHorizontal: 28, paddingVertical: 14 }]} onPress={() => router.back()}>
+        <Text style={btn.primaryText}>Go back</Text>
+      </TouchableOpacity>
+    </View>
+  )
 
   return (
     <>

@@ -8,6 +8,9 @@ import ConfettiCannon from 'react-native-confetti-cannon'
 import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as ImageManipulator from 'expo-image-manipulator'
+import * as Haptics from 'expo-haptics'
+import { Ionicons } from '@expo/vector-icons'
+import { Dimensions } from 'react-native'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
@@ -269,6 +272,8 @@ export default function CreateScreen() {
       setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
       setStep('success')
       track('piece_published', { pieceId, storeId: selectedStore?.id })
+      // Reward the magic moment with a soft physical pulse.
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   })
@@ -278,7 +283,13 @@ export default function CreateScreen() {
   if (step === 'success' && sharePayload) {
     return (
       <View style={[styles.container, styles.successContainer]}>
-        <ConfettiCannon count={200} origin={{x: -10, y: 0}} fadeOut={true} />
+        <ConfettiCannon
+          count={120}
+          origin={{ x: Dimensions.get('window').width / 2, y: -20 }}
+          explosionSpeed={350}
+          fallSpeed={2800}
+          fadeOut={true}
+        />
         <ScrollView contentContainerStyle={styles.successContent}>
           <View style={[card, styles.successCard]}>
             <Image source={{ uri: transformedUri! }} style={styles.successImage} />
@@ -336,14 +347,17 @@ export default function CreateScreen() {
 
       {step === 'pick' && (
         <View style={styles.pickArea}>
-          <Text style={[type.body, { marginBottom: 16, textAlign: 'center', color: colors.mid }]}>Photograph your child's artwork</Text>
-          <TouchableOpacity style={[btn.primary, { padding: 24, borderRadius: 20, gap: 8 }]} onPress={takePhoto}>
-            <Text style={{ fontSize: 32 }}>📷</Text>
-            <Text style={btn.primaryText}>Take Photo</Text>
+          <Text style={styles.pickHeading}>Photograph your child's drawing</Text>
+          <Text style={styles.pickSubhead}>It works on any drawing — fridge, table, school folder.</Text>
+
+          <TouchableOpacity style={styles.takePhotoBtn} onPress={takePhoto} activeOpacity={0.85}>
+            <Ionicons name="camera" size={40} color={colors.white} />
+            <Text style={styles.takePhotoLabel}>Take Photo</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[btn.secondary, { padding: 24, borderRadius: 20, gap: 8 }]} onPress={pickImage}>
-            <Text style={{ fontSize: 32 }}>🖼️</Text>
-            <Text style={btn.secondaryText}>Choose from Library</Text>
+
+          <TouchableOpacity style={styles.libraryBtn} onPress={pickImage} activeOpacity={0.7}>
+            <Ionicons name="images-outline" size={18} color={colors.mid} />
+            <Text style={styles.libraryLabel}>or pick from your library</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -392,9 +406,11 @@ export default function CreateScreen() {
         <View>
           <View style={styles.compareRow}>
             <View style={styles.compareItem}>
+              <Text style={styles.compareLabel}>The drawing</Text>
               <Image source={{ uri: imageUri! }} style={styles.compareImage} />
             </View>
             <View style={styles.compareItem}>
+              <Text style={[styles.compareLabel, { color: colors.goldDark }]}>The world</Text>
               <Image source={{ uri: transformedUri }} style={styles.compareImage} />
             </View>
           </View>
@@ -477,7 +493,33 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingTop: 56 },
   header: { fontSize: 32, fontWeight: '900', color: colors.dark, letterSpacing: -1 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  pickArea: { gap: 16 },
+  pickArea: { paddingTop: 24, alignItems: 'center' },
+  pickHeading: { fontSize: 22, fontWeight: '800', color: colors.dark, letterSpacing: -0.6, textAlign: 'center', marginBottom: 6 },
+  pickSubhead: { fontSize: 14, color: colors.mid, textAlign: 'center', marginBottom: 32 },
+  takePhotoBtn: {
+    width: '100%',
+    backgroundColor: colors.dark,
+    borderRadius: 24,
+    paddingVertical: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    shadowColor: colors.dark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  takePhotoLabel: { color: colors.white, fontSize: 18, fontWeight: '800', letterSpacing: -0.4 },
+  libraryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+  libraryLabel: { color: colors.mid, fontSize: 14, fontWeight: '600' },
   prompt: { fontSize: 15, color: colors.mid, marginBottom: 16, textAlign: 'center' },
   bigBtn: { backgroundColor: colors.dark, borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 },
   bigBtnSecondary: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
@@ -531,7 +573,7 @@ const styles = StyleSheet.create({
   webNoticeText: { color: colors.goldDark, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   compareRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   compareItem: { flex: 1 },
-  compareLabel: { fontSize: 12, color: colors.muted, marginBottom: 4, textAlign: 'center', fontWeight: '600' },
+  compareLabel: { fontSize: 11, color: colors.muted, marginBottom: 8, textAlign: 'center', fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
   compareImage: { width: '100%', aspectRatio: 1, borderRadius: 12 },
   input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, padding: 16, marginBottom: 12, fontSize: 16, color: colors.dark, backgroundColor: colors.white },
   storePicker: { borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, padding: 16, marginBottom: 16, backgroundColor: colors.white },

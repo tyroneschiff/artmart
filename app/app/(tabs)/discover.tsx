@@ -101,7 +101,8 @@ export default function DiscoverScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Failed to load worlds</Text>
+        <Text style={styles.errorTitle}>That didn't load</Text>
+        <Text style={styles.errorText}>Check your connection and give it another go.</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
           <Text style={styles.retryBtnText}>Try again</Text>
         </TouchableOpacity>
@@ -238,7 +239,8 @@ const styles = StyleSheet.create({
   emptyBody: { ...type.body, fontSize: 14, textAlign: 'center', marginBottom: 24 },
   emptyCta: { ...btn.primary, paddingHorizontal: 28, paddingVertical: 14 },
   emptyCtaText: { ...btn.primaryText, fontSize: 15 },
-  errorText: { ...type.body, marginBottom: 16 },
+  errorTitle: { ...type.h2, fontSize: 22, marginBottom: 6, textAlign: 'center' },
+  errorText: { ...type.body, marginBottom: 20, textAlign: 'center', fontSize: 14 },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
 })
