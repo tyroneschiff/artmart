@@ -254,6 +254,7 @@ The most dangerous bugs look like success but do nothing:
 **At the end of every response:**
 1. Update `## Current task queue` — what just completed, what's next, ≤8 bullets total
 2. If anything was learned from real device use this session, prepend a dated entry to `## Recent session notes`
+3. **Always close with a "Next most optimal move" line.** Single concrete action that will most directly turn this experimental app into a profitable business — not a list, not a roadmap. Apply the Decision filter and the Acquisition strategy ranking. If two moves are tied, pick the one that unlocks measurement (instrumentation, share telemetry, dad-feedback loop) over the one that polishes existing surface. The line must be specific enough to act on within 24 hours — file path or domain action, not "think about pricing."
 
 **Response style:** Maximum signal, minimum words. Code over prose.
 
