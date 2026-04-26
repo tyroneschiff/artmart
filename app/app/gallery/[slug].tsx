@@ -59,7 +59,7 @@ export default function StoreScreen() {
 
     setExportProgress({ done: 0, total: piecesWithOriginals.length })
     let saved = 0
-    let firstAsset: MediaLibrary.Asset | null = null
+    const assets: MediaLibrary.Asset[] = []
 
     for (const piece of piecesWithOriginals) {
       try {
@@ -67,7 +67,7 @@ export default function StoreScreen() {
         const localUri = FileSystem.documentDirectory + filename
         await FileSystem.downloadAsync(piece.original_image_url, localUri)
         const asset = await MediaLibrary.createAssetAsync(localUri)
-        if (!firstAsset) firstAsset = asset
+        assets.push(asset)
         saved++
         setExportProgress({ done: saved, total: piecesWithOriginals.length })
       } catch (e) {
@@ -76,16 +76,20 @@ export default function StoreScreen() {
     }
 
     // Group everything into a "Draw Up" album so they're easy to find
-    if (firstAsset) {
+    if (assets.length > 0) {
       try {
-        let album = await MediaLibrary.getAlbumAsync('Draw Up')
-        if (!album) {
-          album = await MediaLibrary.createAlbumAsync('Draw Up', firstAsset, false)
+        const existing = await MediaLibrary.getAlbumAsync('Draw Up')
+        if (!existing) {
+          // createAlbumAsync uses the first asset to seed the album
+          const album = await MediaLibrary.createAlbumAsync('Draw Up', assets[0], false)
+          if (assets.length > 1) {
+            await MediaLibrary.addAssetsToAlbumAsync(assets.slice(1), album, false)
+          }
         } else {
-          await MediaLibrary.addAssetsToAlbumAsync([firstAsset], album, false)
+          await MediaLibrary.addAssetsToAlbumAsync(assets, existing, false)
         }
       } catch {
-        // Album creation isn't critical — assets are still in the camera roll
+        // Album grouping isn't critical — assets are still in the camera roll
       }
     }
 
@@ -149,14 +153,6 @@ export default function StoreScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {isOwner && data.pieces.length > 0 && (
-        <View style={styles.preserveBanner}>
-          <Text style={styles.preserveBannerText}>
-            Save every original drawing to your Photos before recycling the paper versions.
-          </Text>
-        </View>
-      )}
 
       <FlatList
         data={sortedPieces}
@@ -243,8 +239,6 @@ const styles = StyleSheet.create({
   shareBtnText: { ...btn.primaryText, fontSize: 13 },
   saveAllBtn: { backgroundColor: colors.white, borderRadius: 100, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
   saveAllBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
-  preserveBanner: { marginHorizontal: 20, marginBottom: 16, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.goldLight, borderRadius: 12, borderWidth: 1, borderColor: colors.goldMid },
-  preserveBannerText: { fontSize: 12, fontWeight: '600', color: colors.goldDark, lineHeight: 17, textAlign: 'center' },
   galleryHeader: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 12, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
   avatarText: { fontSize: 28, fontWeight: '900', color: colors.goldDark },

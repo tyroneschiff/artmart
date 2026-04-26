@@ -4,7 +4,6 @@ import { colors, type } from '../lib/theme'
 type Props = {
   imageUri: string
   childName?: string
-  pieceId?: string
   onPress?: () => void
 }
 

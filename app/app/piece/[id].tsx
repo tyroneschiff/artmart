@@ -193,8 +193,8 @@ export default function PieceScreen() {
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             {isOwner && (
-              <TouchableOpacity onPress={handleDelete} disabled={deleteMutation.isPending} style={styles.deleteBtn}>
-                <Text style={styles.deleteBtnText}>Delete</Text>
+              <TouchableOpacity onPress={handleDelete} disabled={deleteMutation.isPending} style={styles.iconBtn} hitSlop={8}>
+                <Text style={styles.iconBtnGlyph}>⌫</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity style={[btn.primary, { paddingVertical: 10, paddingHorizontal: 18 }]} onPress={() =>
@@ -209,33 +209,43 @@ export default function PieceScreen() {
           <Image source={{ uri: displayImageUrl || '' }} style={styles.mainImage} />
         </TouchableOpacity>
 
-        <View style={styles.titleRow}>
-          <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
-          <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/gallery/${piece.stores?.slug}`)}>
-            <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Gallery →</Text>
-          </TouchableOpacity>
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>{piece.title}</Text>
+
+          <View style={styles.metaRow}>
+            <TouchableOpacity style={styles.galleryChip} onPress={() => router.push(`/gallery/${piece.stores?.slug}`)} activeOpacity={0.75}>
+              <View style={styles.galleryAvatar}>
+                <Text style={styles.galleryAvatarText}>{piece.stores?.child_name?.[0]?.toUpperCase() ?? '?'}</Text>
+              </View>
+              <Text style={styles.galleryChipText}>{piece.stores?.child_name}'s Gallery</Text>
+              <Text style={styles.galleryChipArrow}>›</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.voteChip, hasVoted && styles.voteChipDone]}
+              onPress={() => {
+                if (!session) {
+                  router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}?vote=1` } })
+                } else if (!hasVoted) {
+                  voteMutation.mutate()
+                }
+              }}
+              disabled={voteMutation.isPending || hasVoted}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.voteChipText, hasVoted && styles.voteChipTextDone]}>
+                ♥ {piece.vote_count}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {piece.ai_description ? (
-          <>
-            <Text style={[type.body, { fontSize: 14, paddingHorizontal: 16, paddingBottom: 12, lineHeight: 22 }]}>{piece.ai_description}</Text>
-            <ReadAloudButton text={piece.ai_description} />
-          </>
+          <View style={styles.descriptionBlock}>
+            <Text style={styles.descriptionText}>{piece.ai_description}</Text>
+            <ReadAloudButton text={piece.ai_description} compact />
+          </View>
         ) : null}
-
-        <TouchableOpacity
-          style={[styles.voteBtn, hasVoted && styles.voteBtnDone]}
-          onPress={() => {
-            if (!session) {
-              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}?vote=1` } })
-            } else if (!hasVoted) {
-              voteMutation.mutate()
-            }
-          }}
-          disabled={voteMutation.isPending || hasVoted}
-        >
-          <Text style={styles.voteBtnText}>♥ {piece.vote_count} {piece.vote_count === 1 ? 'vote' : 'votes'}</Text>
-        </TouchableOpacity>
 
         <View style={styles.commentSection}>
           <Text style={[type.h3, { marginBottom: 16 }]}>Comments</Text>
@@ -297,7 +307,6 @@ export default function PieceScreen() {
         <PreservedDrawing
           imageUri={piece.original_image_url}
           childName={piece.stores?.child_name}
-          pieceId={id}
           onPress={() => setLightboxUri(piece.original_image_url)}
         />
       </ScrollView>
@@ -328,15 +337,25 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
-  titleRow: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12 },
-  storeBtn: { paddingBottom: 4 },
-  storeBtnText: { fontSize: 13, fontWeight: '700', color: colors.gold },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
+  iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  iconBtnGlyph: { fontSize: 16, color: colors.muted, lineHeight: 18 },
   mainImage: { width: '100%', aspectRatio: 1 },
-  voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
-  voteBtnDone: { opacity: 0.6 },
-  voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
+  titleBlock: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
+  title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5, color: colors.dark, lineHeight: 32, marginBottom: 14 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  galleryChip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6, paddingHorizontal: 8, paddingRight: 14, borderRadius: 100, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, flex: 1 },
+  galleryAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, alignItems: 'center', justifyContent: 'center' },
+  galleryAvatarText: { fontSize: 12, fontWeight: '900', color: colors.goldDark },
+  galleryChipText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
+  galleryChipArrow: { fontSize: 18, color: colors.muted, marginLeft: 4 },
+  voteChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 14, borderRadius: 100, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, minWidth: 60, justifyContent: 'center' },
+  voteChipDone: { opacity: 0.55 },
+  voteChipText: { fontSize: 13, fontWeight: '800', color: colors.goldDark, letterSpacing: -0.1 },
+  voteChipTextDone: { color: colors.goldDark },
+  descriptionBlock: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
+  descriptionText: { fontSize: 15, color: colors.mid, lineHeight: 23, marginBottom: 14, fontWeight: '500' },
   lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
   lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
