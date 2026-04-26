@@ -51,6 +51,21 @@ export default function StoreScreen() {
       return
     }
 
+    const count = piecesWithOriginals.length
+    const noun = count === 1 ? 'original' : 'originals'
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        `Save ${count} ${noun} to Photos?`,
+        'Just the drawings — the transformed worlds stay in the gallery.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Save', onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      )
+    })
+    if (!confirmed) return
+
     const { status } = await MediaLibrary.requestPermissionsAsync()
     if (status !== 'granted') {
       Alert.alert('Photos access needed', 'Please allow Photos access to save the originals.')

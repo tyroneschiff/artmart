@@ -191,18 +191,11 @@ export default function PieceScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.back}>‹</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            {isOwner && (
-              <TouchableOpacity onPress={handleDelete} disabled={deleteMutation.isPending} style={styles.iconBtn} hitSlop={8}>
-                <Text style={styles.iconBtnGlyph}>⌫</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={[btn.primary, { paddingVertical: 10, paddingHorizontal: 18 }]} onPress={() =>
-              setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
-            }>
-              <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={[btn.primary, { paddingVertical: 10, paddingHorizontal: 18 }]} onPress={() =>
+            setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
+          }>
+            <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity activeOpacity={0.9} onPress={() => displayImageUrl && setLightboxUri(displayImageUrl)}>
@@ -309,6 +302,19 @@ export default function PieceScreen() {
           childName={piece.stores?.child_name}
           onPress={() => setLightboxUri(piece.original_image_url)}
         />
+
+        {isOwner && (
+          <TouchableOpacity
+            style={styles.dangerZone}
+            onPress={handleDelete}
+            disabled={deleteMutation.isPending}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.dangerZoneText}>
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete this piece'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)} statusBarTranslucent>
@@ -339,8 +345,8 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
-  iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  iconBtnGlyph: { fontSize: 16, color: colors.muted, lineHeight: 18 },
+  dangerZone: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, alignItems: 'center' },
+  dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   mainImage: { width: '100%', aspectRatio: 1 },
   titleBlock: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
   title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5, color: colors.dark, lineHeight: 32, marginBottom: 14 },
@@ -354,13 +360,13 @@ const styles = StyleSheet.create({
   voteChipDone: { opacity: 0.55 },
   voteChipText: { fontSize: 13, fontWeight: '800', color: colors.goldDark, letterSpacing: -0.1 },
   voteChipTextDone: { color: colors.goldDark },
-  descriptionBlock: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
+  descriptionBlock: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   descriptionText: { fontSize: 15, color: colors.mid, lineHeight: 23, marginBottom: 14, fontWeight: '500' },
   lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
   lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
   lightboxCloseText: { color: colors.white, fontSize: 24, lineHeight: 28, fontWeight: '300' },
-  commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 16 },
+  commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 0 },
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
   postBtn: { paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },

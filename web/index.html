@@ -139,19 +139,18 @@
       margin: 16px auto 80px;
       padding: 0 28px;
     }
-    .slides { position: relative; min-height: 1px; }
+    .slides {
+      display: grid;
+      grid-template-areas: "stack";
+    }
     .slide {
+      grid-area: stack;
       opacity: 0;
-      visibility: hidden;
-      position: absolute;
-      inset: 0;
-      transition: opacity 1400ms cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 2200ms ease-in-out;
       pointer-events: none;
     }
     .slide.is-active {
       opacity: 1;
-      visibility: visible;
-      position: relative;
       pointer-events: auto;
     }
     .example-pair {
