@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" shape-rendering="geometricPrecision">
+  <!-- Dark cream backdrop, full bleed (no rounded corners — iOS adds the mask) -->
+  <rect width="1024" height="1024" fill="#1C1810"/>
+
+  <!-- Outer warm "stage" rectangle so the arch reads on small sizes -->
+  <rect x="120" y="120" width="784" height="784" rx="120" fill="#241D14"/>
+
+  <!-- Cream archway frame -->
+  <path d="M 232 760
+           L 232 460
+           A 280 280 0 0 1 792 460
+           L 792 760
+           Z"
+        fill="#FEFAF3"/>
+
+  <!-- Sky inside the arch (warm cream) -->
+  <path d="M 312 740
+           L 312 472
+           A 200 200 0 0 1 712 472
+           L 712 740
+           Z"
+        fill="#FDF0D5"/>
+
+  <!-- Sun: solid gold circle -->
+  <circle cx="512" cy="540" r="92" fill="#E8A020"/>
+
+  <!-- Sun glow halo (lighter gold, smaller circle on top for warmth) -->
+  <circle cx="512" cy="528" r="44" fill="#FFE8A6"/>
+
+  <!-- Horizon: warm gold band -->
+  <rect x="312" y="660" width="400" height="80" fill="#E8A020"/>
+
+  <!-- Crayon hill silhouette in warm dark gold -->
+  <path d="M 312 660
+           Q 412 632 512 660
+           Q 612 688 712 660
+           L 712 740
+           L 312 740 Z"
+        fill="#8B5E00"/>
+
+  <!-- Subtle base shadow under the doorway -->
+  <ellipse cx="512" cy="788" rx="220" ry="14" fill="#000" opacity="0.22"/>
+</svg>

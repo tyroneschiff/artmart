@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" shape-rendering="geometricPrecision">
+  <!-- Cream backdrop -->
+  <rect width="1200" height="630" fill="#FEFAF3"/>
+
+  <!-- Subtle warm tint band on the right where the arch lives -->
+  <rect x="700" y="0" width="500" height="630" fill="#F5EDD8"/>
+
+  <!-- Arch group, anchored on right side -->
+  <g transform="translate(820, 100)">
+    <!-- Cream arch frame on dark backdrop card -->
+    <rect x="-60" y="-60" width="380" height="510" rx="40" fill="#1C1810"/>
+    <!-- Outer cream archway -->
+    <path d="M 28 380
+             L 28 192
+             A 116 116 0 0 1 260 192
+             L 260 380
+             Z"
+          fill="#FEFAF3"/>
+    <!-- Inside the arch (warm sky) -->
+    <path d="M 60 366
+             L 60 196
+             A 84 84 0 0 1 228 196
+             L 228 366
+             Z"
+          fill="#FDF0D5"/>
+    <!-- Sun -->
+    <circle cx="144" cy="232" r="42" fill="#E8A020"/>
+    <circle cx="144" cy="225" r="20" fill="#FFE8A6"/>
+    <!-- Horizon -->
+    <rect x="60" y="304" width="168" height="62" fill="#E8A020"/>
+    <!-- Hill silhouette -->
+    <path d="M 60 304
+             Q 102 286 144 304
+             Q 186 322 228 304
+             L 228 366
+             L 60 366 Z"
+          fill="#8B5E00"/>
+  </g>
+
+  <!-- Wordmark + tagline on the left -->
+  <text x="80" y="160" font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="44" font-weight="900" fill="#1C1810" letter-spacing="-1.5">
+    draw <tspan fill="#E8A020">up</tspan>
+  </text>
+
+  <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="62" font-weight="900" fill="#1C1810" letter-spacing="-2">
+    Step inside your
+  </text>
+  <text x="80" y="362" font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="62" font-weight="900" fill="#1C1810" letter-spacing="-2">
+    <tspan>child's </tspan><tspan fill="#E8A020">drawing.</tspan>
+  </text>
+
+  <text x="80" y="430" font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="24" font-weight="500" fill="#6B5E4E" letter-spacing="-0.4">
+    AI brings it to life. A warm voice
+  </text>
+  <text x="80" y="464" font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="24" font-weight="500" fill="#6B5E4E" letter-spacing="-0.4">
+    reads it back to them by name.
+  </text>
+
+  <!-- CTA pill -->
+  <rect x="80" y="488" width="296" height="64" rx="32" fill="#1C1810"/>
+  <text x="228" y="529" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, Inter, Segoe UI, sans-serif"
+        font-size="20" font-weight="700" fill="#FEFAF3" letter-spacing="-0.2">
+    Try the iPhone beta →
+  </text>
+</svg>

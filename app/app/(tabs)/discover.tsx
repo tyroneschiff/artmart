@@ -134,7 +134,6 @@ export default function DiscoverScreen() {
                 <Text style={[styles.dropdownItemText, sort === opt.value && styles.dropdownItemTextActive]}>
                   {opt.icon} {opt.label}
                 </Text>
-                {sort === opt.value && <Text style={styles.dropdownCheck}>✓</Text>}
               </TouchableOpacity>
             ))}
           </View>
@@ -202,15 +201,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     alignSelf: 'flex-start',
-    backgroundColor: colors.goldLight,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.goldMid,
+    borderColor: colors.border,
     borderRadius: 100,
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 8,
   },
-  sortBtnText: { ...type.label, color: colors.goldDark, fontWeight: '700', fontSize: 13 },
-  sortCaret: { fontSize: 10, color: colors.goldDark, marginTop: 1 },
+  sortBtnText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
+  sortCaret: { fontSize: 11, color: colors.muted, marginTop: 1 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'flex-start', paddingTop: 140, paddingHorizontal: 20 },
   dropdown: {
     backgroundColor: colors.white,
@@ -218,23 +217,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
   },
-  dropdownItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
+  dropdownItem: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   dropdownItemActive: { backgroundColor: colors.goldLight },
-  dropdownItemText: { ...type.body, color: colors.dark, fontWeight: '600' },
+  dropdownItemText: { fontSize: 15, fontWeight: '600', color: colors.dark },
   dropdownItemTextActive: { color: colors.goldDark, fontWeight: '700' },
-  dropdownCheck: { color: colors.gold, fontWeight: '700', fontSize: 16 },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
   voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 4 },
-  voteBadgeDone: { opacity: 0.6 },
+  voteBadgeDone: { opacity: 0.92 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },
   title: { ...type.h3, fontSize: 13, letterSpacing: -0.2 },

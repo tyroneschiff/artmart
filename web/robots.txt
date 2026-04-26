@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Disallow internal/dynamic API endpoints from indexing
+Disallow: /api/
+
+Sitemap: https://drawup.ink/sitemap.xml
