@@ -3,8 +3,17 @@
 // No third-party cookies, no proxy chain — preview crawlers (iMessage, WhatsApp,
 // Slack, FB) get a clean HTML response with proper OG tags.
 
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://twwittitwwuuauhgrdaw.supabase.co"
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  "https://twwittitwwuuauhgrdaw.supabase.co"
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY
 const APP_STORE_URL = "https://apps.apple.com/us/app/draw-up/id6762963488"
 
 function escapeHtml(str) {
@@ -119,7 +128,27 @@ function renderHtml({ title, description, imageUrl, canonicalUrl, bodyHeadline, 
 }
 
 export default async function handler(req, res) {
-  const { type, id } = req.query
+  const { type, id, debug } = req.query
+
+  if (debug === "env") {
+    res.setHeader("Content-Type", "application/json")
+    return res.status(200).send(JSON.stringify({
+      hasSupabaseUrl: !!SUPABASE_URL,
+      supabaseUrlSource: process.env.SUPABASE_URL ? "SUPABASE_URL"
+        : process.env.NEXT_PUBLIC_SUPABASE_URL ? "NEXT_PUBLIC_SUPABASE_URL"
+        : process.env.EXPO_PUBLIC_SUPABASE_URL ? "EXPO_PUBLIC_SUPABASE_URL"
+        : process.env.VITE_SUPABASE_URL ? "VITE_SUPABASE_URL"
+        : "fallback-hardcoded",
+      hasAnonKey: !!SUPABASE_ANON_KEY,
+      anonKeySource: process.env.SUPABASE_ANON_KEY ? "SUPABASE_ANON_KEY"
+        : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+        : process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? "EXPO_PUBLIC_SUPABASE_ANON_KEY"
+        : process.env.VITE_SUPABASE_ANON_KEY ? "VITE_SUPABASE_ANON_KEY"
+        : "MISSING",
+      supabaseUrl: SUPABASE_URL,
+      anonKeyLength: SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.length : 0,
+    }))
+  }
 
   let payload = {
     title: "Draw Up — Step inside your child's drawing",
