@@ -40,15 +40,15 @@ export async function shareNative(payload: SharePayload): Promise<void> {
 export function buildPieceShareMessage(title: string, childName: string, pieceId: string): SharePayload {
   return {
     title: `Step inside ${childName}'s world — ${title}`,
-    message: `${childName} imagined a whole world and called it "${title}". Come take a look 🌱`,
+    message: `Step inside ${childName}'s world — "${title}" ✨`,
     url: `https://drawup.ink/piece/${pieceId}`,
   }
 }
 
 export function buildStoreShareMessage(childName: string, slug: string): SharePayload {
   return {
-    title: `Step inside ${childName}'s imagination`,
-    message: `${childName} has been building worlds — take a walk through them here 🌱`,
+    title: `Step inside ${childName}'s worlds`,
+    message: `Step inside ${childName}'s worlds. ✨`,
     url: `https://drawup.ink/store/${slug}`,
   }
 }

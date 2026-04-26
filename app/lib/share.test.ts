@@ -12,7 +12,7 @@ describe('share lib', () => {
 
   it('builds store share message correctly', () => {
     const payload = buildStoreShareMessage('Emma', 'emma-store')
-    expect(payload.title).toContain("Emma's imagination")
+    expect(payload.title).toContain("Emma's worlds")
     expect(payload.url).toBe('https://drawup.ink/store/emma-store')
   })
 
