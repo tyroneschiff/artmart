@@ -3,7 +3,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'
+const VOICE_ID = 'XB0fDUnXU5powFXDhCwa'
 const MODEL_ID = 'eleven_multilingual_v2'
 
 Deno.serve(async (req) => {
@@ -29,9 +29,9 @@ Deno.serve(async (req) => {
         text,
         model_id: MODEL_ID,
         voice_settings: {
-          stability: 0.45,
-          similarity_boost: 0.8,
-          style: 0.5,
+          stability: 0.4,
+          similarity_boost: 0.75,
+          style: 0.6,
           use_speaker_boost: true,
         },
       }),
