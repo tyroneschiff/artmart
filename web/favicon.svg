@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" shape-rendering="geometricPrecision">
-  <rect width="64" height="64" rx="14" fill="#1C1810"/>
-  <path d="M 14 50 L 14 32 A 18 18 0 0 1 50 32 L 50 50 Z" fill="#FEFAF3"/>
-  <path d="M 19 48 L 19 33 A 13 13 0 0 1 45 33 L 45 48 Z" fill="#FDF0D5"/>
-  <circle cx="32" cy="36" r="7" fill="#E8A020"/>
-  <circle cx="32" cy="34" r="3.4" fill="#FFE8A6"/>
-  <rect x="19" y="42" width="26" height="6" fill="#E8A020"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
+  <!-- Cream rounded square -->
+  <rect width="64" height="64" rx="14" fill="#FEFAF3"/>
+
+  <!-- Sun rays — 8 simple rounded strokes -->
+  <g stroke="#E8A020" stroke-width="3" stroke-linecap="round" fill="none">
+    <line x1="32" y1="9"  x2="32" y2="14"/>   <!-- top -->
+    <line x1="49" y1="15" x2="46" y2="19"/>   <!-- top-right -->
+    <line x1="55" y1="32" x2="50" y2="32"/>   <!-- right -->
+    <line x1="49" y1="49" x2="46" y2="45"/>   <!-- bottom-right -->
+    <line x1="32" y1="55" x2="32" y2="50"/>   <!-- bottom -->
+    <line x1="15" y1="49" x2="18" y2="45"/>   <!-- bottom-left -->
+    <line x1="9"  y1="32" x2="14" y2="32"/>   <!-- left -->
+    <line x1="15" y1="15" x2="18" y2="19"/>   <!-- top-left -->
+  </g>
+
+  <!-- Sun body -->
+  <circle cx="32" cy="32" r="14" fill="#E8A020"/>
+
+  <!-- Inner highlight -->
+  <ellipse cx="28" cy="29" rx="6" ry="4.5" fill="#FFE8A6" opacity="0.85"/>
 </svg>

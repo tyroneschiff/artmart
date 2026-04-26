@@ -1,44 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" shape-rendering="geometricPrecision">
-  <!-- Dark cream backdrop, full bleed (no rounded corners — iOS adds the mask) -->
-  <rect width="1024" height="1024" fill="#1C1810"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
+  <!-- Cream paper backdrop -->
+  <rect width="1024" height="1024" fill="#FEFAF3"/>
 
-  <!-- Outer warm "stage" rectangle so the arch reads on small sizes -->
-  <rect x="120" y="120" width="784" height="784" rx="120" fill="#241D14"/>
+  <!-- Subtle warm radial behind the sun, gives depth without busy-ness -->
+  <defs>
+    <radialGradient id="warm" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#FDF0D5" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FEFAF3" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#warm)"/>
 
-  <!-- Cream archway frame -->
-  <path d="M 232 760
-           L 232 460
-           A 280 280 0 0 1 792 460
-           L 792 760
+  <!-- Sun rays — slightly wobbly, hand-drawn feel via varying length/angle -->
+  <!-- Each ray is a rounded-cap stroke radiating from the center (512,512). -->
+  <g stroke="#E8A020" stroke-width="42" stroke-linecap="round" fill="none">
+    <!-- 12 rays: alternating long & short, slight wobble in angle for charm -->
+    <line x1="512" y1="200"  x2="512" y2="100"/>   <!-- top -->
+    <line x1="700" y1="245"  x2="754" y2="160"/>   <!-- top-right -->
+    <line x1="816" y1="408"  x2="908" y2="370"/>   <!-- right-upper -->
+    <line x1="816" y1="608"  x2="908" y2="650"/>   <!-- right-lower -->
+    <line x1="700" y1="780"  x2="754" y2="864"/>   <!-- bottom-right -->
+    <line x1="512" y1="828"  x2="512" y2="922"/>   <!-- bottom -->
+    <line x1="324" y1="780"  x2="270" y2="864"/>   <!-- bottom-left -->
+    <line x1="208" y1="608"  x2="116" y2="650"/>   <!-- left-lower -->
+    <line x1="208" y1="408"  x2="116" y2="370"/>   <!-- left-upper -->
+    <line x1="324" y1="245"  x2="270" y2="160"/>   <!-- top-left -->
+  </g>
+
+  <!-- Sun body — slightly wobbly circle drawn as a path for hand-feel -->
+  <path d="M 512 268
+           C 648 264, 760 372, 760 510
+           C 762 650, 656 762, 514 760
+           C 374 758, 264 650, 268 510
+           C 270 374, 376 270, 512 268
            Z"
-        fill="#FEFAF3"/>
+        fill="#E8A020"/>
 
-  <!-- Sky inside the arch (warm cream) -->
-  <path d="M 312 740
-           L 312 472
-           A 200 200 0 0 1 712 472
-           L 712 740
-           Z"
-        fill="#FDF0D5"/>
+  <!-- Inner warm highlight (gives the sun depth, like a child smudged the crayon harder) -->
+  <ellipse cx="468" cy="464" rx="120" ry="92" fill="#FFE8A6" opacity="0.85"/>
 
-  <!-- Sun: solid gold circle -->
-  <circle cx="512" cy="540" r="92" fill="#E8A020"/>
+  <!-- Eyes -->
+  <circle cx="446" cy="490" r="22" fill="#1C1810"/>
+  <circle cx="578" cy="490" r="22" fill="#1C1810"/>
 
-  <!-- Sun glow halo (lighter gold, smaller circle on top for warmth) -->
-  <circle cx="512" cy="528" r="44" fill="#FFE8A6"/>
+  <!-- Smile — wobbly child-drawn curve -->
+  <path d="M 432 568
+           Q 512 624, 592 568"
+        stroke="#1C1810"
+        stroke-width="22"
+        stroke-linecap="round"
+        fill="none"/>
 
-  <!-- Horizon: warm gold band -->
-  <rect x="312" y="660" width="400" height="80" fill="#E8A020"/>
-
-  <!-- Crayon hill silhouette in warm dark gold -->
-  <path d="M 312 660
-           Q 412 632 512 660
-           Q 612 688 712 660
-           L 712 740
-           L 312 740 Z"
-        fill="#8B5E00"/>
-
-  <!-- Subtle base shadow under the doorway -->
-  <ellipse cx="512" cy="788" rx="220" ry="14" fill="#000" opacity="0.22"/>
+  <!-- Tiny sparkle in upper-right — the magical transformation hint -->
+  <g transform="translate(872, 152)" fill="#E8A020">
+    <path d="M 0 -36 L 8 -8 L 36 0 L 8 8 L 0 36 L -8 8 L -36 0 L -8 -8 Z"/>
+  </g>
 </svg>
