@@ -1,4 +1,5 @@
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
@@ -43,10 +44,12 @@ async function fetchUserVotes(userId: string): Promise<string[]> {
   return (data ?? []).map((v: { piece_id: string }) => v.piece_id)
 }
 
-const SORT_OPTIONS: { value: SortMode; label: string; icon: string }[] = [
-  { value: 'top', label: 'Most loved', icon: '♥' },
-  { value: 'popular', label: 'Most visited', icon: '◉' },
-  { value: 'new', label: 'Newest', icon: '✦' },
+type SortIcon = keyof typeof Ionicons.glyphMap
+
+const SORT_OPTIONS: { value: SortMode; label: string; icon: SortIcon }[] = [
+  { value: 'top', label: 'Most loved', icon: 'heart' },
+  { value: 'popular', label: 'Most visited', icon: 'eye' },
+  { value: 'new', label: 'Newest', icon: 'sparkles' },
 ]
 
 export default function DiscoverScreen() {
@@ -118,25 +121,30 @@ export default function DiscoverScreen() {
           <CreditsChip />
         </View>
         <TouchableOpacity style={styles.sortBtn} onPress={() => setDropdownOpen(true)} activeOpacity={0.7}>
-          <Text style={styles.sortBtnText}>{activeOption.icon} {activeOption.label}</Text>
-          <Text style={styles.sortCaret}>▾</Text>
+          <Ionicons name={activeOption.icon} size={13} color={colors.dark} />
+          <Text style={styles.sortBtnText}>{activeOption.label}</Text>
+          <Ionicons name="chevron-down" size={13} color={colors.muted} />
         </TouchableOpacity>
       </View>
 
       <Modal visible={dropdownOpen} transparent animationType="fade" onRequestClose={() => setDropdownOpen(false)}>
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setDropdownOpen(false)}>
           <View style={styles.dropdown}>
-            {SORT_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.value}
-                style={[styles.dropdownItem, sort === opt.value && styles.dropdownItemActive]}
-                onPress={() => { setSort(opt.value); setDropdownOpen(false) }}
-              >
-                <Text style={[styles.dropdownItemText, sort === opt.value && styles.dropdownItemTextActive]}>
-                  {opt.icon} {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {SORT_OPTIONS.map((opt) => {
+              const active = sort === opt.value
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.dropdownItem, active && styles.dropdownItemActive]}
+                  onPress={() => { setSort(opt.value); setDropdownOpen(false) }}
+                >
+                  <Ionicons name={opt.icon} size={15} color={active ? colors.goldDark : colors.dark} />
+                  <Text style={[styles.dropdownItemText, active && styles.dropdownItemTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -165,7 +173,8 @@ export default function DiscoverScreen() {
                   }}
                   disabled={isVoted || isVoting}
                 >
-                  <Text style={styles.voteBadgeText}>♥ {item.vote_count}</Text>
+                  <Ionicons name={isVoted ? 'heart' : 'heart-outline'} size={12} color={colors.white} />
+                  <Text style={styles.voteBadgeText}>{item.vote_count}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.cardBody}>
@@ -200,7 +209,7 @@ const styles = StyleSheet.create({
   sortBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
     alignSelf: 'flex-start',
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -210,7 +219,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sortBtnText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
-  sortCaret: { fontSize: 11, color: colors.muted, marginTop: 1 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'flex-start', paddingTop: 140, paddingHorizontal: 20 },
   dropdown: {
     backgroundColor: colors.white,
@@ -219,7 +227,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
   },
-  dropdownItem: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+  dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   dropdownItemActive: { backgroundColor: colors.goldLight },
   dropdownItemText: { fontSize: 15, fontWeight: '600', color: colors.dark },
   dropdownItemTextActive: { color: colors.goldDark, fontWeight: '700' },
@@ -227,7 +235,7 @@ const styles = StyleSheet.create({
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
-  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 4 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeDone: { opacity: 0.92 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },

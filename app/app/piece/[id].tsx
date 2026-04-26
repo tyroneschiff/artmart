@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput, Modal, Dimensions, StatusBar } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
@@ -200,7 +201,7 @@ export default function PieceScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.back}>‹</Text>
+            <Ionicons name="chevron-back" size={22} color={colors.dark} />
           </TouchableOpacity>
           <TouchableOpacity style={[btn.primary, { paddingVertical: 10, paddingHorizontal: 18 }]} onPress={() =>
             setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
@@ -222,7 +223,7 @@ export default function PieceScreen() {
                 <Text style={styles.galleryAvatarText}>{piece.stores?.child_name?.[0]?.toUpperCase() ?? '?'}</Text>
               </View>
               <Text style={styles.galleryChipText}>{piece.stores?.child_name}'s Gallery</Text>
-              <Text style={styles.galleryChipArrow}>›</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.muted} style={{ marginLeft: 4 }} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -237,8 +238,14 @@ export default function PieceScreen() {
               disabled={voteMutation.isPending || hasVoted}
               activeOpacity={0.75}
             >
+              <Ionicons
+                name={hasVoted ? 'heart' : 'heart-outline'}
+                size={14}
+                color={colors.goldDark}
+                style={{ marginRight: 6 }}
+              />
               <Text style={[styles.voteChipText, hasVoted && styles.voteChipTextDone]}>
-                ♥ {piece.vote_count}
+                {piece.vote_count}
               </Text>
             </TouchableOpacity>
           </View>
@@ -333,7 +340,7 @@ export default function PieceScreen() {
         <TouchableOpacity style={styles.lightboxBackdrop} activeOpacity={1} onPress={() => setLightboxUri(null)}>
           <Image source={{ uri: lightboxUri || '' }} style={styles.lightboxImage} resizeMode="contain" />
           <TouchableOpacity style={styles.lightboxClose} onPress={() => setLightboxUri(null)} hitSlop={12}>
-            <Text style={styles.lightboxCloseText}>×</Text>
+            <Ionicons name="close" size={22} color={colors.white} />
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -355,7 +362,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
   dangerZone: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, alignItems: 'center' },
   dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   mainImage: { width: '100%', aspectRatio: 1 },
@@ -376,7 +382,6 @@ const styles = StyleSheet.create({
   lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
   lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  lightboxCloseText: { color: colors.white, fontSize: 24, lineHeight: 28, fontWeight: '300' },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 0 },
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },

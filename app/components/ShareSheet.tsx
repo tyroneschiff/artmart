@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { colors } from '../lib/theme'
 import { SharePayload, shareToWhatsApp } from '../lib/share'
 import { track } from '../lib/analytics'
@@ -66,23 +67,23 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
         <Text style={styles.url} numberOfLines={1}>{payload.url}</Text>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.action} onPress={handleNativeShare}>
-            <View style={[styles.actionIcon, { backgroundColor: '#E5F4FF' }]}>
-              <Text style={styles.actionEmoji}>↑</Text>
+          <TouchableOpacity style={styles.action} onPress={handleNativeShare} activeOpacity={0.7}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="share-outline" size={28} color={colors.dark} />
             </View>
             <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.action} onPress={handleWhatsApp}>
-            <View style={[styles.actionIcon, { backgroundColor: '#E8F8EE' }]}>
-              <Text style={styles.actionEmoji}>🟢</Text>
+          <TouchableOpacity style={styles.action} onPress={handleWhatsApp} activeOpacity={0.7}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
             </View>
             <Text style={styles.actionLabel}>WhatsApp</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.action} onPress={handleCopy}>
-            <View style={[styles.actionIcon, { backgroundColor: '#F8F8F8' }]}>
-              <Text style={styles.actionEmoji}>🔗</Text>
+          <TouchableOpacity style={styles.action} onPress={handleCopy} activeOpacity={0.7}>
+            <View style={styles.actionIcon}>
+              <Ionicons name="link-outline" size={28} color={colors.dark} />
             </View>
             <Text style={styles.actionLabel}>Copy link</Text>
           </TouchableOpacity>
@@ -146,18 +147,15 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  actionEmoji: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.dark,
   },
   actionLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.mid,
+    letterSpacing: -0.1,
   },
   cancelBtn: {
     backgroundColor: colors.white,

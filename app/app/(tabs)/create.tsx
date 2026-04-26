@@ -348,7 +348,7 @@ export default function CreateScreen() {
       {step === 'pick' && (
         <View style={styles.pickArea}>
           <Text style={styles.pickHeading}>Photograph your child's drawing</Text>
-          <Text style={styles.pickSubhead}>It works on any drawing — fridge, table, school folder.</Text>
+          <Text style={styles.pickSubhead}>Any drawing works — don't worry about angle or lighting.</Text>
 
           <TouchableOpacity style={styles.takePhotoBtn} onPress={takePhoto} activeOpacity={0.85}>
             <Ionicons name="camera" size={40} color={colors.white} />

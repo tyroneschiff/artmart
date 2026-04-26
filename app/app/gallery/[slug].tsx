@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, Alert, Platform } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useQuery } from '@tanstack/react-query'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
@@ -152,15 +153,18 @@ export default function StoreScreen() {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backText}>‹</Text>
+          <Ionicons name="chevron-back" size={22} color={colors.dark} />
         </TouchableOpacity>
         <View style={styles.headerActions}>
           {isOwner && data.pieces.length > 0 && (
-            <TouchableOpacity style={styles.saveAllBtn} onPress={handleSaveAllOriginals} disabled={!!exportProgress}>
+            <TouchableOpacity style={styles.saveAllBtn} onPress={handleSaveAllOriginals} disabled={!!exportProgress} activeOpacity={0.7}>
               {exportProgress ? (
                 <Text style={styles.saveAllBtnText}>Saving {exportProgress.done}/{exportProgress.total}…</Text>
               ) : (
-                <Text style={styles.saveAllBtnText}>↓ Save all</Text>
+                <>
+                  <Ionicons name="download-outline" size={15} color={colors.dark} />
+                  <Text style={styles.saveAllBtnText}>Save all</Text>
+                </>
               )}
             </TouchableOpacity>
           )}
@@ -184,9 +188,10 @@ export default function StoreScreen() {
             </View>
             {data.pieces.length > 1 && (
               <View style={styles.sortRow}>
-                <TouchableOpacity style={styles.sortDropdown} onPress={() => setDropdownOpen(true)}>
-                  <Text style={styles.sortDropdownText}>{sort === 'top' ? '♥ Most loved' : '✦ Newest'}</Text>
-                  <Text style={styles.sortCaret}>▾</Text>
+                <TouchableOpacity style={styles.sortDropdown} onPress={() => setDropdownOpen(true)} activeOpacity={0.7}>
+                  <Ionicons name={sort === 'top' ? 'heart' : 'sparkles'} size={13} color={colors.dark} />
+                  <Text style={styles.sortDropdownText}>{sort === 'top' ? 'Most loved' : 'Newest'}</Text>
+                  <Ionicons name="chevron-down" size={13} color={colors.muted} />
                 </TouchableOpacity>
               </View>
             )}
@@ -198,7 +203,8 @@ export default function StoreScreen() {
               <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
               {item.vote_count > 0 && (
                 <View style={styles.voteBadge}>
-                  <Text style={styles.voteBadgeText}>♥ {item.vote_count}</Text>
+                  <Ionicons name="heart" size={12} color={colors.white} />
+                  <Text style={styles.voteBadgeText}>{item.vote_count}</Text>
                 </View>
               )}
             </View>
@@ -232,17 +238,21 @@ export default function StoreScreen() {
       <Modal visible={dropdownOpen} transparent animationType="fade">
         <TouchableOpacity style={styles.dropdownOverlay} onPress={() => setDropdownOpen(false)} activeOpacity={1}>
           <View style={styles.dropdownMenu}>
-            {(['top', 'new'] as SortMode[]).map((mode) => (
+            {(['top', 'new'] as SortMode[]).map((mode) => {
+              const active = sort === mode
+              return (
               <TouchableOpacity
                 key={mode}
-                style={[styles.dropdownItem, sort === mode && styles.dropdownItemActive]}
+                style={[styles.dropdownItem, active && styles.dropdownItemActive]}
                 onPress={() => { setSort(mode); setDropdownOpen(false) }}
               >
-                <Text style={[styles.dropdownItemText, sort === mode && styles.dropdownItemTextActive]}>
-                  {mode === 'top' ? '♥ Most loved' : '✦ Newest'}
+                <Ionicons name={mode === 'top' ? 'heart' : 'sparkles'} size={15} color={active ? colors.goldDark : colors.dark} />
+                <Text style={[styles.dropdownItemText, active && styles.dropdownItemTextActive]}>
+                  {mode === 'top' ? 'Most loved' : 'Newest'}
                 </Text>
               </TouchableOpacity>
-            ))}
+              )
+            })}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -261,11 +271,10 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 22, color: colors.dark, lineHeight: 26 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   shareBtn: { ...btn.primary, paddingHorizontal: 16, paddingVertical: 9 },
   shareBtnText: { ...btn.primaryText, fontSize: 13 },
-  saveAllBtn: { backgroundColor: colors.white, borderRadius: 100, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
+  saveAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderRadius: 100, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
   saveAllBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
   galleryHeader: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 12, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
@@ -273,14 +282,13 @@ const styles = StyleSheet.create({
   galleryName: { ...type.h2 },
   pieceCount: { ...type.label, marginTop: 4 },
   sortRow: { paddingHorizontal: 16, marginBottom: 12 },
-  sortDropdown: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, backgroundColor: colors.white, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
-  sortDropdownText: { fontSize: 13, fontWeight: '700', color: colors.dark },
-  sortCaret: { fontSize: 11, color: colors.muted },
+  sortDropdown: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7, backgroundColor: colors.white, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
+  sortDropdownText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
   row: { paddingHorizontal: 16, gap: 10, marginBottom: 10 },
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
-  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 8, paddingVertical: 4 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 100, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },
   title: { ...type.h3, fontSize: 13 },
@@ -296,7 +304,7 @@ const styles = StyleSheet.create({
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-start', paddingTop: 220, paddingHorizontal: 16 },
   dropdownMenu: { backgroundColor: colors.white, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  dropdownItem: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+  dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   dropdownItemActive: { backgroundColor: colors.goldLight },
   dropdownItemText: { fontSize: 15, fontWeight: '600', color: colors.dark },
   dropdownItemTextActive: { color: colors.goldDark },

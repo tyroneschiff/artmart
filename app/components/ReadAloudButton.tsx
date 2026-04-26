@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native'
+import { TouchableOpacity, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native'
 import { Audio } from 'expo-av'
 import * as FileSystem from 'expo-file-system/legacy'
+import { Ionicons } from '@expo/vector-icons'
 import { colors } from '../lib/theme'
 
 export default function ReadAloudButton({ text, compact }: { text: string; compact?: boolean }) {
@@ -71,6 +72,8 @@ export default function ReadAloudButton({ text, compact }: { text: string; compa
   const isLoading = state === 'loading'
   const isPlaying = state === 'playing'
 
+  const iconColor = isPlaying ? colors.white : colors.goldDark
+
   return (
     <TouchableOpacity
       style={[styles.btn, isPlaying && styles.btnActive, compact && styles.btnCompact]}
@@ -78,7 +81,11 @@ export default function ReadAloudButton({ text, compact }: { text: string; compa
       activeOpacity={0.75}
       disabled={isLoading}
     >
-      <Text style={styles.icon}>{isPlaying ? '⏹' : isLoading ? '…' : '▶'}</Text>
+      {isLoading ? (
+        <ActivityIndicator size="small" color={colors.goldDark} />
+      ) : (
+        <Ionicons name={isPlaying ? 'stop' : 'play'} size={14} color={iconColor} />
+      )}
       <Text style={[styles.label, isPlaying && styles.labelActive]}>
         {isPlaying ? 'Stop' : isLoading ? 'Preparing…' : 'Read story aloud'}
       </Text>
@@ -103,7 +110,6 @@ const styles = StyleSheet.create({
   },
   btnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
   btnCompact: { marginHorizontal: 0 },
-  icon: { fontSize: 12 },
   label: { fontSize: 13, fontWeight: '700', color: colors.goldDark, letterSpacing: 0.2 },
   labelActive: { color: colors.white },
 })

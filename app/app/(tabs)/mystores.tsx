@@ -2,6 +2,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
@@ -128,7 +129,7 @@ export default function MyStoresScreen() {
                   {count === 0 ? 'First world coming soon' : count === 1 ? '1 world' : `${count} worlds`}
                 </Text>
               </View>
-              <Text style={styles.storeArrow}>›</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.muted} />
             </TouchableOpacity>
           )
         }}
@@ -209,7 +210,6 @@ const styles = StyleSheet.create({
   storeName: { fontSize: 17, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
   storeMeta: { ...type.label, marginTop: 3, fontSize: 12 },
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
-  storeArrow: { fontSize: 20, color: colors.muted },
   upsellCard: {
     backgroundColor: colors.dangerBg,
     borderRadius: 16,
