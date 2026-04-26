@@ -1,11 +1,28 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native'
 import { router } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../hooks/useAuthStore'
 import { useCredits } from '../lib/useCredits'
 import { purchaseCredits } from '../lib/checkout'
 import { colors, type, btn, card } from '../lib/theme'
+
+type Pack = {
+  id: string
+  name: string
+  amount: number
+  price: string
+  perPiece: string
+  badge?: string
+  featured?: boolean
+}
+
+const PACKS: Pack[] = [
+  { id: 'starter', name: 'Starter',  amount: 3,  price: '$2.99',  perPiece: '$1.00 per drawing' },
+  { id: 'creator', name: 'Creator',  amount: 12, price: '$9.99',  perPiece: '$0.83 per drawing', badge: 'Most popular', featured: true },
+  { id: 'family',  name: 'Family',   amount: 25, price: '$19.99', perPiece: '$0.80 per drawing' },
+]
 
 export default function CreditsScreen() {
   const session = useAuthStore((s) => s.session)
@@ -13,157 +30,178 @@ export default function CreditsScreen() {
   const { data: credits, isLoading } = useCredits()
   const [purchasing, setPurchasing] = useState<string | null>(null)
 
-  async function handleBuy(amount: number, packTitle: string) {
+  async function handleBuy(pack: Pack) {
     if (!session) return
-    setPurchasing(packTitle)
+    setPurchasing(pack.id)
     try {
       const { data: { session: currentSession } } = await (await import('../lib/supabase')).supabase.auth.getSession()
-      const newBalance = await purchaseCredits(currentSession!.access_token, amount)
-
-      // Server confirmed the grant — set the authoritative balance immediately
+      const newBalance = await purchaseCredits(currentSession!.access_token, pack.amount)
       queryClient.setQueryData<number>(['credits', session.user.id], newBalance)
-
-      Alert.alert('Success!', `${amount} credits have been added to your account.`)
+      Alert.alert('Magic incoming ✨', `${pack.amount} credits added. Go transform something.`)
       router.back()
     } catch (e: any) {
-      if (e.message !== 'Canceled') {
-        Alert.alert('Payment failed', e.message)
-      }
+      if (e.message !== 'Canceled') Alert.alert('Payment failed', e.message)
     } finally {
       setPurchasing(null)
     }
   }
 
-  const PACKS = [
-    {
-      id: 'taste',
-      title: 'Taste Pack',
-      amount: 3,
-      price: '$2.99',
-      detail: 'Perfect for your first creation',
-      badge: null,
-      featured: false,
-    },
-    {
-      id: 'imagination',
-      title: 'Creator Pack',
-      amount: 12,
-      price: '$9.99',
-      detail: '~$0.83 per transformation',
-      badge: 'POPULAR',
-      featured: true,
-    },
-    {
-      id: 'value',
-      title: 'Best Value Pack',
-      amount: 25,
-      price: '$19.99',
-      detail: '~$0.80 per transformation',
-      badge: 'BEST VALUE',
-      featured: false,
-    }
-  ]
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
-          <Text style={styles.closeText}>✕</Text>
+        <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()} hitSlop={8}>
+          <Ionicons name="close" size={20} color={colors.dark} />
         </TouchableOpacity>
-        <Text style={styles.title}>Get Credits</Text>
+        <Text style={styles.title}>Keep the magic going</Text>
+        <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.balanceCard, card]}>
-          <Text style={type.label}>Your Balance</Text>
-          <Text style={styles.balanceValue}>{isLoading ? '...' : credits}</Text>
-          <Text style={styles.balanceSub}>credits remaining</Text>
+        <View style={styles.balancePill}>
+          <Ionicons name="sparkles" size={14} color={colors.goldDark} />
+          <Text style={styles.balancePillText}>
+            {isLoading ? '…' : `${credits ?? 0} credit${credits === 1 ? '' : 's'} left`}
+          </Text>
         </View>
 
-        <View style={styles.packsGrid}>
-          {PACKS.map((pack) => (
-            <View 
-              key={pack.id} 
-              style={[
-                styles.offerCard, 
-                pack.featured ? styles.offerCardFeatured : styles.offerCardStandard
-              ]}
-            >
-              {pack.badge && (
-                <View style={styles.offerBadge}>
-                  <Text style={styles.offerBadgeText}>{pack.badge}</Text>
-                </View>
-              )}
-              <Text style={[styles.offerTitle, pack.featured && styles.textWhite]}>{pack.title}</Text>
-              <Text style={[styles.offerAmount, pack.featured && styles.textWhite]}>{pack.amount} Credits</Text>
-              <Text style={[styles.offerPrice, pack.featured && styles.textWhite]}>{pack.price}</Text>
-              <Text style={[styles.offerDetail, pack.featured && styles.textWhiteMuted]}>{pack.detail}</Text>
+        <Text style={styles.subhead}>
+          Each credit turns one drawing into a world.
+        </Text>
 
-              <TouchableOpacity 
-                style={[
-                  btn.primary,
-                  !pack.featured && styles.buyBtnStandard,
-                  purchasing === pack.title && styles.buyBtnDisabled
-                ]} 
-                onPress={() => handleBuy(pack.amount, pack.title)}
-                disabled={!!purchasing}
-              >
-                {purchasing === pack.title ? (
-                  <ActivityIndicator color={pack.featured ? colors.white : colors.dark} />
-                ) : (
-                  <Text style={[btn.primaryText, !pack.featured && styles.textDark]}>
-                    Buy {pack.amount}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
+        <View style={styles.packs}>
+          {PACKS.map((pack) => (
+            <PackCard
+              key={pack.id}
+              pack={pack}
+              isPurchasing={purchasing === pack.id}
+              anyPurchasing={!!purchasing}
+              onPress={() => handleBuy(pack)}
+            />
           ))}
         </View>
 
-        <Text style={[type.body, styles.info]}>
-          Each credit lets you step inside one drawing. The AI transforms the drawing into a living world using your child's original colors and characters as the blueprint.
+        <Text style={styles.fineprint}>
+          Credits never expire. Refunded automatically if a transform fails.
         </Text>
       </ScrollView>
     </View>
   )
 }
 
+function PackCard({ pack, isPurchasing, anyPurchasing, onPress }: {
+  pack: Pack
+  isPurchasing: boolean
+  anyPurchasing: boolean
+  onPress: () => void
+}) {
+  return (
+    <View style={[styles.packCard, pack.featured && styles.packCardFeatured]}>
+      {pack.badge && (
+        <View style={styles.packBadge}>
+          <Text style={styles.packBadgeText}>{pack.badge}</Text>
+        </View>
+      )}
+
+      <View style={styles.packHeader}>
+        <Text style={styles.packName}>{pack.name}</Text>
+        <Text style={styles.packPrice}>{pack.price}</Text>
+      </View>
+
+      <View style={styles.packMeta}>
+        <Text style={styles.packAmount}>{pack.amount} credits</Text>
+        <Text style={styles.packDot}>·</Text>
+        <Text style={styles.packPerPiece}>{pack.perPiece}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={[btn.primary, styles.buyBtn, anyPurchasing && !isPurchasing && styles.buyBtnFaded]}
+        onPress={onPress}
+        disabled={anyPurchasing}
+        activeOpacity={0.85}
+      >
+        {isPurchasing ? (
+          <ActivityIndicator color={colors.white} size="small" />
+        ) : (
+          <Text style={btn.primaryText}>Buy {pack.amount} credits</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingTop: 20, paddingBottom: 20, paddingHorizontal: 20 },
-  closeBtn: { 
-    position: 'absolute', 
-    left: 20, 
-    top: 20, 
-    width: 36, 
-    height: 36, 
-    borderRadius: 18, 
-    backgroundColor: colors.white, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    ...card 
-  },
-  closeText: { fontSize: 16, fontWeight: '700', color: colors.dark },
-  title: { ...type.h3, letterSpacing: -0.5 },
-  content: { padding: 24, alignItems: 'center' },
-  balanceCard: { width: '100%', padding: 32, alignItems: 'center', marginBottom: 24 },
-  balanceValue: { fontSize: 64, fontWeight: '900', color: colors.dark, letterSpacing: -2 },
-  balanceSub: { ...type.body, color: colors.mid, marginTop: 4 },
-  packsGrid: { width: '100%', gap: 16 },
-  offerCard: { ...card, width: '100%', padding: 24, alignItems: 'center', marginBottom: 8 },
-  offerCardFeatured: { backgroundColor: colors.gold, borderColor: colors.gold, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
-  offerCardStandard: { backgroundColor: colors.white },
-  offerBadge: { backgroundColor: colors.dark, borderRadius: 100, paddingHorizontal: 12, paddingVertical: 4, position: 'absolute', top: -10, alignSelf: 'center' },
-  offerBadgeText: { color: colors.white, fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
-  offerTitle: { ...type.label, color: colors.dark, opacity: 0.7, marginBottom: 4 },
-  offerAmount: { ...type.h1, marginBottom: 4 },
-  offerPrice: { ...type.h2, marginBottom: 8 },
-  offerDetail: { ...type.body, fontSize: 13, color: colors.mid, opacity: 0.8, marginBottom: 20, textAlign: 'center' },
-  buyBtnStandard: { backgroundColor: colors.cream, borderWidth: 1, borderColor: colors.border },
-  buyBtnDisabled: { opacity: 0.7 },
-  textWhite: { color: colors.white },
-  textWhiteMuted: { color: colors.white, opacity: 0.8 },
-  textDark: { color: colors.dark },
-  info: { textAlign: 'center', paddingHorizontal: 16, marginTop: 32 },
-})
 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 18, paddingBottom: 12, paddingHorizontal: 20,
+  },
+  closeBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.white,
+    borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  title: { fontSize: 17, fontWeight: '800', color: colors.dark, letterSpacing: -0.4 },
+
+  content: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 12 },
+
+  balancePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    alignSelf: 'center',
+    backgroundColor: colors.goldLight,
+    borderWidth: 1, borderColor: colors.goldMid,
+    borderRadius: 100, paddingHorizontal: 14, paddingVertical: 8,
+    marginBottom: 24,
+  },
+  balancePillText: { fontSize: 13, fontWeight: '700', color: colors.goldDark, letterSpacing: -0.1 },
+
+  subhead: {
+    textAlign: 'center',
+    fontSize: 15, color: colors.mid, fontWeight: '500',
+    marginBottom: 28, paddingHorizontal: 16, lineHeight: 22,
+  },
+
+  packs: { gap: 14 },
+  packCard: {
+    ...card,
+    padding: 20,
+    paddingTop: 22,
+  },
+  packCardFeatured: {
+    backgroundColor: colors.goldLight,
+    borderColor: colors.goldMid,
+    borderWidth: 1.5,
+    paddingTop: 28,
+    shadowColor: colors.dark,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  packBadge: {
+    position: 'absolute', top: -10, alignSelf: 'center',
+    backgroundColor: colors.dark,
+    borderRadius: 100, paddingHorizontal: 12, paddingVertical: 5,
+  },
+  packBadgeText: { color: colors.white, fontSize: 10, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
+
+  packHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 },
+  packName: { fontSize: 18, fontWeight: '800', color: colors.dark, letterSpacing: -0.4 },
+  packPrice: { fontSize: 22, fontWeight: '900', color: colors.dark, letterSpacing: -0.6 },
+
+  packMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 },
+  packAmount: { fontSize: 13, fontWeight: '700', color: colors.dark },
+  packDot: { fontSize: 13, color: colors.muted },
+  packPerPiece: { fontSize: 13, fontWeight: '700', color: colors.goldDark },
+
+  buyBtn: { paddingVertical: 14 },
+  buyBtnFaded: { opacity: 0.4 },
+
+  fineprint: {
+    textAlign: 'center', fontSize: 13, color: colors.muted,
+    fontWeight: '500', marginTop: 28, paddingHorizontal: 16, lineHeight: 19,
+  },
+})

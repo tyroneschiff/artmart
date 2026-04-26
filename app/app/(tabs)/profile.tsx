@@ -6,19 +6,25 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { useCredits } from '../../lib/useCredits'
+import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
+import { track } from '../../lib/analytics'
 import { colors, type, btn, card } from '../../lib/theme'
 import Constants from 'expo-constants'
 
-async function fetchOwnerStats(userId: string) {
+type AllPiece = { id: string; original_image_url: string | null; stores: { child_name: string } | null }
+
+async function fetchOwnerCollection(userId: string): Promise<{ galleries: number; pieces: AllPiece[] }> {
   const [storesRes, piecesRes] = await Promise.all([
     supabase.from('stores').select('id', { count: 'exact', head: true }).eq('owner_id', userId),
-    supabase.from('pieces').select('id, store_id, stores!inner(owner_id)', { count: 'exact', head: true })
+    supabase
+      .from('pieces')
+      .select('id, original_image_url, stores!inner(owner_id, child_name)')
       .eq('stores.owner_id', userId)
       .eq('published', true),
   ])
   return {
     galleries: storesRes.count ?? 0,
-    pieces: piecesRes.count ?? 0,
+    pieces: (piecesRes.data ?? []) as unknown as AllPiece[],
   }
 }
 
@@ -30,6 +36,7 @@ export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState('')
   const [saving, setSaving] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [exportProgress, setExportProgress] = useState<SaveProgress | null>(null)
 
   const { data: profile } = useQuery({
     queryKey: ['profile', session?.user.id],
@@ -41,11 +48,14 @@ export default function ProfileScreen() {
     enabled: !!session,
   })
 
-  const { data: stats } = useQuery({
-    queryKey: ['owner-stats', session?.user.id],
-    queryFn: () => fetchOwnerStats(session!.user.id),
+  const { data: collection } = useQuery({
+    queryKey: ['owner-collection', session?.user.id],
+    queryFn: () => fetchOwnerCollection(session!.user.id),
     enabled: !!session,
   })
+  const galleries = collection?.galleries ?? 0
+  const pieces = collection?.pieces ?? []
+  const eligibleForSave = pieces.filter((p) => !!p.original_image_url)
 
   useEffect(() => {
     if (profile?.display_name) setDisplayName(profile.display_name)
@@ -54,23 +64,67 @@ export default function ProfileScreen() {
   const version = Constants.expoConfig?.version ?? '1.0.0'
   const email = session?.user.email ?? ''
   const greetingName = profile?.display_name?.trim() || email.split('@')[0]
-  const initial = (greetingName?.[0] ?? '?').toUpperCase()
 
   async function handleSaveName() {
-    if (!displayName.trim()) return
+    const trimmed = displayName.trim()
+    if (!trimmed || trimmed === profile?.display_name) return
     setSaving(true)
+    // Optimistically update the cache so the header re-renders instantly.
+    const previous = queryClient.getQueryData<{ display_name: string | null }>(['profile', session?.user.id])
+    queryClient.setQueryData(['profile', session?.user.id], { ...(previous ?? {}), display_name: trimmed })
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({ id: session!.user.id, display_name: displayName.trim() })
+        .upsert({ id: session!.user.id, display_name: trimmed })
       if (error) throw error
       queryClient.invalidateQueries({ queryKey: ['profile', session?.user.id] })
-      Alert.alert('Saved', 'Your name has been updated.')
     } catch (e: any) {
+      // Roll back the optimistic update on failure.
+      queryClient.setQueryData(['profile', session?.user.id], previous)
       Alert.alert('Error', e.message)
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleSaveAllAcrossGalleries() {
+    if (exportProgress || eligibleForSave.length === 0) return
+
+    const noun = eligibleForSave.length === 1 ? 'original' : 'originals'
+    const galleryWord = galleries === 1 ? 'gallery' : 'galleries'
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        `Save ${eligibleForSave.length} ${noun} to Photos?`,
+        `Every drawing across your ${galleries} ${galleryWord} — saved to a "Draw Up" album. The transformed worlds stay in the app.`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Save', onPress: () => resolve(true) },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) },
+      )
+    })
+    if (!confirmed) return
+
+    setExportProgress({ done: 0, total: eligibleForSave.length })
+    const result = await saveOriginalsToPhotos(
+      eligibleForSave.map((p) => ({ id: p.id, original_image_url: p.original_image_url, childName: p.stores?.child_name })),
+      (p) => setExportProgress(p),
+    )
+    setExportProgress(null)
+
+    if (result.noPermission) {
+      Alert.alert('Photos access needed', 'Please allow Photos access to save the originals.')
+      return
+    }
+
+    track('original_saved', { metadata: { scope: 'all', count: result.saved, total: result.total } })
+
+    Alert.alert(
+      result.saved === result.total ? 'Saved to Photos ✨' : 'Mostly saved',
+      result.saved === result.total
+        ? `${result.saved} drawing${result.saved === 1 ? '' : 's'} now safe in your Photos. Look for the "Draw Up" album.`
+        : `Saved ${result.saved} of ${result.total}. Try again to retry the rest.`,
+    )
   }
 
   async function handleLogout() {
@@ -93,37 +147,60 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Identity header */}
       <View style={styles.identityHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initial}</Text>
-        </View>
         <Text style={styles.identityName} numberOfLines={1}>{greetingName}</Text>
         <Text style={styles.identityEmail} numberOfLines={1}>{email}</Text>
       </View>
 
-      {/* Your work */}
+      {/* Your collection */}
       <View style={styles.section}>
-        <Text style={type.label}>YOUR WORK</Text>
-        <TouchableOpacity
-          style={[card, styles.workCard]}
-          onPress={() => router.push('/(tabs)/mystores')}
-          activeOpacity={0.85}
-        >
-          <View style={styles.workStats}>
+        <Text style={type.label}>YOUR COLLECTION</Text>
+        <View style={[card, styles.workCard]}>
+          <TouchableOpacity
+            style={styles.workStats}
+            onPress={() => router.push('/(tabs)/mystores')}
+            activeOpacity={0.85}
+          >
             <View style={styles.workStat}>
-              <Text style={styles.workStatNumber}>{stats?.galleries ?? '—'}</Text>
-              <Text style={styles.workStatLabel}>{stats?.galleries === 1 ? 'gallery' : 'galleries'}</Text>
+              <Text style={styles.workStatNumber}>{collection ? galleries : '—'}</Text>
+              <Text style={styles.workStatLabel}>{galleries === 1 ? 'gallery' : 'galleries'}</Text>
             </View>
             <View style={styles.workDivider} />
             <View style={styles.workStat}>
-              <Text style={styles.workStatNumber}>{stats?.pieces ?? '—'}</Text>
-              <Text style={styles.workStatLabel}>{stats?.pieces === 1 ? 'world' : 'worlds'}</Text>
+              <Text style={styles.workStatNumber}>{collection ? pieces.length : '—'}</Text>
+              <Text style={styles.workStatLabel}>{pieces.length === 1 ? 'world' : 'worlds'}</Text>
             </View>
-          </View>
-          <View style={styles.workCta}>
-            <Text style={styles.workCtaText}>Open My Galleries</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.workCta}
+            onPress={() => router.push('/(tabs)/mystores')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.workCtaText}>Open Galleries</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.muted} />
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+
+          {eligibleForSave.length > 0 && (
+            <TouchableOpacity
+              style={styles.workSaveAll}
+              onPress={handleSaveAllAcrossGalleries}
+              disabled={!!exportProgress}
+              activeOpacity={0.7}
+            >
+              {exportProgress ? (
+                <>
+                  <ActivityIndicator size="small" color={colors.dark} />
+                  <Text style={styles.workSaveAllText}>Saving {exportProgress.done}/{exportProgress.total}…</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="download-outline" size={16} color={colors.dark} />
+                  <Text style={styles.workSaveAllText}>Save all originals to Photos</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Credits */}
@@ -194,17 +271,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
   content: { paddingBottom: 48 },
 
-  identityHeader: { alignItems: 'center', paddingTop: 64, paddingBottom: 32, paddingHorizontal: 28 },
-  avatar: {
-    width: 72, height: 72, borderRadius: 24,
-    backgroundColor: colors.goldLight,
-    borderWidth: 1.5, borderColor: colors.goldMid,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14,
-  },
-  avatarText: { fontSize: 30, fontWeight: '900', color: colors.goldDark, letterSpacing: -1 },
-  identityName: { fontSize: 24, fontWeight: '800', color: colors.dark, letterSpacing: -0.6, marginBottom: 4 },
-  identityEmail: { fontSize: 13, color: colors.muted, fontWeight: '500' },
+  identityHeader: { paddingTop: 72, paddingBottom: 36, paddingHorizontal: 24 },
+  identityName: { fontSize: 28, fontWeight: '900', color: colors.dark, letterSpacing: -0.8, marginBottom: 4 },
+  identityEmail: { fontSize: 14, color: colors.muted, fontWeight: '500' },
 
   section: { paddingHorizontal: 20, marginBottom: 24 },
 
@@ -216,6 +285,8 @@ const styles = StyleSheet.create({
   workDivider: { width: 1, height: 36, backgroundColor: colors.border },
   workCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.cream },
   workCtaText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
+  workSaveAll: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.cream },
+  workSaveAllText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
 
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },

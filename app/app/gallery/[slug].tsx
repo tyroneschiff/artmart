@@ -1,16 +1,15 @@
 import { useState, useMemo } from 'react'
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, Alert, Platform } from 'react-native'
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuery } from '@tanstack/react-query'
 import { GallerySkeleton } from '../../components/Skeleton'
-import * as FileSystem from 'expo-file-system/legacy'
-import * as MediaLibrary from 'expo-media-library'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
+import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
 import { track } from '../../lib/analytics'
 
 type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string; vote_count: number; created_at: string }
@@ -36,28 +35,22 @@ export default function StoreScreen() {
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
   const [sort, setSort] = useState<SortMode>('top')
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [exportProgress, setExportProgress] = useState<{ done: number; total: number } | null>(null)
+  const [exportProgress, setExportProgress] = useState<SaveProgress | null>(null)
 
   const isOwner = !!session && data?.store && session.user.id === data.store.owner_id
 
   async function handleSaveAllOriginals() {
     if (!data || !isOwner || exportProgress) return
-    const piecesWithOriginals = data.pieces.filter((p) => p.original_image_url)
-    if (piecesWithOriginals.length === 0) {
+    const eligible = data.pieces.filter((p) => p.original_image_url)
+    if (eligible.length === 0) {
       Alert.alert('Nothing to save', 'No original drawings in this gallery yet.')
       return
     }
 
-    if (Platform.OS === 'web') {
-      Alert.alert('Open the app', 'Saving originals to Photos works on the iPhone app.')
-      return
-    }
-
-    const count = piecesWithOriginals.length
-    const noun = count === 1 ? 'original' : 'originals'
+    const noun = eligible.length === 1 ? 'original' : 'originals'
     const confirmed = await new Promise<boolean>((resolve) => {
       Alert.alert(
-        `Save ${count} ${noun} to Photos?`,
+        `Save ${eligible.length} ${noun} to Photos?`,
         'Just the drawings — the transformed worlds stay in the gallery.',
         [
           { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
@@ -68,55 +61,25 @@ export default function StoreScreen() {
     })
     if (!confirmed) return
 
-    const { status } = await MediaLibrary.requestPermissionsAsync()
-    if (status !== 'granted') {
+    setExportProgress({ done: 0, total: eligible.length })
+    const result = await saveOriginalsToPhotos(
+      eligible.map((p) => ({ id: p.id, original_image_url: p.original_image_url, childName: data.store.child_name })),
+      (p) => setExportProgress(p),
+    )
+    setExportProgress(null)
+
+    if (result.noPermission) {
       Alert.alert('Photos access needed', 'Please allow Photos access to save the originals.')
       return
     }
 
-    setExportProgress({ done: 0, total: piecesWithOriginals.length })
-    let saved = 0
-    const assets: MediaLibrary.Asset[] = []
+    track('original_saved', { storeId: data.store.id, metadata: { count: result.saved, total: result.total } })
 
-    for (const piece of piecesWithOriginals) {
-      try {
-        const filename = `drawup_${data.store.child_name}_${piece.id}.jpg`
-        const localUri = FileSystem.documentDirectory + filename
-        await FileSystem.downloadAsync(piece.original_image_url, localUri)
-        const asset = await MediaLibrary.createAssetAsync(localUri)
-        assets.push(asset)
-        saved++
-        setExportProgress({ done: saved, total: piecesWithOriginals.length })
-      } catch (e) {
-        // Skip individual failures, keep going
-      }
-    }
-
-    // Group everything into a "Draw Up" album so they're easy to find
-    if (assets.length > 0) {
-      try {
-        const existing = await MediaLibrary.getAlbumAsync('Draw Up')
-        if (!existing) {
-          // createAlbumAsync uses the first asset to seed the album
-          const album = await MediaLibrary.createAlbumAsync('Draw Up', assets[0], false)
-          if (assets.length > 1) {
-            await MediaLibrary.addAssetsToAlbumAsync(assets.slice(1), album, false)
-          }
-        } else {
-          await MediaLibrary.addAssetsToAlbumAsync(assets, existing, false)
-        }
-      } catch {
-        // Album grouping isn't critical — assets are still in the camera roll
-      }
-    }
-
-    track('original_saved', { storeId: data.store.id, metadata: { count: saved, total: piecesWithOriginals.length } })
-    setExportProgress(null)
     Alert.alert(
-      saved === piecesWithOriginals.length ? 'Saved to Photos ✨' : 'Mostly saved',
-      saved === piecesWithOriginals.length
-        ? `${saved} original drawing${saved === 1 ? '' : 's'} now safe in your Photos. Look for the "Draw Up" album.`
-        : `Saved ${saved} of ${piecesWithOriginals.length}. Try again to retry the rest.`,
+      result.saved === result.total ? 'Saved to Photos ✨' : 'Mostly saved',
+      result.saved === result.total
+        ? `${result.saved} original drawing${result.saved === 1 ? '' : 's'} now safe in your Photos. Look for the "Draw Up" album.`
+        : `Saved ${result.saved} of ${result.total}. Try again to retry the rest.`,
     )
   }
 
