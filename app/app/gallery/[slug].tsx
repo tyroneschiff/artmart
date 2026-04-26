@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react'
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native'
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Modal, Alert, Platform } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
+import * as FileSystem from 'expo-file-system/legacy'
+import * as MediaLibrary from 'expo-media-library'
 import { supabase } from '../../lib/supabase'
+import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
+import { track } from '../../lib/analytics'
 
-type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; vote_count: number; price_digital: number; price_print: number; created_at: string }
-type Store = { id: string; child_name: string; slug: string; description: string }
+type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string; vote_count: number; created_at: string }
+type Store = { id: string; child_name: string; slug: string; description: string; owner_id: string }
 type SortMode = 'top' | 'new'
 
 async function fetchStore(slug: string) {
@@ -16,7 +20,7 @@ async function fetchStore(slug: string) {
   if (error) throw error
   const { data: pieces, error: e2 } = await supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, price_digital, price_print, created_at')
+    .select('id, title, transformed_image_url, watermarked_image_url, original_image_url, vote_count, created_at')
     .eq('store_id', store.id)
     .eq('published', true)
   if (e2) throw e2
@@ -25,10 +29,75 @@ async function fetchStore(slug: string) {
 
 export default function StoreScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>()
+  const session = useAuthStore((s) => s.session)
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['store', slug], queryFn: () => fetchStore(slug) })
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
   const [sort, setSort] = useState<SortMode>('top')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [exportProgress, setExportProgress] = useState<{ done: number; total: number } | null>(null)
+
+  const isOwner = !!session && data?.store && session.user.id === data.store.owner_id
+
+  async function handleSaveAllOriginals() {
+    if (!data || !isOwner || exportProgress) return
+    const piecesWithOriginals = data.pieces.filter((p) => p.original_image_url)
+    if (piecesWithOriginals.length === 0) {
+      Alert.alert('Nothing to save', 'No original drawings in this gallery yet.')
+      return
+    }
+
+    if (Platform.OS === 'web') {
+      Alert.alert('Open the app', 'Saving originals to Photos works on the iPhone app.')
+      return
+    }
+
+    const { status } = await MediaLibrary.requestPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Photos access needed', 'Please allow Photos access to save the originals.')
+      return
+    }
+
+    setExportProgress({ done: 0, total: piecesWithOriginals.length })
+    let saved = 0
+    let firstAsset: MediaLibrary.Asset | null = null
+
+    for (const piece of piecesWithOriginals) {
+      try {
+        const filename = `drawup_${data.store.child_name}_${piece.id}.jpg`
+        const localUri = FileSystem.documentDirectory + filename
+        await FileSystem.downloadAsync(piece.original_image_url, localUri)
+        const asset = await MediaLibrary.createAssetAsync(localUri)
+        if (!firstAsset) firstAsset = asset
+        saved++
+        setExportProgress({ done: saved, total: piecesWithOriginals.length })
+      } catch (e) {
+        // Skip individual failures, keep going
+      }
+    }
+
+    // Group everything into a "Draw Up" album so they're easy to find
+    if (firstAsset) {
+      try {
+        let album = await MediaLibrary.getAlbumAsync('Draw Up')
+        if (!album) {
+          album = await MediaLibrary.createAlbumAsync('Draw Up', firstAsset, false)
+        } else {
+          await MediaLibrary.addAssetsToAlbumAsync([firstAsset], album, false)
+        }
+      } catch {
+        // Album creation isn't critical — assets are still in the camera roll
+      }
+    }
+
+    track('original_saved', { storeId: data.store.id, metadata: { count: saved, total: piecesWithOriginals.length } })
+    setExportProgress(null)
+    Alert.alert(
+      saved === piecesWithOriginals.length ? 'Saved to Photos ✨' : 'Mostly saved',
+      saved === piecesWithOriginals.length
+        ? `${saved} original drawing${saved === 1 ? '' : 's'} now safe in your Photos. Look for the "Draw Up" album.`
+        : `Saved ${saved} of ${piecesWithOriginals.length}. Try again to retry the rest.`,
+    )
+  }
 
   const sortedPieces = useMemo(() => {
     if (!data?.pieces) return []
@@ -65,10 +134,29 @@ export default function StoreScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Text style={styles.shareBtnText}>Share</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {isOwner && data.pieces.length > 0 && (
+            <TouchableOpacity style={styles.saveAllBtn} onPress={handleSaveAllOriginals} disabled={!!exportProgress}>
+              {exportProgress ? (
+                <Text style={styles.saveAllBtnText}>Saving {exportProgress.done}/{exportProgress.total}…</Text>
+              ) : (
+                <Text style={styles.saveAllBtnText}>↓ Save all</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+            <Text style={styles.shareBtnText}>Share</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {isOwner && data.pieces.length > 0 && (
+        <View style={styles.preserveBanner}>
+          <Text style={styles.preserveBannerText}>
+            Save every original drawing to your Photos before recycling the paper versions.
+          </Text>
+        </View>
+      )}
 
       <FlatList
         data={sortedPieces}
@@ -114,27 +202,8 @@ export default function StoreScreen() {
             <Text style={styles.emptyBody}>{store.child_name} is still dreaming up their first world. Check back soon to step inside.</Text>
           </View>
         }
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
       />
-
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(tabs)/discover')}>
-          <Text style={styles.navIcon}>✦</Text>
-          <Text style={styles.navLabel}>Discover</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(tabs)/create')}>
-          <Text style={styles.navIcon}>✨</Text>
-          <Text style={styles.navLabel}>Create</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(tabs)/mystores')}>
-          <Text style={styles.navIcon}>🎨</Text>
-          <Text style={styles.navLabel}>My Galleries</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(tabs)/profile')}>
-          <Text style={styles.navIcon}>◉</Text>
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
 
       <Modal visible={dropdownOpen} transparent animationType="fade">
         <TouchableOpacity style={styles.dropdownOverlay} onPress={() => setDropdownOpen(false)} activeOpacity={1}>
@@ -169,8 +238,13 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   backText: { fontSize: 22, color: colors.dark, lineHeight: 26 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   shareBtn: { ...btn.primary, paddingHorizontal: 16, paddingVertical: 9 },
   shareBtnText: { ...btn.primaryText, fontSize: 13 },
+  saveAllBtn: { backgroundColor: colors.white, borderRadius: 100, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
+  saveAllBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
+  preserveBanner: { marginHorizontal: 20, marginBottom: 16, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: colors.goldLight, borderRadius: 12, borderWidth: 1, borderColor: colors.goldMid },
+  preserveBannerText: { fontSize: 12, fontWeight: '600', color: colors.goldDark, lineHeight: 17, textAlign: 'center' },
   galleryHeader: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 12, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
   avatarText: { fontSize: 28, fontWeight: '900', color: colors.goldDark },
@@ -195,10 +269,6 @@ const styles = StyleSheet.create({
   errorText: { ...type.body, marginBottom: 16 },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingBottom: 28, paddingTop: 10 },
-  navItem: { flex: 1, alignItems: 'center', gap: 3 },
-  navIcon: { fontSize: 18 },
-  navLabel: { fontSize: 11, fontWeight: '600', color: colors.mid },
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-start', paddingTop: 220, paddingHorizontal: 16 },
   dropdownMenu: { backgroundColor: colors.white, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
   dropdownItem: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },

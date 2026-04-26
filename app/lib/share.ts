@@ -49,6 +49,6 @@ export function buildStoreShareMessage(childName: string, slug: string): SharePa
   return {
     title: `Step inside ${childName}'s worlds`,
     message: `Step inside ${childName}'s worlds. ✨`,
-    url: `https://drawup.ink/store/${slug}`,
+    url: `https://drawup.ink/gallery/${slug}`,
   }
 }

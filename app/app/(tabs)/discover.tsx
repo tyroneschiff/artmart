@@ -178,8 +178,11 @@ export default function DiscoverScreen() {
         ListEmptyComponent={
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>✨</Text>
-            <Text style={styles.emptyTitle}>The portal is waiting</Text>
-            <Text style={styles.emptyBody}>No worlds have been discovered yet. Be the first to step inside a drawing and share what you find.</Text>
+            <Text style={styles.emptyTitle}>Nothing to discover yet</Text>
+            <Text style={styles.emptyBody}>Be the first. Snap a photo of your child's drawing and watch it come to life.</Text>
+            <TouchableOpacity style={styles.emptyCta} onPress={() => router.push('/(tabs)/create')}>
+              <Text style={styles.emptyCtaText}>Create the first one</Text>
+            </TouchableOpacity>
           </View>
         }
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -238,8 +241,10 @@ const styles = StyleSheet.create({
   childName: { ...type.label, marginTop: 2 },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { ...type.h2, fontSize: 18, marginBottom: 8 },
-  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center' },
+  emptyTitle: { ...type.h2, fontSize: 20, marginBottom: 8, textAlign: 'center' },
+  emptyBody: { ...type.body, fontSize: 14, textAlign: 'center', marginBottom: 24 },
+  emptyCta: { ...btn.primary, paddingHorizontal: 28, paddingVertical: 14 },
+  emptyCtaText: { ...btn.primaryText, fontSize: 15 },
   errorText: { ...type.body, marginBottom: 16 },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },

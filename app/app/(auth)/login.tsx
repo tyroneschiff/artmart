@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import * as Linking from 'expo-linking'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../../lib/supabase'
+import { track } from '../../lib/analytics'
 import { colors } from '../../lib/theme'
 
 const DEV_CREDS_KEY = '__dev_login_creds__'
@@ -41,6 +42,7 @@ export default function LoginScreen() {
           options: { emailRedirectTo: Linking.createURL('/') },
         })
         if (error) throw error
+        track('signup_completed')
         Alert.alert('Check your email', 'We sent you a confirmation link.')
       }
 
@@ -50,6 +52,9 @@ export default function LoginScreen() {
 
       if (returnTo) {
         router.replace(returnTo as any)
+      } else if (mode === 'signup') {
+        // New parents: drop them straight into the magic moment
+        router.replace('/(tabs)/create')
       } else {
         router.replace('/(tabs)/discover')
       }

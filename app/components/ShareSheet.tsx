@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share } from 'react-native'
 import { colors } from '../lib/theme'
 import { SharePayload, shareToWhatsApp } from '../lib/share'
+import { track } from '../lib/analytics'
 
 type Props = {
   visible: boolean
@@ -11,17 +13,27 @@ type Props = {
 }
 
 export default function ShareSheet({ visible, payload, onClose }: Props) {
+  // Parse URL to attribute the share event back to a piece or gallery.
+  const trackProps = (() => {
+    if (!payload) return {}
+    const m = payload.url.match(/\/piece\/([^/?#]+)/)
+    return m ? { pieceId: m[1] } : {}
+  })()
+
+  useEffect(() => {
+    if (visible && payload) track('share_started', trackProps)
+  }, [visible, payload?.url])
+
   if (!payload) return null
 
   async function handleNativeShare() {
     try {
-      // Share first, close after — iOS presents the system share sheet on top of our modal.
-      // Closing the modal first deallocates the presenting view controller and silently cancels the share.
       await Share.share({
         title: payload!.title,
         message: payload!.message,
         url: payload!.url,
       })
+      track('share_completed', { ...trackProps, metadata: { channel: 'native' } })
     } catch (e: any) {
       Alert.alert('Share failed', e?.message || 'Could not open share sheet')
     }
@@ -30,6 +42,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
 
   async function handleWhatsApp() {
     onClose()
+    track('share_completed', { ...trackProps, metadata: { channel: 'whatsapp' } })
     await shareToWhatsApp(`${payload!.message}\n${payload!.url}`)
   }
 
@@ -39,6 +52,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
     } else {
       Clipboard.setString(payload!.url)
     }
+    track('share_completed', { ...trackProps, metadata: { channel: 'copy' } })
     onClose()
     Alert.alert('Copied!', 'Link copied to clipboard.')
   }

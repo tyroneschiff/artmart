@@ -131,23 +131,24 @@ Deno.serve(async (req) => {
 You MUST respond with ONLY a raw JSON object — no markdown, no explanation, no code fences.
 The JSON must have exactly two keys: "description" and "prompt".
 
-The "description" is READ ALOUD to the child who drew this. They are 4–10 years old and listening closely. Write FOR THEM, not for adults.
+The "description" is READ ALOUD to the child who drew this — 4–10 years old and listening closely. Make them grin. Make them feel seen. Spark a tiny bit of wonder.
 
 Hard rules for the description:
-- Exactly 2 short sentences. Maximum 25 words total. Brevity is more important than completeness.
-- Sentence 1 names 1–2 specific things you see in the drawing. Sentence 2 is a warm reaction.
-- Use simple, everyday words a 6-year-old understands. NEVER use: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, confident, composition, palette.
-- Speak to them: use "you" and "your". Open with their name if provided.
-- Sound like a friendly grown-up talking, not a poet.
+- 2 sentences, max 30 words total.
+- Kid-friendly vocabulary only. NEVER use: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, vivid, dynamic, captivating, imaginative, delightful, composition, palette.
+- NEVER start with "You painted", "You drew", "You made", "You created". Vary openings — surprise, wonder, observation, imagination.
+- Name 1–2 specific things from the drawing (a color, a creature, a shape, a detail).
+- Spark imagination — what's happening, where they might be, what it feels like.
+- End with warmth, but make it feel earned, not formulaic.
+- Speak TO them when natural ("I wonder if you...") but don't force "your" everywhere.
+- Plain text only, no quotes, no emoji.
 
-Good examples (note the length):
-"Sadie, your rainbow is huge — red, orange, green, blue, all the colors! It looks like a happy parade across the sky."
+GOOD EXAMPLES:
+"Wow — that purple dragon looks like he's about to take off into the clouds! And those tiny flowers down by his feet? Such a sweet detail."
 
-"Josiah, look at all those tall trees with little creatures hiding in the branches. What an amazing forest you made."
+"A whole rainbow city! I keep finding new windows in those blue towers — I bet the people who live there are happy all day long."
 
-"That dragon is right next to the cottage, and the sun is smiling. I love your world."
-
-Never infer a name from the drawing. If no childName is provided, just start with what you see.
+"Look at that brave little fox tiptoeing through the orange leaves. Something about his pointy ears makes me feel like he's about to find an adventure."
 
 The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original drawing as input, so be vivid and push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, composition, and color choices are the source of truth. Show what it looks like to stand inside that place.
 
@@ -170,7 +171,7 @@ Example:
             source: { type: 'base64', media_type: mimeType, data: imageBase64 }
           }, {
             type: 'text',
-            text: `Step inside this child's drawing${artistName ? ` by ${artistName}` : ''}. Write a 2-sentence description (max 25 words) spoken directly TO ${artistName ? artistName : 'the child'} — kid-friendly words, name 1–2 specific things you see, end with a warm reaction. Then write a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
+            text: `Look at this child's drawing${artistName ? ` by ${artistName}` : ''}. Write your 2-sentence reaction to ${artistName ? artistName : 'the child'} — surprise them, spark wonder, name something specific. Don't start with "You painted/drew/made/created". Then write a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
           }]
         }]
       }),

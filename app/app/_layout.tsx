@@ -115,7 +115,7 @@ export default function RootLayout() {
   return (
     <StripeWrapper>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ 
+        <Stack screenOptions={{
           headerShown: false,
           gestureEnabled: true,
           fullScreenGestureEnabled: true,

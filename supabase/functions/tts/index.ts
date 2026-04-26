@@ -3,7 +3,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const VOICE_ID = 'UviZUSU9a9VkWQGoGxpv'
+const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'
 const MODEL_ID = 'eleven_multilingual_v2'
 
 Deno.serve(async (req) => {
@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('ELEVENLABS_API_KEY')
     if (!apiKey) throw new Error('ELEVENLABS_API_KEY not set')
 
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_192`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: {
         'xi-api-key': apiKey,
@@ -29,9 +29,9 @@ Deno.serve(async (req) => {
         text,
         model_id: MODEL_ID,
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-          style: 0.35,
+          stability: 0.45,
+          similarity_boost: 0.8,
+          style: 0.5,
           use_speaker_boost: true,
         },
       }),

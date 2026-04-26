@@ -127,8 +127,33 @@ function renderHtml({ title, description, imageUrl, canonicalUrl, bodyHeadline, 
 </html>`
 }
 
+async function logOgView(type, id) {
+  if (!SUPABASE_ANON_KEY) return
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/events`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        event_type: "og_view",
+        piece_id: type === "piece" ? id : null,
+        metadata: { type, slug: type !== "piece" ? id : null },
+      }),
+    })
+  } catch {
+    // Silent — telemetry must never break the OG response.
+  }
+}
+
 export default async function handler(req, res) {
   const { type, id } = req.query
+  if ((type === "piece" || type === "gallery" || type === "store") && id) {
+    logOgView(type, id) // fire and forget
+  }
 
   let payload = {
     title: "Draw Up — Step inside your child's drawing",
@@ -156,8 +181,8 @@ export default async function handler(req, res) {
         payload.bylineLabel = `A world by ${childName}`
         payload.ctaLabel = "Step inside on Draw Up"
       }
-    } else if (type === "store" && id) {
-      payload.canonicalUrl = `https://drawup.ink/store/${id}`
+    } else if ((type === "gallery" || type === "store") && id) {
+      payload.canonicalUrl = `https://drawup.ink/gallery/${id}`
       const store = await fetchStore(id)
       if (store) {
         const pieces = (store.pieces || []).filter((p) => p.published)

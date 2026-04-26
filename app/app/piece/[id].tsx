@@ -4,17 +4,16 @@ import { useLocalSearchParams, router } from 'expo-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { purchasePiece } from '../../lib/checkout'
-import { downloadPiece } from '../../lib/download'
-import GiftingModal, { GiftingData } from '../../components/GiftingModal'
 import ShareSheet from '../../components/ShareSheet'
+import PreservedDrawing from '../../components/PreservedDrawing'
+import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
-  vote_count: number; price_digital: number; price_print: number; ai_description: string
+  vote_count: number; ai_description: string
   stores: { child_name: string; slug: string; owner_id: string }
 }
 
@@ -46,28 +45,11 @@ async function fetchComments(pieceId: string): Promise<Comment[]> {
   return data as unknown as Comment[]
 }
 
-async function fetchMyDigitalOrder(pieceId: string, userId: string) {
-  const { data } = await supabase
-    .from('orders')
-    .select('id')
-    .eq('piece_id', pieceId)
-    .eq('buyer_id', userId)
-    .eq('order_type', 'digital')
-    .eq('status', 'paid')
-    .maybeSingle()
-  return data
-}
-
-
 export default function PieceScreen() {
   const { id, vote } = useLocalSearchParams<{ id: string; vote?: string }>()
   const session = useAuthStore((s) => s.session)
   const queryClient = useQueryClient()
   const autoVoteFired = useRef(false)
-    const [purchasing, setPurchasing] = useState<'digital' | 'print' | null>(null)
-    const [downloading, setDownloading] = useState(false)
-    const [giftingModalVisible, setGiftingModalVisible] = useState(false)
-    const [modalOrderType, setModalOrderType] = useState<'digital' | 'print'>('print')
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
     const [lightboxUri, setLightboxUri] = useState<string | null>(null)
@@ -78,12 +60,6 @@ export default function PieceScreen() {
 
     const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
   
-    const { data: myDigitalOrder } = useQuery({
-      queryKey: ['orders', id, session?.user.id, 'digital'],
-      queryFn: () => fetchMyDigitalOrder(id, session!.user.id),
-      enabled: !!session,
-    })
-
     const { data: myVote } = useQuery({
       queryKey: ['vote', id, session?.user.id],
       queryFn: async () => {
@@ -94,8 +70,7 @@ export default function PieceScreen() {
     })
     const hasVoted = !!myVote
 
-    const showHighRes = isOwner || !!myDigitalOrder
-    const displayImageUrl = piece ? (showHighRes ? piece.transformed_image_url : (piece.watermarked_image_url || piece.transformed_image_url)) : null
+    const displayImageUrl = piece ? (piece.transformed_image_url || piece.watermarked_image_url) : null
   
     const withTimeout = <T,>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> => {
       const timeout = new Promise<never>((_, reject) =>
@@ -114,6 +89,7 @@ export default function PieceScreen() {
         queryClient.invalidateQueries({ queryKey: ['piece', id] })
         queryClient.invalidateQueries({ queryKey: ['discover'] })
         queryClient.invalidateQueries({ queryKey: ['vote', id, session?.user.id] })
+        track('vote_cast', { pieceId: id })
       },
       onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })
@@ -164,7 +140,7 @@ export default function PieceScreen() {
         queryClient.invalidateQueries({ queryKey: ['store', piece!.stores?.slug] })
         queryClient.invalidateQueries({ queryKey: ['discover'] })
         queryClient.invalidateQueries({ queryKey: ['mystores'] })
-        router.replace(`/store/${piece!.stores?.slug}`)
+        router.replace(`/gallery/${piece!.stores?.slug}`)
       },
       onError: (e: any) => Alert.alert('Delete failed', e.message),
     })
@@ -193,53 +169,6 @@ export default function PieceScreen() {
       onError: (e: any) => Alert.alert('Error', e.message),
     })
   
-    async function executePurchase(orderType: 'digital' | 'print', giftingData?: GiftingData) {
-      // Session check is now more nuanced, handled in handlePurchase
-      setPurchasing(orderType)
-      try {
-        const userToken = session?.access_token || undefined // Pass token if session exists, else undefined
-        await purchasePiece(
-          id, 
-          orderType, 
-          userToken, 
-          giftingData?.shippingAddress, 
-          giftingData?.guestEmail, 
-          giftingData?.recipientEmail, 
-          giftingData?.giftMessage,
-          giftingData?.quantity
-        )
-        if (orderType === 'digital') {
-          Alert.alert('Purchase complete!', 'Your file is ready to download.', [
-            { text: 'Download now', onPress: () => downloadPiece(id) },
-            { text: 'Later' },
-          ])
-        } else {
-          Alert.alert('Order placed!', 'Your print is being prepared and will ship soon!')
-        }
-        queryClient.invalidateQueries({ queryKey: ['orders'] })
-        queryClient.invalidateQueries({ queryKey: ['paidOrderCount'] })
-      } catch (e: any) {
-        if (e.message !== 'Canceled') Alert.alert('Payment failed', e.message)
-      } finally {
-        setPurchasing(null)
-      }
-    }
-  
-    async function handleRedownload() {
-      setDownloading(true)
-      try {
-        await downloadPiece(id)
-      } catch {
-        Alert.alert('Download failed', 'Please try again.')
-      } finally {
-        setDownloading(false)
-      }
-    }
-  
-    function handlePurchase(orderType: 'digital' | 'print') {
-      setModalOrderType(orderType)
-      setGiftingModalVisible(true)
-    }
   if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
   
   if (error) {
@@ -262,14 +191,13 @@ export default function PieceScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.back}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>{piece.title}</Text>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             {isOwner && (
               <TouchableOpacity onPress={handleDelete} disabled={deleteMutation.isPending} style={styles.deleteBtn}>
                 <Text style={styles.deleteBtnText}>Delete</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={[btn.primary, { paddingVertical: 8, paddingHorizontal: 16 }]} onPress={() =>
+            <TouchableOpacity style={[btn.primary, { paddingVertical: 10, paddingHorizontal: 18 }]} onPress={() =>
               setSharePayload(buildPieceShareMessage(piece.title, piece.stores?.child_name ?? 'Artist', piece.id))
             }>
               <Text style={[btn.primaryText, { fontSize: 13 }]}>Share</Text>
@@ -283,7 +211,7 @@ export default function PieceScreen() {
 
         <View style={styles.titleRow}>
           <Text style={[type.h2, { fontSize: 26, flex: 1 }]}>{piece.title}</Text>
-          <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/store/${piece.stores?.slug}`)}>
+          <TouchableOpacity style={styles.storeBtn} onPress={() => router.push(`/gallery/${piece.stores?.slug}`)}>
             <Text style={styles.storeBtnText}>{piece.stores?.child_name}'s Gallery →</Text>
           </TouchableOpacity>
         </View>
@@ -308,46 +236,6 @@ export default function PieceScreen() {
         >
           <Text style={styles.voteBtnText}>♥ {piece.vote_count} {piece.vote_count === 1 ? 'vote' : 'votes'}</Text>
         </TouchableOpacity>
-
-        {(isOwner || myDigitalOrder) && (
-          <View style={styles.purchaseSection}>
-            <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
-            <TouchableOpacity
-              style={[card, styles.purchaseCard]}
-              onPress={handleRedownload}
-              disabled={downloading || purchasing !== null}
-            >
-              <View>
-                <Text style={styles.purchaseType}>Keep the high-res version</Text>
-                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>
-                  {isOwner ? "Free for you as the creator" : "You own this · Download again"}
-                </Text>
-              </View>
-              {downloading
-                ? <ActivityIndicator color={colors.gold} />
-                : <Text style={styles.redownloadLabel}>{isOwner ? 'Download' : 'Re-download'}</Text>}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {!isOwner && !myDigitalOrder && (
-          <View style={styles.purchaseSection}>
-            <Text style={[type.h3, { marginBottom: 12 }]}>Bring this world home</Text>
-            <TouchableOpacity
-              style={[card, styles.purchaseCard]}
-              onPress={() => handlePurchase('digital')}
-              disabled={purchasing !== null}
-            >
-              <View>
-                <Text style={styles.purchaseType}>Digital download</Text>
-                <Text style={[type.label, { marginTop: 2, fontSize: 12 }]}>Full-resolution file, yours to keep</Text>
-              </View>
-              {purchasing === 'digital'
-                ? <ActivityIndicator color={colors.gold} />
-                : <Text style={styles.purchasePrice}>${((piece.price_digital || 500) / 100).toFixed(2)}</Text>}
-            </TouchableOpacity>
-          </View>
-        )}
 
         <View style={styles.commentSection}>
           <Text style={[type.h3, { marginBottom: 16 }]}>Comments</Text>
@@ -406,10 +294,12 @@ export default function PieceScreen() {
           </View>
         </View>
 
-        <Text style={[type.label, { paddingHorizontal: 16, marginBottom: 8, fontSize: 13 }]}>The drawing</Text>
-        <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(piece.original_image_url)}>
-          <Image source={{ uri: piece.original_image_url }} style={styles.originalImage} resizeMode="contain" />
-        </TouchableOpacity>
+        <PreservedDrawing
+          imageUri={piece.original_image_url}
+          childName={piece.stores?.child_name}
+          pieceId={id}
+          onPress={() => setLightboxUri(piece.original_image_url)}
+        />
       </ScrollView>
 
       <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)} statusBarTranslucent>
@@ -422,16 +312,6 @@ export default function PieceScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <GiftingModal
-        visible={giftingModalVisible}
-        isGuest={!session}
-        orderType={modalOrderType}
-        onConfirm={(data) => {
-          setGiftingModalVisible(false)
-          executePurchase(modalOrderType, data)
-        }}
-        onCancel={() => setGiftingModalVisible(false)}
-      />
       <ShareSheet
         visible={!!sharePayload}
         payload={sharePayload}
@@ -448,26 +328,15 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
-  headerTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.gold, textAlign: 'center', paddingHorizontal: 8 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 12 },
   storeBtn: { paddingBottom: 4 },
   storeBtnText: { fontSize: 13, fontWeight: '700', color: colors.gold },
   backBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   back: { fontSize: 22, color: colors.dark, lineHeight: 26 },
   mainImage: { width: '100%', aspectRatio: 1 },
-  actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16 },
-  magicLabel: { paddingHorizontal: 16, paddingTop: 12, flex: 1 },
-voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
+  voteBtn: { marginHorizontal: 16, marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   voteBtnDone: { opacity: 0.6 },
   voteBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 16 },
-  purchaseSection: { paddingHorizontal: 16, marginBottom: 32 },
-  purchaseCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, marginBottom: 8 },
-  purchaseType: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  purchasePrice: { fontSize: 18, fontWeight: '800', color: colors.gold },
-  discountBadge: { backgroundColor: colors.gold, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  discountBadgeText: { color: colors.white, fontSize: 10, fontWeight: '800' },
-  redownloadLabel: { fontSize: 14, fontWeight: '700', color: colors.gold },
-  originalImage: { width: '100%', aspectRatio: 1, backgroundColor: colors.cream, opacity: 0.85 },
   lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
   lightboxClose: { position: 'absolute', top: 56, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },

@@ -13,6 +13,7 @@ import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
+import { track } from '../../lib/analytics'
 import { colors, btn, type, card } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
@@ -21,8 +22,6 @@ import ReadAloudButton from '../../components/ReadAloudButton'
 
 const isWeb = Platform.OS === 'web'
 
-const PRICE_DIGITAL_CENTS = 500
-const PRICE_PRINT_CENTS = 3000
 
 const TRANSFORM_TIPS = [
   "Analyzing every brushstroke...",
@@ -128,6 +127,7 @@ export default function CreateScreen() {
     if (!imageUri) return
     setTransforming(true)
     setTransformError(null)
+    track('transform_started')
     try {
       const compressed = await ImageManipulator.manipulateAsync(
         imageUri,
@@ -147,12 +147,15 @@ export default function CreateScreen() {
       setTransformedUri(downloadedUri)
       setAiDescription(description)
       setStep('publish')
+      track('transform_completed', { storeId: autoStore?.id })
     } catch (e: any) {
       if (e instanceof OutOfCreditsError) {
         queryClient.invalidateQueries({ queryKey: ['credits'] })
         setShowCreditsUpsell(true)
+        track('transform_failed', { metadata: { reason: 'out_of_credits' } })
       } else {
         setTransformError(e.message ?? 'Something went wrong. Please try again.')
+        track('transform_failed', { metadata: { reason: e?.message?.slice(0, 200) ?? 'unknown' } })
       }
     } finally {
       setTransforming(false)
@@ -172,7 +175,10 @@ export default function CreateScreen() {
       if (error) throw error
       const { data } = await refetchStores()
       const created = data?.find((s) => s.slug === slug)
-      if (created) setSelectedStore(created)
+      if (created) {
+        setSelectedStore(created)
+        track('gallery_created', { storeId: created.id })
+      }
       setNewStoreName('')
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
     } catch (e: any) {
@@ -251,8 +257,6 @@ export default function CreateScreen() {
         transformed_image_url: transformedStoredUrl,
         watermarked_image_url: watermarkedUrl,
         ai_description: aiDescription || null,
-        price_digital: PRICE_DIGITAL_CENTS,
-        price_print: PRICE_PRINT_CENTS,
         published: true,
       }).select('id').single()
       if (error) throw error
@@ -264,6 +268,7 @@ export default function CreateScreen() {
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
       setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
       setStep('success')
+      track('piece_published', { pieceId, storeId: selectedStore?.id })
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   })
@@ -293,7 +298,7 @@ export default function CreateScreen() {
                 style={[btn.primary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
                 onPress={() => {
                   resetCreate()
-                  router.push(`/store/${selectedStore?.slug}`)
+                  router.push(`/gallery/${selectedStore?.slug}`)
                 }}
               >
                 <Text style={btn.primaryText}>{selectedStore?.child_name}'s Gallery</Text>

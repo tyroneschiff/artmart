@@ -5,8 +5,15 @@
       "destination": "/api/og?type=piece&id=:id"
     },
     {
+      "source": "/gallery/:slug",
+      "destination": "/api/og?type=gallery&id=:slug"
+    }
+  ],
+  "redirects": [
+    {
       "source": "/store/:slug",
-      "destination": "/api/og?type=store&id=:slug"
+      "destination": "/gallery/:slug",
+      "permanent": true
     }
   ]
 }

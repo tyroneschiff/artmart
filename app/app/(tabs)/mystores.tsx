@@ -110,12 +110,17 @@ export default function MyStoresScreen() {
         renderItem={({ item }) => {
           const { coverUrl, count } = galleryCover(item.pieces)
           return (
-            <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/store/${item.slug}`)}>
-              {coverUrl ? (
-                <Image source={{ uri: coverUrl }} style={styles.storeCover} />
-              ) : (
-                <View style={styles.storeIcon}><Text style={styles.storeIconText}>{item.child_name[0].toUpperCase()}</Text></View>
-              )}
+            <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/gallery/${item.slug}`)}>
+              <View style={styles.coverWrap}>
+                {coverUrl ? (
+                  <Image source={{ uri: coverUrl }} style={styles.storeCover} />
+                ) : (
+                  <View style={styles.storeCoverEmpty} />
+                )}
+                <View style={styles.initialBadge}>
+                  <Text style={styles.initialBadgeText}>{item.child_name[0].toUpperCase()}</Text>
+                </View>
+              </View>
               <View style={styles.storeInfo}>
                 <Text style={styles.storeName}>{item.child_name}'s Gallery</Text>
                 <Text style={styles.storeMeta}>
@@ -168,7 +173,7 @@ export default function MyStoresScreen() {
             onChangeText={setSlug}
             autoCapitalize="none"
           />
-          {slug ? <Text style={styles.slugPreview}>drawup.ink/store/{slug}</Text> : null}
+          {slug ? <Text style={styles.slugPreview}>drawup.ink/gallery/{slug}</Text> : null}
           <TouchableOpacity
             style={[styles.button, (!childName || !slug) && styles.buttonDisabled]}
             onPress={() => createStore.mutate()}
@@ -194,9 +199,11 @@ const styles = StyleSheet.create({
   addBtn: { ...btn.primary, paddingVertical: 9, paddingHorizontal: 16 },
   addBtnText: { ...btn.primaryText, fontSize: 14 },
   storeCard: { ...card, flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, padding: 16 },
-  storeIcon: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: colors.goldMid },
-  storeIconText: { fontSize: 24, fontWeight: '800', color: colors.goldDark },
-  storeCover: { width: 56, height: 56, borderRadius: 14, marginRight: 16, backgroundColor: colors.border },
+  coverWrap: { width: 56, height: 56, marginRight: 16, position: 'relative' },
+  storeCover: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.border },
+  storeCoverEmpty: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid },
+  initialBadge: { position: 'absolute', bottom: -4, right: -4, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.dark, borderWidth: 2, borderColor: colors.cream, alignItems: 'center', justifyContent: 'center' },
+  initialBadgeText: { color: colors.white, fontWeight: '900', fontSize: 11, letterSpacing: -0.3 },
   storeInfo: { flex: 1 },
   storeName: { fontSize: 17, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
   storeMeta: { ...type.label, marginTop: 3, fontSize: 12 },
