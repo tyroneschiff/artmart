@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('ELEVENLABS_API_KEY')
     if (!apiKey) throw new Error('ELEVENLABS_API_KEY not set')
 
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_22050_32`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_192`, {
       method: 'POST',
       headers: {
         'xi-api-key': apiKey,
