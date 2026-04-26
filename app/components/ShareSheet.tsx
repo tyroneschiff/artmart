@@ -1,36 +1,26 @@
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform } from 'react-native'
 import { colors } from '../lib/theme'
-import { SharePayload, shareNative, shareToWhatsApp } from '../lib/share'
-import { exportStoryCard } from '../lib/export'
+import { SharePayload, shareToWhatsApp, shareToSMS } from '../lib/share'
 
 type Props = {
   visible: boolean
   payload: SharePayload | null
-  imageUri?: string // Added to support story export
-  childName?: string // Added to support story export
+  imageUri?: string
+  childName?: string
   onClose: () => void
 }
 
-export default function ShareSheet({ visible, payload, imageUri, childName, onClose }: Props) {
+export default function ShareSheet({ visible, payload, onClose }: Props) {
   if (!payload) return null
+
+  async function handleMessages() {
+    onClose()
+    await shareToSMS(`${payload!.message}\n${payload!.url}`)
+  }
 
   async function handleWhatsApp() {
     onClose()
     await shareToWhatsApp(`${payload!.message}\n${payload!.url}`)
-  }
-
-  async function handleInstagram() {
-    onClose()
-    if (imageUri) {
-      await exportStoryCard(imageUri, payload!.title, childName || 'Artist')
-    } else {
-      Alert.alert('Not available', 'Story export is only available for full pieces.')
-    }
-  }
-
-  async function handleNative() {
-    onClose()
-    await shareNative(payload!)
   }
 
   async function handleCopy() {
@@ -52,32 +42,25 @@ export default function ShareSheet({ visible, payload, imageUri, childName, onCl
         <Text style={styles.url} numberOfLines={1}>{payload.url}</Text>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.action} onPress={handleWhatsApp}>
-            <View style={[styles.actionIcon, { backgroundColor: '#E8F8EE' }]}>
+          <TouchableOpacity style={styles.action} onPress={handleMessages}>
+            <View style={[styles.actionIcon, { backgroundColor: '#E5F4FF' }]}>
               <Text style={styles.actionEmoji}>💬</Text>
             </View>
+            <Text style={styles.actionLabel}>Messages</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.action} onPress={handleWhatsApp}>
+            <View style={[styles.actionIcon, { backgroundColor: '#E8F8EE' }]}>
+              <Text style={styles.actionEmoji}>🟢</Text>
+            </View>
             <Text style={styles.actionLabel}>WhatsApp</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.action} onPress={handleInstagram}>
-            <View style={[styles.actionIcon, { backgroundColor: colors.goldLight }]}>
-              <Text style={styles.actionEmoji}>📸</Text>
-            </View>
-            <Text style={styles.actionLabel}>Story</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.action} onPress={handleNative}>
-            <View style={[styles.actionIcon, { backgroundColor: '#EEF0F8' }]}>
-              <Text style={styles.actionEmoji}>↑</Text>
-            </View>
-            <Text style={styles.actionLabel}>Share</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.action} onPress={handleCopy}>
             <View style={[styles.actionIcon, { backgroundColor: '#F8F8F8' }]}>
               <Text style={styles.actionEmoji}>🔗</Text>
             </View>
-            <Text style={styles.actionLabel}>Copy</Text>
+            <Text style={styles.actionLabel}>Copy link</Text>
           </TouchableOpacity>
         </View>
 

@@ -17,6 +17,16 @@ export async function shareToWhatsApp(message: string): Promise<void> {
   await Linking.openURL(url)
 }
 
+export async function shareToSMS(message: string): Promise<void> {
+  const encoded = encodeURIComponent(message)
+  // iOS: sms:&body=... opens Messages with pre-filled body, no recipient
+  // Android: sms:?body=... does the same
+  const url = Platform.OS === 'ios'
+    ? `sms:&body=${encoded}`
+    : `sms:?body=${encoded}`
+  await Linking.openURL(url)
+}
+
 export async function shareNative(payload: SharePayload): Promise<void> {
   await Share.share({
     title: payload.title,
