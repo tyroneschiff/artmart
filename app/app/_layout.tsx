@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Platform } from 'react-native'
+import { Platform, Linking } from 'react-native'
 import { Stack } from 'expo-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as Notifications from 'expo-notifications'
@@ -73,7 +73,27 @@ export default function RootLayout() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
-    return () => subscription.unsubscribe()
+
+    // Handle email confirmation deep links: drawup://#access_token=...
+    async function processDeepLink(url: string | null) {
+      if (!url) return
+      const hash = url.split('#')[1]
+      if (!hash) return
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+      }
+    }
+
+    Linking.getInitialURL().then(processDeepLink)
+    const linkingSub = Linking.addEventListener('url', ({ url }) => processDeepLink(url))
+
+    return () => {
+      subscription.unsubscribe()
+      linkingSub.remove()
+    }
   }, [])
 
   useEffect(() => {

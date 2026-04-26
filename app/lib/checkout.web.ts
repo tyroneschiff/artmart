@@ -1,7 +1,7 @@
 import { Alert, Linking } from 'react-native'
 import { ShippingAddress } from '../components/GiftingModal'
 
-const APP_STORE_URL = 'https://apps.apple.com/app/id6762963488'
+const APP_STORE_URL = 'https://testflight.apple.com/join/rKsqMyfV'
 
 export async function purchasePiece(
   _pieceId: string,
