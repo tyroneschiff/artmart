@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share, InteractionManager } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share } from 'react-native'
 import { colors } from '../lib/theme'
 import { SharePayload, shareToWhatsApp } from '../lib/share'
 
@@ -14,19 +14,18 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
   if (!payload) return null
 
   async function handleNativeShare() {
+    try {
+      // Share first, close after — iOS presents the system share sheet on top of our modal.
+      // Closing the modal first deallocates the presenting view controller and silently cancels the share.
+      await Share.share({
+        title: payload!.title,
+        message: `${payload!.message}\n${payload!.url}`,
+        url: payload!.url,
+      })
+    } catch (e: any) {
+      Alert.alert('Share failed', e?.message || 'Could not open share sheet')
+    }
     onClose()
-    // Wait for modal close animation before invoking system sheet — otherwise iOS cancels it.
-    InteractionManager.runAfterInteractions(() => {
-      setTimeout(() => {
-        Share.share({
-          title: payload!.title,
-          message: payload!.message,
-          url: payload!.url,
-        }).catch((e) => {
-          Alert.alert('Could not open share sheet', e.message)
-        })
-      }, 350)
-    })
   }
 
   async function handleWhatsApp() {
