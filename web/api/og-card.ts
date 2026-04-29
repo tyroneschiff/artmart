@@ -6,12 +6,15 @@
 // (kid drew this · Draw Up rendered the world) without needing the
 // parent to explain it.
 //
-// Edge runtime + @vercel/og. Cached at the CDN so each piece's card
-// is generated once and then served fast.
+// Edge runtime + @vercel/og. Plain createElement (no JSX) so this
+// compiles without any JSX transform pipeline.
 
+import React from "react"
 import { ImageResponse } from "@vercel/og"
 
 export const config = { runtime: "edge" }
+
+const h = React.createElement
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -25,12 +28,12 @@ const SUPABASE_ANON_KEY =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY
 
-async function fetchPiece(id) {
+async function fetchPiece(id: string) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/pieces?id=eq.${encodeURIComponent(id)}&select=title,original_image_url,transformed_image_url,watermarked_image_url,stores(child_name)`,
     {
       headers: {
-        apikey: SUPABASE_ANON_KEY,
+        apikey: SUPABASE_ANON_KEY!,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
     }
@@ -40,12 +43,12 @@ async function fetchPiece(id) {
   return rows && rows[0] ? rows[0] : null
 }
 
-async function fetchGallery(slug) {
+async function fetchGallery(slug: string) {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/stores?slug=eq.${encodeURIComponent(slug)}&select=child_name,pieces(original_image_url,transformed_image_url,watermarked_image_url,created_at,published)`,
     {
       headers: {
-        apikey: SUPABASE_ANON_KEY,
+        apikey: SUPABASE_ANON_KEY!,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
     }
@@ -55,15 +58,14 @@ async function fetchGallery(slug) {
   return rows && rows[0] ? rows[0] : null
 }
 
-export default async function handler(req) {
+export default async function handler(req: Request) {
   const url = new URL(req.url)
   const type = url.searchParams.get("type")
   const id = url.searchParams.get("id")
 
-  let original = null
-  let transformed = null
+  let original: string | null = null
+  let transformed: string | null = null
   let childName = "a young artist"
-  let title = ""
 
   try {
     if (type === "piece" && id) {
@@ -72,13 +74,12 @@ export default async function handler(req) {
         original = piece.original_image_url
         transformed = piece.transformed_image_url || piece.watermarked_image_url
         childName = piece.stores?.child_name || childName
-        title = piece.title || ""
       }
     } else if ((type === "gallery" || type === "store") && id) {
       const gallery = await fetchGallery(id)
       if (gallery) {
-        const published = (gallery.pieces || []).filter((p) => p.published && p.original_image_url)
-        const sorted = published.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+        const published = (gallery.pieces || []).filter((p: any) => p.published && p.original_image_url)
+        const sorted = published.slice().sort((a: any, b: any) => (b.created_at || "").localeCompare(a.created_at || ""))
         const latest = sorted[0]
         if (latest) {
           original = latest.original_image_url
@@ -87,26 +88,16 @@ export default async function handler(req) {
         childName = gallery.child_name || childName
       }
     }
-  } catch (e) {
+  } catch {
     // Fall through to default card
   }
 
-  // Fallback: brand splash if we don't have a pair
   if (!original || !transformed) {
-    return new ImageResponse(
-      <BrandFallback />,
-      { width: 1200, height: 630 }
-    )
+    return new ImageResponse(brandFallback(), { width: 1200, height: 630 })
   }
 
   return new ImageResponse(
-    <BeforeAfterCard
-      original={original}
-      transformed={transformed}
-      childName={childName}
-      title={title}
-      type={type}
-    />,
+    beforeAfterCard({ original, transformed, childName, type: type || "piece" }),
     {
       width: 1200,
       height: 630,
@@ -117,95 +108,125 @@ export default async function handler(req) {
   )
 }
 
-function BeforeAfterCard({ original, transformed, childName, title, type }) {
-  const headline =
-    type === "piece"
-      ? `${childName} drew this.`
-      : `${childName}'s gallery on Draw Up.`
-  const subhead =
-    type === "piece"
-      ? `Draw Up turned it into a world.`
-      : `Every drawing, brought to life.`
+// ── Element builders (createElement, no JSX) ─────────────────────────────
 
-  return (
-    <div
-      style={{
+function beforeAfterCard({
+  original,
+  transformed,
+  childName,
+  type,
+}: {
+  original: string
+  transformed: string
+  childName: string
+  type: string
+}) {
+  const headline =
+    type === "piece" ? `${childName} drew this.` : `${childName}'s gallery on Draw Up.`
+  const subhead =
+    type === "piece" ? `Draw Up turned it into a world.` : `Every drawing, brought to life.`
+
+  return h(
+    "div",
+    {
+      style: {
         width: "100%",
         height: "100%",
         display: "flex",
         flexDirection: "column",
         backgroundColor: "#FEFAF3",
         fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
-    >
-      {/* Top row: two image panels with arrow between */}
-      <div
-        style={{
+      },
+    },
+    // Top row: two image panels with arrow between
+    h(
+      "div",
+      {
+        style: {
           display: "flex",
           flex: 1,
           padding: "32px 32px 0 32px",
           gap: 16,
           alignItems: "center",
-        }}
-      >
-        <ImagePanel src={original} label="THE DRAWING" labelBg="#1C1810" labelColor="#FEFAF3" />
-        <Arrow />
-        <ImagePanel src={transformed} label="THE WORLD" labelBg="#E8A020" labelColor="#FFFFFF" />
-      </div>
-
-      {/* Bottom: copy + brand */}
-      <div
-        style={{
+        },
+      },
+      imagePanel(original, "THE DRAWING", "#1C1810", "#FEFAF3"),
+      arrow(),
+      imagePanel(transformed, "THE WORLD", "#E8A020", "#FFFFFF")
+    ),
+    // Bottom: copy + brand
+    h(
+      "div",
+      {
+        style: {
           display: "flex",
           flexDirection: "column",
           padding: "20px 36px 28px 36px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
+        },
+      },
+      h(
+        "div",
+        {
+          style: {
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+          },
+        },
+        h(
+          "div",
+          { style: { display: "flex", flexDirection: "column" } },
+          h(
+            "div",
+            {
+              style: {
                 fontSize: 36,
                 fontWeight: 900,
                 letterSpacing: -1.4,
                 color: "#1C1810",
                 lineHeight: 1.1,
-              }}
-            >
-              {headline}
-            </div>
-            <div
-              style={{
+              },
+            },
+            headline
+          ),
+          h(
+            "div",
+            {
+              style: {
                 fontSize: 22,
                 fontWeight: 600,
                 color: "#6B5E4E",
                 marginTop: 4,
                 letterSpacing: -0.4,
-              }}
-            >
-              {subhead}
-            </div>
-          </div>
-          <div
-            style={{
+              },
+            },
+            subhead
+          )
+        ),
+        h(
+          "div",
+          {
+            style: {
+              display: "flex",
               fontSize: 24,
               fontWeight: 900,
               color: "#1C1810",
               letterSpacing: -0.8,
-            }}
-          >
-            draw <span style={{ color: "#E8A020" }}>up</span>
-          </div>
-        </div>
-      </div>
-    </div>
+            },
+          },
+          "draw ",
+          h("span", { style: { color: "#E8A020" } }, "up")
+        )
+      )
+    )
   )
 }
 
-function ImagePanel({ src, label, labelBg, labelColor }) {
-  return (
-    <div
-      style={{
+function imagePanel(src: string, label: string, labelBg: string, labelColor: string) {
+  return h(
+    "div",
+    {
+      style: {
         flex: 1,
         height: 420,
         position: "relative",
@@ -214,20 +235,18 @@ function ImagePanel({ src, label, labelBg, labelColor }) {
         borderRadius: 20,
         border: "1px solid #EDE4D0",
         overflow: "hidden",
-      }}
-    >
-      <img
-        src={src}
-        width={520}
-        height={420}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-        }}
-      />
-      <div
-        style={{
+      },
+    },
+    h("img", {
+      src,
+      width: 520,
+      height: 420,
+      style: { width: "100%", height: "100%", objectFit: "cover" },
+    }),
+    h(
+      "div",
+      {
+        style: {
           position: "absolute",
           top: -10,
           left: 16,
@@ -239,18 +258,18 @@ function ImagePanel({ src, label, labelBg, labelColor }) {
           padding: "5px 12px",
           borderRadius: 999,
           display: "flex",
-        }}
-      >
-        {label}
-      </div>
-    </div>
+        },
+      },
+      label
+    )
   )
 }
 
-function Arrow() {
-  return (
-    <div
-      style={{
+function arrow() {
+  return h(
+    "div",
+    {
+      style: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -258,17 +277,17 @@ function Arrow() {
         fontSize: 36,
         fontWeight: 300,
         width: 28,
-      }}
-    >
-      →
-    </div>
+      },
+    },
+    "→"
   )
 }
 
-function BrandFallback() {
-  return (
-    <div
-      style={{
+function brandFallback() {
+  return h(
+    "div",
+    {
+      style: {
         width: "100%",
         height: "100%",
         display: "flex",
@@ -277,28 +296,33 @@ function BrandFallback() {
         justifyContent: "center",
         backgroundColor: "#FEFAF3",
         fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
-    >
-      <div
-        style={{
+      },
+    },
+    h(
+      "div",
+      {
+        style: {
+          display: "flex",
           fontSize: 64,
           fontWeight: 900,
           letterSpacing: -2,
           color: "#1C1810",
-        }}
-      >
-        draw <span style={{ color: "#E8A020" }}>up</span>
-      </div>
-      <div
-        style={{
+        },
+      },
+      "draw ",
+      h("span", { style: { color: "#E8A020" } }, "up")
+    ),
+    h(
+      "div",
+      {
+        style: {
           fontSize: 28,
           color: "#6B5E4E",
           marginTop: 12,
           fontWeight: 500,
-        }}
-      >
-        Step inside your child's drawing
-      </div>
-    </div>
+        },
+      },
+      "Step inside your child's drawing"
+    )
   )
 }
