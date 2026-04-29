@@ -274,6 +274,10 @@ export default function CreateScreen() {
       track('piece_published', { pieceId, storeId: selectedStore?.id })
       // Reward the magic moment with a soft physical pulse.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      // Pre-warm OG card + page so the first share lands instantly in iMessage.
+      // Fire both endpoints; both get CDN-cached at the edge for a year.
+      fetch(`https://drawup.ink/api/og-card?type=piece&id=${encodeURIComponent(pieceId)}`).catch(() => {})
+      fetch(`https://drawup.ink/piece/${encodeURIComponent(pieceId)}`).catch(() => {})
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   })

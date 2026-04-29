@@ -138,14 +138,16 @@ function beforeAfterCard({
         fontFamily: "system-ui, -apple-system, sans-serif",
       },
     },
-    // Top row: two image panels with arrow between
+    // Top row: two image panels with arrow between.
+    // 48px top padding gives the floating labels (top: -10) breathing room
+    // so they don't clip against iMessage's preview crop.
     h(
       "div",
       {
         style: {
           display: "flex",
           flex: 1,
-          padding: "32px 32px 0 32px",
+          padding: "48px 32px 0 32px",
           gap: 16,
           alignItems: "center",
         },

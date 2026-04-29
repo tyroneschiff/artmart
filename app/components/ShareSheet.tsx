@@ -14,6 +14,22 @@ type Props = {
   onClose: () => void
 }
 
+// Hit the dynamic OG card endpoint so Vercel renders + CDN-caches the
+// composite before the recipient's iMessage / WhatsApp ever asks for it.
+// Without this, the FIRST viewer of a freshly-shared piece pays the
+// 1–2s render latency and may see "loading" then the image pops in.
+function prewarmOgCard(shareUrl: string) {
+  try {
+    const m = shareUrl.match(/drawup\.ink\/(piece|gallery)\/([^/?#]+)/)
+    if (!m) return
+    const ogUrl = `https://drawup.ink/api/og-card?type=${m[1]}&id=${encodeURIComponent(m[2])}`
+    // Fire-and-forget. Don't await; don't surface errors.
+    fetch(ogUrl, { method: 'GET' }).catch(() => {})
+  } catch {
+    // Never let pre-warm fail the share flow.
+  }
+}
+
 export default function ShareSheet({ visible, payload, onClose }: Props) {
   // Parse URL to attribute the share event back to a piece or gallery.
   const trackProps = (() => {
@@ -23,7 +39,13 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
   })()
 
   useEffect(() => {
-    if (visible && payload) track('share_started', trackProps)
+    if (visible && payload) {
+      track('share_started', trackProps)
+      // Pre-warm the OG card so by the time the recipient sees the link,
+      // the composite image is rendered and CDN-cached. Fire-and-forget;
+      // the share sheet doesn't block on this.
+      prewarmOgCard(payload.url)
+    }
   }, [visible, payload?.url])
 
   if (!payload) return null
