@@ -5,14 +5,14 @@ import { Share, Linking, Platform } from 'react-native'
 describe('share lib', () => {
   it('builds piece share message correctly', () => {
     const payload = buildPieceShareMessage('Starry Night', 'Emma', '123')
-    expect(payload.title).toContain("Emma's world")
-    expect(payload.message).toContain('"Starry Night"')
+    expect(payload.title).toContain('Emma drew this')
+    expect(payload.message).toContain('Draw Up turned it into a world')
     expect(payload.url).toBe('https://drawup.ink/piece/123')
   })
 
   it('builds store share message correctly', () => {
     const payload = buildStoreShareMessage('Emma', 'emma-store')
-    expect(payload.title).toContain("Emma's worlds")
+    expect(payload.title).toContain("Emma's drawings")
     expect(payload.url).toBe('https://drawup.ink/gallery/emma-store')
   })
 

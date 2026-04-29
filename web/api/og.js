@@ -56,18 +56,38 @@ async function fetchStore(slug) {
   return rows && rows[0] ? rows[0] : null
 }
 
-function renderHtml({ title, description, imageUrl, canonicalUrl, bodyHeadline, bodySubtitle, bylineLabel, ctaLabel }) {
+function renderHtml({ title, description, ogImageUrl, originalImageUrl, transformedImageUrl, canonicalUrl, bodyHeadline, bodySubtitle, bylineLabel, ctaLabel, childName }) {
   const safe = {
     title: escapeHtml(title),
     description: escapeHtml(description),
-    imageUrl: escapeHtml(imageUrl),
+    ogImageUrl: escapeHtml(ogImageUrl),
+    originalImageUrl: originalImageUrl ? escapeHtml(originalImageUrl) : null,
+    transformedImageUrl: transformedImageUrl ? escapeHtml(transformedImageUrl) : null,
     canonicalUrl: escapeHtml(canonicalUrl),
     bodyHeadline: escapeHtml(bodyHeadline),
     bodySubtitle: escapeHtml(bodySubtitle),
     bylineLabel: bylineLabel ? escapeHtml(bylineLabel) : null,
     ctaLabel: escapeHtml(ctaLabel),
     appStore: escapeHtml(APP_STORE_URL),
+    childName: childName ? escapeHtml(childName) : null,
   }
+
+  // Body composition: when we have both images, show them side-by-side with
+  // labels so taps on the link land on a page that ALSO tells the relationship
+  // between the drawing and the rendered world. Single-image fallback otherwise.
+  const heroBlock = safe.originalImageUrl && safe.transformedImageUrl ? `
+      <div class="pair">
+        <div class="panel">
+          <span class="panel-label dark">The drawing</span>
+          <img src="${safe.originalImageUrl}" alt="The original drawing">
+        </div>
+        <div class="arrow">→</div>
+        <div class="panel">
+          <span class="panel-label gold">The world</span>
+          <img src="${safe.transformedImageUrl}" alt="The world rendered by Draw Up">
+        </div>
+      </div>` : `
+      <img class="hero" src="${safe.transformedImageUrl || safe.ogImageUrl}" alt="${safe.bodyHeadline}">`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -83,40 +103,54 @@ function renderHtml({ title, description, imageUrl, canonicalUrl, bodyHeadline, 
   <meta property="og:site_name" content="Draw Up">
   <meta property="og:title" content="${safe.title}">
   <meta property="og:description" content="${safe.description}">
-  <meta property="og:image" content="${safe.imageUrl}">
-  <meta property="og:image:width" content="1024">
-  <meta property="og:image:height" content="1024">
+  <meta property="og:image" content="${safe.ogImageUrl}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="${safe.canonicalUrl}">
   <meta name="twitter:title" content="${safe.title}">
   <meta name="twitter:description" content="${safe.description}">
-  <meta name="twitter:image" content="${safe.imageUrl}">
+  <meta name="twitter:image" content="${safe.ogImageUrl}">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{background:#FEFAF3;color:#1C1810}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;min-height:100vh;padding:32px 20px 48px}
-    .wrap{max-width:520px;margin:0 auto}
+    .wrap{max-width:560px;margin:0 auto}
     .brand{text-align:center;font-weight:900;letter-spacing:-1px;font-size:22px;margin-bottom:24px}
     .brand span{color:#E8A020}
     .card{background:#fff;border-radius:24px;overflow:hidden;border:1px solid #EDE4D0;box-shadow:0 12px 40px rgba(28,24,16,.06)}
     .hero{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#EDE4D0}
+    .pair{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:14px 14px 0}
+    .panel{position:relative;border-radius:14px;overflow:hidden;background:#FDF0D5;border:1px solid #EDE4D0}
+    .panel img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#EDE4D0}
+    .panel-label{position:absolute;top:-10px;left:10px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+    .panel-label.dark{background:#1C1810;color:#FEFAF3}
+    .panel-label.gold{background:#E8A020;color:#fff}
+    .arrow{color:#A89880;font-size:22px;font-weight:300;display:flex;align-items:center;justify-content:center}
     .body{padding:28px 24px 24px;text-align:center}
     .byline{color:#A89880;font-size:13px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px}
     h1{font-size:26px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-bottom:14px}
     p.desc{color:#6B5E4E;line-height:1.55;font-size:16px;margin-bottom:28px}
+    .attribution{font-size:13px;color:#A89880;margin-top:-18px;margin-bottom:24px;font-weight:500}
+    .attribution strong{color:#1C1810;font-weight:700}
     .cta{background:#1C1810;color:#fff;text-decoration:none;padding:16px 28px;border-radius:999px;font-weight:700;display:inline-block;font-size:16px}
     .footer{text-align:center;color:#A89880;font-size:13px;margin-top:24px}
     .footer a{color:#6B5E4E;text-decoration:none;border-bottom:1px solid #EDE4D0}
+    @media (max-width:480px){
+      .pair{grid-template-columns:1fr;gap:14px}
+      .arrow{display:none}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="brand">draw <span>up</span></div>
     <div class="card">
-      <img class="hero" src="${safe.imageUrl}" alt="${safe.bodyHeadline}">
+      ${heroBlock}
       <div class="body">
         ${safe.bylineLabel ? `<div class="byline">${safe.bylineLabel}</div>` : ""}
         <h1>${safe.bodyHeadline}</h1>
+        ${safe.childName ? `<p class="attribution">Drawn by <strong>${safe.childName}</strong> · World rendered by Draw Up</p>` : ""}
         <p class="desc">${safe.bodySubtitle}</p>
         <a class="cta" href="${safe.appStore}">${safe.ctaLabel}</a>
       </div>
@@ -158,47 +192,58 @@ export default async function handler(req, res) {
   let payload = {
     title: "Draw Up — Step inside your child's drawing",
     description: "Snap a photo of your kid's drawing and watch it come to life. Hear the world described back to them. Share the magic with family.",
-    imageUrl: `${SUPABASE_URL}/storage/v1/object/public/artwork/og-default.png`,
+    ogImageUrl: "https://drawup.ink/og-image.jpg",
+    originalImageUrl: null,
+    transformedImageUrl: null,
     canonicalUrl: "https://drawup.ink",
     bodyHeadline: "Step inside your child's drawing",
     bodySubtitle: "Draw Up turns your kid's artwork into a vivid world they can step into and hear described aloud.",
     bylineLabel: null,
     ctaLabel: "Get the app",
+    childName: null,
   }
 
   try {
     if (type === "piece" && id) {
       payload.canonicalUrl = `https://drawup.ink/piece/${id}`
+      // OG card shows the dynamic before/after composite — receivers see the
+      // relationship between the drawing and the rendered world instantly.
+      payload.ogImageUrl = `https://drawup.ink/api/og-card?type=piece&id=${encodeURIComponent(id)}`
       const piece = await fetchPiece(id)
       if (piece) {
         const childName = (piece.stores && piece.stores.child_name) || "a young artist"
         const safeTitle = piece.title || "A new world"
-        payload.title = `${safeTitle} — a world by ${childName}`
-        payload.description = piece.ai_description || `Step inside ${childName}'s drawing on Draw Up.`
-        payload.imageUrl = piece.transformed_image_url || piece.watermarked_image_url || payload.imageUrl
+        payload.title = `${childName} drew this — and Draw Up turned it into a world`
+        payload.description = piece.ai_description || `${childName} drew this. Draw Up turned it into a world.`
         payload.bodyHeadline = safeTitle
         payload.bodySubtitle = payload.description
-        payload.bylineLabel = `A world by ${childName}`
+        payload.bylineLabel = null
         payload.ctaLabel = "Step inside on Draw Up"
+        payload.childName = childName
+        payload.originalImageUrl = piece.original_image_url || null
+        payload.transformedImageUrl = piece.transformed_image_url || piece.watermarked_image_url || null
       }
     } else if ((type === "gallery" || type === "store") && id) {
       payload.canonicalUrl = `https://drawup.ink/gallery/${id}`
+      payload.ogImageUrl = `https://drawup.ink/api/og-card?type=gallery&id=${encodeURIComponent(id)}`
       const store = await fetchStore(id)
       if (store) {
         const pieces = (store.pieces || []).filter((p) => p.published)
         const sorted = pieces.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
         const latest = sorted[0]
         const count = pieces.length
-        payload.title = `${store.child_name}'s Gallery on Draw Up`
+        payload.title = `${store.child_name}'s drawings, brought to life on Draw Up`
         payload.description = count > 0
-          ? `Step inside ${count} ${count === 1 ? "world" : "worlds"} dreamed up by ${store.child_name}.`
-          : `${store.child_name}'s drawings will live here. Step inside soon.`
-        payload.bodyHeadline = `${store.child_name}'s Gallery`
+          ? `${count} drawing${count === 1 ? "" : "s"} by ${store.child_name}, each turned into a world.`
+          : `${store.child_name}'s drawings will live here.`
+        payload.bodyHeadline = `${store.child_name}'s drawings, brought to life`
         payload.bodySubtitle = payload.description
         payload.bylineLabel = count > 0 ? `${count} ${count === 1 ? "world" : "worlds"}` : null
         payload.ctaLabel = "Visit the gallery on Draw Up"
+        payload.childName = store.child_name
         if (latest) {
-          payload.imageUrl = latest.transformed_image_url || latest.watermarked_image_url || payload.imageUrl
+          payload.originalImageUrl = latest.original_image_url || null
+          payload.transformedImageUrl = latest.transformed_image_url || latest.watermarked_image_url || null
         }
       }
     }
