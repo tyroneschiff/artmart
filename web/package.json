@@ -6,6 +6,7 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@vercel/og": "^0.6.4"
+    "@vercel/og": "^0.6.4",
+    "react": "^18.3.1"
   }
 }
