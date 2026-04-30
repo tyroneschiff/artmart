@@ -69,19 +69,27 @@ export default function ProfileScreen() {
   async function handleSaveName() {
     const trimmed = displayName.trim()
     if (!trimmed || trimmed === profile?.display_name) return
+    // Hard guard: never touch supabase if the session somehow lapsed
+    // between mount and the tap. Send the user back to sign in.
+    if (!session?.user?.id) {
+      Alert.alert('Please sign in again', 'Your session expired. Sign in to update your name.')
+      router.replace('/(auth)/login')
+      return
+    }
+    const userId = session.user.id
     setSaving(true)
     // Optimistically update the cache so the header re-renders instantly.
-    const previous = queryClient.getQueryData<{ display_name: string | null }>(['profile', session?.user.id])
-    queryClient.setQueryData(['profile', session?.user.id], { ...(previous ?? {}), display_name: trimmed })
+    const previous = queryClient.getQueryData<{ display_name: string | null }>(['profile', userId])
+    queryClient.setQueryData(['profile', userId], { ...(previous ?? {}), display_name: trimmed })
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({ id: session!.user.id, display_name: trimmed })
+        .upsert({ id: userId, display_name: trimmed })
       if (error) throw error
-      queryClient.invalidateQueries({ queryKey: ['profile', session?.user.id] })
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] })
     } catch (e: any) {
       // Roll back the optimistic update on failure.
-      queryClient.setQueryData(['profile', session?.user.id], previous)
+      queryClient.setQueryData(['profile', userId], previous)
       Alert.alert('Error', e.message)
     } finally {
       setSaving(false)
@@ -143,6 +151,23 @@ export default function ProfileScreen() {
         },
       },
     ])
+  }
+
+  // Auth gate: profile is meaningless without a session. If somehow the
+  // session lapsed mid-navigation, send the user back to sign-in instead
+  // of letting the page render in a half-broken state.
+  if (!session) {
+    return (
+      <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', padding: 32 }]}>
+        <Text style={[type.h2, { fontSize: 22, marginBottom: 6, textAlign: 'center' }]}>Sign in to see your profile</Text>
+        <Text style={[type.body, { fontSize: 14, textAlign: 'center', marginBottom: 20 }]}>
+          Your session ended. Sign in again to pick up where you left off.
+        </Text>
+        <TouchableOpacity style={[btn.primary, { paddingHorizontal: 28, paddingVertical: 14 }]} onPress={() => router.replace('/(auth)/login')}>
+          <Text style={btn.primaryText}>Sign in</Text>
+        </TouchableOpacity>
+      </View>
+    )
   }
 
   return (
