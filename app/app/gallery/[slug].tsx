@@ -3,7 +3,7 @@ import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Alert
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { GallerySkeleton } from '../../components/Skeleton'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
@@ -32,6 +32,7 @@ async function fetchStore(slug: string) {
 export default function StoreScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>()
   const session = useAuthStore((s) => s.session)
+  const queryClient = useQueryClient()
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['store', slug], queryFn: () => fetchStore(slug) })
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
   const [sort, setSort] = useState<SortMode>('top')
@@ -39,6 +40,39 @@ export default function StoreScreen() {
   const [exportProgress, setExportProgress] = useState<SaveProgress | null>(null)
 
   const isOwner = !!session && data?.store && session.user.id === data.store.owner_id
+
+  const deleteGallery = useMutation({
+    mutationFn: async () => {
+      if (!data) throw new Error('No gallery loaded')
+      // ON DELETE CASCADE on pieces.store_id removes pieces automatically.
+      const { error } = await supabase.from('stores').delete().eq('id', data.store.id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mystores'] })
+      queryClient.invalidateQueries({ queryKey: ['discover'] })
+      queryClient.invalidateQueries({ queryKey: ['owner-collection'] })
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      router.replace('/(tabs)/mystores')
+    },
+    onError: (e: any) => Alert.alert('Could not delete', e?.message || 'Try again.'),
+  })
+
+  function handleDeleteGallery() {
+    if (!data) return
+    const count = data.pieces.length
+    const detail = count === 0
+      ? `Delete ${data.store.child_name}'s gallery? This can't be undone.`
+      : `Delete ${data.store.child_name}'s gallery and all ${count} world${count === 1 ? '' : 's'} inside it? This can't be undone.`
+    Alert.alert(
+      'Delete this gallery?',
+      detail,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteGallery.mutate() },
+      ],
+    )
+  }
 
   async function handleSaveAllOriginals() {
     if (!data || !isOwner || exportProgress) return
@@ -198,6 +232,20 @@ export default function StoreScreen() {
             )}
           </View>
         }
+        ListFooterComponent={
+          isOwner ? (
+            <TouchableOpacity
+              style={styles.dangerZone}
+              onPress={handleDeleteGallery}
+              disabled={deleteGallery.isPending}
+              activeOpacity={0.6}
+            >
+              <Text style={styles.dangerZoneText}>
+                {deleteGallery.isPending ? 'Deleting…' : 'Delete this gallery'}
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
         contentContainerStyle={{ paddingBottom: 32 }}
       />
 
@@ -266,6 +314,8 @@ const styles = StyleSheet.create({
   emptyCtaText: { ...btn.primaryText, fontSize: 15 },
   errorTitle: { ...type.h2, fontSize: 22, marginBottom: 6, textAlign: 'center' },
   errorText: { ...type.body, marginBottom: 20, textAlign: 'center', fontSize: 14 },
+  dangerZone: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 16, alignItems: 'center' },
+  dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   retryBtn: { ...btn.primary, paddingHorizontal: 24, paddingVertical: 12 },
   retryBtnText: { ...btn.primaryText, fontSize: 15 },
   dropdownOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', justifyContent: 'flex-start', paddingTop: 220, paddingHorizontal: 16 },

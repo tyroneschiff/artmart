@@ -64,7 +64,10 @@ export default function ProfileScreen() {
 
   const version = Constants.expoConfig?.version ?? '1.0.0'
   const email = session?.user.email ?? ''
-  const greetingName = profile?.display_name?.trim() || email.split('@')[0]
+  // Prefer the display name. Until they've set one, show a friendly
+  // "Welcome" instead of the awkward email-prefix fallback that read
+  // like a username (e.g. "tyroneandleah").
+  const greetingName = profile?.display_name?.trim() || 'Welcome'
 
   async function handleSaveName() {
     const trimmed = displayName.trim()
