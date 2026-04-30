@@ -10,6 +10,7 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import ShareSheet from '../../components/ShareSheet'
 import PreservedDrawing from '../../components/PreservedDrawing'
 import { PieceSkeleton } from '../../components/Skeleton'
+import ZoomableImage from '../../components/ZoomableImage'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
@@ -342,8 +343,14 @@ export default function PieceScreen() {
 
       <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)} statusBarTranslucent>
         <StatusBar barStyle="light-content" />
-        <TouchableOpacity style={styles.lightboxBackdrop} activeOpacity={1} onPress={() => setLightboxUri(null)}>
-          <Image source={{ uri: lightboxUri || '' }} style={styles.lightboxImage} resizeMode="contain" />
+        <View style={styles.lightboxBackdrop}>
+          {lightboxUri && (
+            <ZoomableImage
+              uri={lightboxUri}
+              style={styles.lightboxImage}
+              onSingleTap={() => setLightboxUri(null)}
+            />
+          )}
           <TouchableOpacity
             style={[styles.lightboxClose, { top: insets.top + 12 }]}
             onPress={() => setLightboxUri(null)}
@@ -351,7 +358,7 @@ export default function PieceScreen() {
           >
             <Ionicons name="close" size={22} color={colors.white} />
           </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       <ShareSheet
