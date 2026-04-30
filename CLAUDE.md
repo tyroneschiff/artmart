@@ -338,6 +338,8 @@ The most dangerous bugs look like success but do nothing:
 
 1. **[PENDING] Grandparent guest checkout** — `GiftingModal` collects guest email when `isGuest=true`; `checkout.ts:purchasePiece` accepts optional `userToken`. Client-side looks complete. Needs end-to-end test: edge function `create-payment-intent` must accept unauthenticated requests. Cannot implement via CRON B.
 
+2. **[PENDING] User-selectable TTS voice** — Add `tts_voice_id` column to `profiles` (migration). Curate 4–6 ElevenLabs voices (Charlotte, warm dad, younger storyteller, grandparent) with pre-rendered ~6s sample MP3s in Supabase Storage `voice-samples/` bucket. Profile settings screen: voice picker section with tap-to-preview (expo-av). `tts` edge function reads `profiles.tts_voice_id` (fallback to Charlotte) instead of hardcoded XB0fDUnXU5powFXDhCwa. Files: new migration `016_profiles_tts_voice.sql`, `supabase/functions/tts/index.ts`, `app/app/(tabs)/profile.tsx`, new `app/lib/voices.ts` constant. Cannot fully implement via CRON B (migration + edge function).
+
 3. **[PENDING] Web gallery + OG meta tags** — MVP checkbox; requires web route deployment outside `app/` directory scope. Cannot implement via CRON B.
 
 ---
@@ -375,10 +377,10 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
-- ✅ "Store" → "Gallery" copy in create.tsx — all 5 violations confirmed fixed (gallery picker, success screen, publish button, modal list)
+- ✅ Read Aloud → owner-only on piece detail — gates `<ReadAloudButton>` behind `isOwner`. Family viewers no longer see it; cuts ElevenLabs cost; description is written *to* the child so it's a parent+kid moment by design.
 - ✅ Vote-after-login fixed — `?vote=1` encoded into returnTo in discover.tsx and piece/[id].tsx
 - ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
-- ✅ Read Aloud — OpenAI TTS nova voice via edge function, expo-av playback
+- ✅ Read Aloud — ElevenLabs Charlotte voice via edge function, expo-av playback
 - ✅ Delete piece — owner-only, confirmation alert, RLS DELETE policy migration
 - ✅ Gallery rename — "Store" → "Gallery" throughout UI
 - ✅ Gallery bottom nav — Discover / Create / My Galleries / Profile
@@ -388,6 +390,7 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
 **Pending:**
+- [ ] User-selectable TTS voice (profile settings, 4–6 curated voices, pre-rendered samples)
 - [ ] Grandparent guest checkout — buy from gallery without login
 - [ ] Web gallery deployment — drawup.ink domain + public routes
 - [ ] OG meta tags for piece/gallery public URLs
@@ -398,6 +401,7 @@ The most dangerous bugs look like success but do nothing:
 
 *(One line per run, newest first)*
 
+- [2026-04-30 Human] Read Aloud gated to owner only on piece detail — visitors no longer see it (cost + product alignment, description is written *to* the child). File: `app/app/piece/[id].tsx`. Added voice-picker backlog item for v1.2.
 - [2026-04-25 CRON B] Vote button "already voted" state fixed — `myVote` query + `hasVoted` disables and dims button; cache invalidated on vote success. File: `app/app/piece/[id].tsx`.
 - [2026-04-25 CRON A] Confirmed items 1 & 2 done in code; found vote button on piece detail always tappable even after voting (error alert breaks delight moment); rewrote backlog with 1 new item + 2 pending.
 - [2026-04-24 CRON B] Vote-after-login fixed in both flows — `?vote=1` encoded into returnTo URL so login.tsx carries it through. Files: `app/(tabs)/discover.tsx`, `app/piece/[id].tsx`.

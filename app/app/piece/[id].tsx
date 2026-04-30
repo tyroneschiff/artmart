@@ -260,7 +260,7 @@ export default function PieceScreen() {
         {piece.ai_description ? (
           <View style={styles.descriptionBlock}>
             <Text style={styles.descriptionText}>{piece.ai_description}</Text>
-            <ReadAloudButton text={piece.ai_description} compact />
+            {isOwner ? <ReadAloudButton text={piece.ai_description} compact /> : null}
           </View>
         ) : null}
 

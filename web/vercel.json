@@ -8,6 +8,10 @@
     {
       "source": "/gallery/:slug",
       "destination": "/api/og?type=gallery&id=:slug"
+    },
+    {
+      "source": "/metrics",
+      "destination": "/api/metrics"
     }
   ],
   "redirects": [
