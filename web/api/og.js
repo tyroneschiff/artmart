@@ -14,7 +14,7 @@ const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY
-const APP_STORE_URL = "https://testflight.apple.com/join/rKsqMyfV"
+const APP_STORE_URL = "https://testflight.apple.com/join/muwXQhQa"
 
 function escapeHtml(str) {
   if (str == null) return ""
