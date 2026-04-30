@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Alert } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -12,6 +12,7 @@ import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
 import { track } from '../../lib/analytics'
+import { useIsSubscribed, useSubscriberCount, useToggleSubscription } from '../../lib/subscriptions'
 
 type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string; vote_count: number; created_at: string }
 type Store = { id: string; child_name: string; slug: string; description: string; owner_id: string }
@@ -30,7 +31,7 @@ async function fetchStore(slug: string) {
 }
 
 export default function StoreScreen() {
-  const { slug } = useLocalSearchParams<{ slug: string }>()
+  const { slug, follow } = useLocalSearchParams<{ slug: string; follow?: string }>()
   const session = useAuthStore((s) => s.session)
   const queryClient = useQueryClient()
   const { data, isLoading, error, refetch } = useQuery({ queryKey: ['store', slug], queryFn: () => fetchStore(slug) })
@@ -40,6 +41,45 @@ export default function StoreScreen() {
   const [exportProgress, setExportProgress] = useState<SaveProgress | null>(null)
 
   const isOwner = !!session && data?.store && session.user.id === data.store.owner_id
+  const storeId = data?.store.id
+  const { data: isSubscribed = false } = useIsSubscribed(storeId)
+  const { data: subscriberCount = 0 } = useSubscriberCount(storeId)
+  const toggleSubscription = useToggleSubscription(storeId)
+
+  const autoFollowedRef = useRef(false)
+  useEffect(() => {
+    if (autoFollowedRef.current) return
+    if (follow !== '1') return
+    if (!session || !storeId || isOwner) return
+    if (isSubscribed) {
+      autoFollowedRef.current = true
+      return
+    }
+    autoFollowedRef.current = true
+    toggleSubscription.mutate(true, {
+      onSuccess: () => {
+        track('gallery_followed', { storeId, metadata: { source: 'post_login' } })
+      },
+    })
+  }, [follow, session, storeId, isOwner, isSubscribed])
+
+  function handleFollow() {
+    if (!storeId) return
+    if (!session) {
+      const returnTo = `/gallery/${slug}?follow=1`
+      router.push({ pathname: '/(auth)/login', params: { returnTo } })
+      return
+    }
+    if (isOwner) return
+    const next = !isSubscribed
+    Haptics.selectionAsync().catch(() => {})
+    toggleSubscription.mutate(next, {
+      onSuccess: () => {
+        track(next ? 'gallery_followed' : 'gallery_unfollowed', { storeId })
+      },
+      onError: (e: any) => Alert.alert('Could not update', e?.message || 'Try again.'),
+    })
+  }
 
   const deleteGallery = useMutation({
     mutationFn: async () => {
@@ -168,6 +208,23 @@ export default function StoreScreen() {
               )}
             </TouchableOpacity>
           )}
+          {!isOwner && (
+            <TouchableOpacity
+              style={[styles.followBtn, isSubscribed && styles.followBtnActive]}
+              onPress={handleFollow}
+              disabled={toggleSubscription.isPending}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isSubscribed ? 'notifications' : 'notifications-outline'}
+                size={15}
+                color={isSubscribed ? colors.goldDark : colors.dark}
+              />
+              <Text style={[styles.followBtnText, isSubscribed && styles.followBtnTextActive]}>
+                {isSubscribed ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
             <Text style={styles.shareBtnText}>Share</Text>
           </TouchableOpacity>
@@ -184,7 +241,10 @@ export default function StoreScreen() {
             <View style={styles.galleryHeader}>
               <View style={styles.avatar}><Text style={styles.avatarText}>{store.child_name[0].toUpperCase()}</Text></View>
               <Text style={styles.galleryName}>{store.child_name}'s Gallery</Text>
-              <Text style={styles.pieceCount}>{data.pieces.length} world{data.pieces.length !== 1 ? 's' : ''}</Text>
+              <Text style={styles.pieceCount}>
+                {data.pieces.length} world{data.pieces.length !== 1 ? 's' : ''}
+                {subscriberCount > 0 ? ` · ${subscriberCount} following` : ''}
+              </Text>
             </View>
             {data.pieces.length > 1 && (
               <View style={styles.sortRow}>
@@ -290,6 +350,10 @@ const styles = StyleSheet.create({
   shareBtnText: { ...btn.primaryText, fontSize: 13 },
   saveAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderRadius: radius.pill, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
   saveAllBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
+  followBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.white, borderRadius: radius.pill, paddingVertical: 9, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border },
+  followBtnActive: { backgroundColor: colors.goldLight, borderColor: colors.goldMid },
+  followBtnText: { color: colors.dark, fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
+  followBtnTextActive: { color: colors.goldDark },
   galleryHeader: { alignItems: 'center', paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 12, paddingHorizontal: 20 },
   avatar: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.goldLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: colors.goldMid },
   avatarText: { fontSize: 28, fontWeight: '900', color: colors.goldDark },
