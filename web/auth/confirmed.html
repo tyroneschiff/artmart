@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email confirmed — Draw Up</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --gold:#E8A020;--gold-light:#FDF0D5;--gold-mid:#F5C96A;--gold-dark:#8B5E00;
+      --cream:#FEFAF3;--dark:#1C1810;--mid:#6B5E4E;--muted:#A89880;--border:#EDE4D0;
+    }
+    html,body{background:var(--cream);color:var(--dark);min-height:100vh}
+    body{
+      font-family:'Inter',-apple-system,sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      padding:32px 24px;line-height:1.55;
+    }
+    .card{
+      max-width:440px;width:100%;text-align:center;
+    }
+    .check{
+      width:80px;height:80px;border-radius:50%;
+      background:var(--gold-light);border:1.5px solid var(--gold-mid);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 28px;
+    }
+    .check svg{width:36px;height:36px;color:var(--gold-dark)}
+    h1{
+      font-size:32px;font-weight:900;letter-spacing:-1px;
+      line-height:1.1;margin-bottom:14px;
+    }
+    p.lede{
+      color:var(--mid);font-size:17px;margin-bottom:32px;
+    }
+    .cta{
+      display:block;background:var(--dark);color:var(--cream);
+      padding:16px 24px;border-radius:999px;
+      font-weight:700;text-decoration:none;font-size:16px;
+      margin-bottom:12px;transition:opacity 0.15s;
+    }
+    .cta:hover{opacity:0.9}
+    .cta-secondary{
+      display:block;background:transparent;color:var(--mid);
+      padding:14px 24px;border-radius:999px;
+      font-weight:600;text-decoration:none;font-size:14px;
+      border:1.5px solid var(--border);
+      margin-bottom:12px;
+    }
+    .cta-secondary:hover{background:#fff}
+    .brand{
+      margin-top:48px;font-weight:900;letter-spacing:-1px;font-size:20px;
+    }
+    .brand span{color:var(--gold)}
+    .brand a{color:inherit;text-decoration:none}
+    .fineprint{color:var(--muted);font-size:13px;margin-top:14px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+
+    <h1>Email confirmed.</h1>
+    <p class="lede">Open Draw Up on your iPhone to step inside your child's drawing.</p>
+
+    <a class="cta" id="open-app" href="drawup://">Open Draw Up</a>
+    <a class="cta-secondary" href="https://testflight.apple.com/join/rKsqMyfV">Don't have it yet? Get the iPhone beta</a>
+
+    <p class="fineprint">If the app doesn't open automatically, tap "Open Draw Up" above.</p>
+
+    <div class="brand"><a href="/">draw <span>up</span></a></div>
+  </main>
+
+  <script>
+    // On iOS Safari (in-app or in Mail), best-effort auto-open the
+    // installed app. If the app isn't installed, the scheme silently
+    // fails and the user reads the messaging on the page.
+    (function () {
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      if (isIOS) {
+        // Forward any access_token / refresh_token hash params so the
+        // app can recover the session via its deep-link handler.
+        var hash = window.location.hash || '';
+        var deepLink = 'drawup://' + hash;
+        // Tiny delay so the user sees the confirmation message first.
+        setTimeout(function () {
+          window.location.href = deepLink;
+        }, 800);
+      }
+    })();
+  </script>
+</body>
+</html>

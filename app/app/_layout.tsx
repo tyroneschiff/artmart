@@ -8,6 +8,7 @@ import * as Device from 'expo-device'
 import Constants from 'expo-constants'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../hooks/useAuthStore'
+import { ensureProfile } from '../lib/ensureProfile'
 import StripeWrapper from '../components/StripeWrapper'
 
 const queryClient = new QueryClient()
@@ -70,9 +71,27 @@ export default function RootLayout() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setHydrated()
+      // Belt-and-suspenders: if the server-side handle_new_user trigger
+      // raced the client, this creates the profile row idempotently.
+      // Then invalidate credits + profile so the UI sees the freshly-
+      // created data instead of the empty pre-trigger state.
+      if (session?.user.id) {
+        ensureProfile(session.user.id).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['credits', session.user.id] })
+          queryClient.invalidateQueries({ queryKey: ['profile', session.user.id] })
+        })
+      }
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
+      // Same defensive ensure on every sign-in (handles fresh sign-up,
+      // sign-in after sign-out, deep-link recovered session).
+      if (event === 'SIGNED_IN' && session?.user.id) {
+        ensureProfile(session.user.id).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['credits', session.user.id] })
+          queryClient.invalidateQueries({ queryKey: ['profile', session.user.id] })
+        })
+      }
     })
 
     // Handle email confirmation deep links: drawup://#access_token=...
