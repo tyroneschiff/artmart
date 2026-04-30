@@ -226,6 +226,14 @@ The most dangerous bugs look like success but do nothing:
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
+**2026-04-30:**
+- **Email confirmation DISABLED in Supabase Dashboard for the beta.** Authentication → Sign In / Providers → Email → "Confirm email" = OFF. Re-enable before public launch + build a "verify your email" gate in the app at that time. Trade-off accepted: simpler beta UX > spam protection.
+- New users now: signUp → session returned immediately → ensureProfile() runs in `_layout.tsx` auth listener → credits + profile queries invalidated → 3 credits visible on first paint.
+- `lib/ensureProfile.ts` is the belt-and-suspenders for the `handle_new_user` trigger race. Idempotent upsert with `ignoreDuplicates: true`. Always called on every `SIGNED_IN` event.
+- Profile screen has a hard auth gate now — redirects to /(auth)/login if session is null. Stops the old "Cannot read property user of null" crash on save name.
+- `web/auth/confirmed.html` exists for the email-confirm flow (when re-enabled). Auto-deep-links to drawup:// on iPhone, shows Email-confirmed messaging + TestFlight CTA on desktop. Vercel needs `cleanUrls: true` in vercel.json.
+- TestFlight build 20 stuck "Waiting for Review" >3 days at session end. Build 21 needed for splash-screen-on-cream fix; do not extend wait.
+
 **2026-04-24:**
 - Physical print flow hidden from ALL users pending Printful account verification. Do not re-add print cards for any user — see `## What we've tried and rejected`.
 - "Store" renamed to "Gallery" throughout UI. Route paths (`/store/[slug]`) unchanged in code. Do not revert copy back to "Store" — the rename is intentional.

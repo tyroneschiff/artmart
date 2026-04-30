@@ -35,20 +35,22 @@ export default function LoginScreen() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          // Always go through our /auth/confirmed page on the web. On
-          // iPhone the page auto-deep-links into the app (forwarding
-          // the hash so the deep-link handler in _layout.tsx can
-          // setSession). On desktop the page shows a clear "Email
-          // confirmed" message + TestFlight CTA. Avoids the old failure
-          // where Supabase fell back to Site URL = drawup.ink (homepage).
+          // Used only when Supabase email confirmation is enabled (it's
+          // off for beta). Page handles iPhone deep-link + desktop CTA.
           options: { emailRedirectTo: 'https://drawup.ink/auth/confirmed' },
         })
         if (error) throw error
         track('signup_completed')
-        Alert.alert('Check your email', 'We sent you a confirmation link.')
+        // signUp returns a session immediately when email confirmation
+        // is OFF in Supabase. If session is missing, confirmation IS
+        // required and we need the user to check their inbox.
+        if (!data.session) {
+          Alert.alert('Check your email', 'We sent you a confirmation link.')
+          return
+        }
       }
 
       if (__DEV__) {
