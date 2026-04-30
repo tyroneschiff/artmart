@@ -377,6 +377,8 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ Gallery subscriptions (Follow + Following feed) — migration `016_subscriptions.sql` (RLS-gated, self-subscription blocked); `app/lib/subscriptions.ts` hooks; Follow/Following pill on gallery page (auth-gated, auto-follows after login via `?follow=1` returnTo); follower count rendered inline; segmented control on Discover (Following | Discover, defaults to Following when subscribed); `gallery_followed` / `gallery_unfollowed` events. Notifications (email/push) deferred to next pass.
+- ✅ Operator metrics dashboard — `/metrics?key=...` (token-gated, multi-`excludeUser` support) renders kill-criteria KPIs, funnel, share channels, sparklines, recent activity. `web/api/metrics.js` reads via service-role key from Vercel env.
 - ✅ Read Aloud → owner-only on piece detail — gates `<ReadAloudButton>` behind `isOwner`. Family viewers no longer see it; cuts ElevenLabs cost; description is written *to* the child so it's a parent+kid moment by design.
 - ✅ Vote-after-login fixed — `?vote=1` encoded into returnTo in discover.tsx and piece/[id].tsx
 - ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
@@ -390,6 +392,7 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
 **Pending:**
+- [ ] Subscription notifications — edge function on `pieces.insert` published=true, fan-out email via Resend (debounce 1/gallery/6h); push later
 - [ ] User-selectable TTS voice (profile settings, 4–6 curated voices, pre-rendered samples)
 - [ ] Grandparent guest checkout — buy from gallery without login
 - [ ] Web gallery deployment — drawup.ink domain + public routes
@@ -401,6 +404,8 @@ The most dangerous bugs look like success but do nothing:
 
 *(One line per run, newest first)*
 
+- [2026-04-30 Human] Gallery subscriptions shipped (schema + Follow + Discover segmented control). Migration applied to remote Supabase. Notifications deferred. Files: `supabase/migrations/016_subscriptions.sql`, `app/lib/subscriptions.ts`, `app/app/gallery/[slug].tsx`, `app/app/(tabs)/discover.tsx`, `app/lib/analytics.ts`.
+- [2026-04-30 Human] Operator metrics dashboard at `/metrics` shipped — token-gated, server-rendered, multi-user exclude. Files: `web/api/metrics.js`, `web/vercel.json`.
 - [2026-04-30 Human] Read Aloud gated to owner only on piece detail — visitors no longer see it (cost + product alignment, description is written *to* the child). File: `app/app/piece/[id].tsx`. Added voice-picker backlog item for v1.2.
 - [2026-04-25 CRON B] Vote button "already voted" state fixed — `myVote` query + `hasVoted` disables and dims button; cache invalidated on vote success. File: `app/app/piece/[id].tsx`.
 - [2026-04-25 CRON A] Confirmed items 1 & 2 done in code; found vote button on piece detail always tappable even after voting (error alert breaks delight moment); rewrote backlog with 1 new item + 2 pending.

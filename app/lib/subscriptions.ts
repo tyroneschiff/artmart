@@ -27,6 +27,23 @@ export function useIsSubscribed(storeId: string | undefined) {
   })
 }
 
+export function useMySubscriptions() {
+  const session = useAuthStore((s) => s.session)
+  const userId = session?.user.id
+  return useQuery({
+    queryKey: ['mySubscriptions', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('store_id')
+        .eq('subscriber_id', userId!)
+      if (error) throw error
+      return (data ?? []).map((r: { store_id: string }) => r.store_id)
+    },
+  })
+}
+
 export function useSubscriberCount(storeId: string | undefined) {
   return useQuery({
     queryKey: ['subscriberCount', storeId],
