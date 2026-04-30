@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../../lib/supabase'
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (!__DEV__) return
@@ -96,20 +98,34 @@ export default function LoginScreen() {
             autoComplete="email"
             returnKeyType="next"
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor={colors.muted}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            textContentType={mode === 'login' ? 'password' : 'newPassword'}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={handleSubmit}
-          />
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Password"
+              placeholderTextColor={colors.muted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              textContentType={mode === 'login' ? 'password' : 'newPassword'}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPassword((s) => !s)}
+              hitSlop={8}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.muted}
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSubmit} disabled={loading}>
             <Text style={styles.buttonText}>{loading ? 'Loading…' : mode === 'login' ? 'Sign in' : 'Create account'}</Text>
@@ -150,6 +166,17 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: colors.dark,
+  },
+  passwordWrap: { position: 'relative' },
+  passwordInput: { paddingRight: 48 },
+  eyeBtn: {
+    position: 'absolute',
+    right: 14,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 28,
   },
   button: {
     backgroundColor: colors.dark,

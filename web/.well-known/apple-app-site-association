@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.art.drawup.app"],
+        "components": [
+          { "/": "/piece/*" },
+          { "/": "/gallery/*" },
+          { "/": "/auth/confirmed" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.art.drawup.app"]
+  }
+}

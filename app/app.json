@@ -29,6 +29,10 @@
       "bundleIdentifier": "art.drawup.app",
       "supportsTablet": false,
       "buildNumber": "21",
+      "associatedDomains": [
+        "applinks:drawup.ink",
+        "webcredentials:drawup.ink"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
