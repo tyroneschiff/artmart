@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import * as Linking from 'expo-linking'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../../lib/supabase'
 import { track } from '../../lib/analytics'
@@ -39,7 +38,13 @@ export default function LoginScreen() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: Linking.createURL('/') },
+          // Always go through our /auth/confirmed page on the web. On
+          // iPhone the page auto-deep-links into the app (forwarding
+          // the hash so the deep-link handler in _layout.tsx can
+          // setSession). On desktop the page shows a clear "Email
+          // confirmed" message + TestFlight CTA. Avoids the old failure
+          // where Supabase fell back to Site URL = drawup.ink (homepage).
+          options: { emailRedirectTo: 'https://drawup.ink/auth/confirmed' },
         })
         if (error) throw error
         track('signup_completed')
