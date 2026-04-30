@@ -21,11 +21,17 @@ function escapeHtml(str) {
     .replace(/'/g, "&#39;")
 }
 
-async function fetchEvents({ sinceIso, excludeUser }) {
+async function fetchEvents({ sinceIso, excludeUsers }) {
   const params = new URLSearchParams()
   params.set("select", "event_type,user_id,piece_id,store_id,metadata,created_at")
   params.set("created_at", `gte.${sinceIso}`)
-  if (excludeUser) params.set("user_id", `not.eq.${excludeUser}`)
+  if (excludeUsers && excludeUsers.length) {
+    if (excludeUsers.length === 1) {
+      params.set("user_id", `not.eq.${excludeUsers[0]}`)
+    } else {
+      params.set("user_id", `not.in.(${excludeUsers.join(",")})`)
+    }
+  }
   params.set("order", "created_at.desc")
   params.set("limit", "5000")
 
@@ -100,7 +106,7 @@ function sparkline(series) {
   </svg>`
 }
 
-function renderHtml({ events30d, excludeUser }) {
+function renderHtml({ events30d, excludeUsers }) {
   const all = events30d
   const d7 = within(all, 7)
   const d30 = all
@@ -216,7 +222,9 @@ function renderHtml({ events30d, excludeUser }) {
     </header>
 
     <div class="filterbar">
-      ${excludeUser ? `<span>Excluding user <code>${escapeHtml(excludeUser.slice(0, 8))}…</code></span>` : `<span>Including all users · add <code>?excludeUser=&lt;uuid&gt;</code> to filter your own events</span>`}
+      ${excludeUsers && excludeUsers.length
+        ? `<span>Excluding ${excludeUsers.length} user${excludeUsers.length === 1 ? "" : "s"}: ${excludeUsers.map((u) => `<code>${escapeHtml(u.slice(0, 8))}…</code>`).join(" ")}</span>`
+        : `<span>Including all users · add <code>?excludeUser=&lt;uuid&gt;,&lt;uuid&gt;</code> to filter</span>`}
     </div>
 
     <h2>Kill criteria (must stay above 0.10)</h2>
@@ -334,11 +342,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    const excludeUsers = (excludeUser || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => /^[0-9a-f-]{36}$/i.test(s))
     const sinceIso = new Date(Date.now() - 30 * 86400000).toISOString()
-    const events30d = await fetchEvents({ sinceIso, excludeUser })
+    const events30d = await fetchEvents({ sinceIso, excludeUsers })
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.setHeader("Cache-Control", "private, max-age=60")
-    res.status(200).send(renderHtml({ events30d, excludeUser }))
+    res.status(200).send(renderHtml({ events30d, excludeUsers }))
   } catch (e) {
     res.status(500).send(`metrics error: ${escapeHtml(e?.message || "unknown")}`)
   }
