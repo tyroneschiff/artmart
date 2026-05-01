@@ -253,11 +253,6 @@ The most dangerous bugs look like success but do nothing:
 - **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs.
 - **Core use case reframed (credit to Evan):** The parent is the buyer, not the grandparent. They're paying to preserve drawings guilt-free before throwing them away. Credits = permission to let go. Print purchases are a secondary bonus.
 
-**2026-04-22:**
-- Transform failing: iPhone photos 4–15MB, Claude rejects >5MB. Fixed with `expo-image-manipulator` compression.
-- Profile display name silently failing for new users: `.update()` on non-existent row. Fixed with `.upsert()`.
-- Crons hitting 30k TPM rate limit at 3-minute cadence. Slowed; upgraded model; rewrote prompts.
-
 ---
 
 ## Standing instructions for Claude
@@ -337,13 +332,83 @@ The most dangerous bugs look like success but do nothing:
 
 ## Strategic Backlog
 
-*(Rewritten each run by CRON A — Implementer reads this to pick next task)*
+*(Rewritten each run by CRON A — Implementer reads this to pick next task. Larger forensic plan lives in `## Tomorrow's polish & feature plan` below.)*
 
-1. **[PENDING] Grandparent guest checkout** — `GiftingModal` collects guest email when `isGuest=true`; `checkout.ts:purchasePiece` accepts optional `userToken`. Client-side looks complete. Needs end-to-end test: edge function `create-payment-intent` must accept unauthenticated requests. Cannot implement via CRON B.
+1. **[PENDING] Subscription email notifications** — Edge function on `pieces.insert` where `published=true`: query `subscriptions` for that store_id, fan-out email via Resend with subject like "{Child} drew a new world" and a deep link. Debounce: 1 email/gallery/6h (collapse multi-piece bursts). Exclude the owner from recipients. Files: new `supabase/functions/notify-new-piece/index.ts`, new `supabase/migrations/020_pieces_publish_trigger.sql` (db trigger calling pg_net to invoke the function), `RESEND_API_KEY` env. Cannot implement via CRON B.
 
-2. **[PENDING] User-selectable TTS voice** — Add `tts_voice_id` column to `profiles` (migration). Curate 4–6 ElevenLabs voices (Charlotte, warm dad, younger storyteller, grandparent) with pre-rendered ~6s sample MP3s in Supabase Storage `voice-samples/` bucket. Profile settings screen: voice picker section with tap-to-preview (expo-av). `tts` edge function reads `profiles.tts_voice_id` (fallback to Charlotte) instead of hardcoded XB0fDUnXU5powFXDhCwa. Files: new migration `016_profiles_tts_voice.sql`, `supabase/functions/tts/index.ts`, `app/app/(tabs)/profile.tsx`, new `app/lib/voices.ts` constant. Cannot fully implement via CRON B (migration + edge function).
+2. **[PENDING] Account deletion flow** — Apple App Store mandatory. Profile screen → "Delete account" → 2-tap confirm → calls edge function that deletes auth user + cascades stores/pieces/subscriptions/votes/comments via FK `on delete cascade` (verify all FKs are cascading). Files: new `supabase/functions/delete-account/index.ts`, `app/app/(tabs)/profile.tsx`. Cannot implement via CRON B.
 
-3. **[PENDING] Web gallery + OG meta tags** — MVP checkbox; requires web route deployment outside `app/` directory scope. Cannot implement via CRON B.
+3. **[PENDING] Privacy Policy + Terms in app** — Apple App Store mandatory. Add two link rows under "App" section in profile, pointing to `https://drawup.ink/privacy` and `https://drawup.ink/terms`. Generate static pages (e.g. termsfeed.com → `web/privacy.html` + `web/terms.html`).
+
+4. **[PENDING] Grandparent guest checkout** — `GiftingModal` collects guest email when `isGuest=true`; `checkout.ts:purchasePiece` accepts optional `userToken`. Client-side looks complete. Needs end-to-end test: edge function `create-payment-intent` must accept unauthenticated requests.
+
+5. **[PENDING] Web gallery rendering** — Currently `drawup.ink/gallery/<slug>` returns the OG-card preview HTML, not an actual gallery view. Family members tapping a shared link see a mini-card and a CTA, not the kid's worlds. Build a real web view that loads the gallery's published pieces from Supabase via PostgREST, similar styling to `web/api/og.js` body.
+
+---
+
+## Tomorrow's polish & feature plan
+
+*(Authored 2026-05-01 from a forensic audit. Use this as the working doc for the next focused session. Items below the priority tiers are open questions, not commitments.)*
+
+### P0 — App Store launch blockers
+
+These prevent public launch, regardless of how good the product feels.
+
+- **Account deletion** — Apple Section 5.1.1(v). Profile → "Delete account" → 2-tap confirm → edge function deletes auth user + cascades. Verify every FK from profiles/stores/pieces is `on delete cascade`. Without this, the next App Store submission gets rejected.
+- **Privacy Policy + Terms in app** — Linked from profile, hosted at drawup.ink/privacy and /terms. Generate via termsfeed.com or similar — no need to author from scratch.
+- **Push notification token unused** — `expo_push_token` is saved in `_layout.tsx:125` but no edge function ever sends to those tokens. Either (a) ship at least one push trigger so the wiring earns its keep, or (b) remove the permission prompt. Asking for push permission and never using it is a trust hit.
+
+### P1 — Activate the acquisition loop
+
+The kill criteria from `## Acquisition strategy` (>0.10 shares/transform, >0.10 signups/share) won't move until these ship.
+
+- **Subscription email notifications** — The Following feed is built but dormant. Without the email/push trigger, "follow" is a passive bookmark that never re-opens the app. **This is the single highest-leverage feature in the queue.** Resend API + edge function on `pieces.insert published=true`, debounced per gallery per 6h.
+- **Web gallery rendering** — A grandparent who taps the WhatsApp link from a parent currently sees the OG preview HTML *as the page*, not a real gallery. The conversion happens in the next 30 seconds — they need to see the kid's worlds and the "Get the app" CTA, not a single card. Highest-friction step in the share→signup funnel right now.
+- **Auto-MP4 before/after reveal** — CLAUDE.md `## Acquisition strategy` calls this "highest-leverage acquisition feature." A 6s portrait MP4 (drawing → wipe → world → child name + watermark) saved to camera roll on publish, ready for parent to share to TikTok/IG without editing. Native `expo-video-thumbnails` + ffmpeg-kit OR server-side `ffmpeg` Lambda. Out of scope for one session but needs to be on the radar.
+- **Share → signup attribution** — `signups_per_share` on the metrics dash is currently misleading because there's no causal link. Add a UTM-style `?ref=<piece_id>` to all share URLs and write that to a column in the events table on signup. Without this, you can't tell which channel/piece/gallery is driving conversions.
+
+### P2 — Friction in the core flow
+
+- **Onboarding context** — A new user is dropped straight into `/(tabs)/create` with no orientation. They have 3 free credits but don't know it. Add a 2-screen onboarding (or single bottom sheet) on first session: "You start with 3 credits. Each turns one drawing into a world. Tap below to start." Track `onboarding_dismissed`.
+- **Comment author differentiation** — `piece/[id].tsx:289-343` shows all comments identically. Highlight your own with a "You" pill or subtle bg tint. Current state feels like a guestbook with no self-presence.
+- **Delete own comment** — Long-press on own comment → confirm delete. Required for any user-generated-content surface.
+- **Comments loading skeleton** — Empty list flashes during fetch. Add a skeleton row matching the comment layout.
+- **Transform error retry preserves image** — already does (verified in audit). Make sure that stays true after any future refactor — it's the single most important UX in the create flow.
+- **Gallery cover + count after first publish** — Verify the cache invalidation path (queryKey collision was fixed today, but a fresh smoke test on a brand-new account + first piece publish is overdue).
+
+### P3 — Engagement & retention
+
+- **"Someone loved your piece" notification** — When a vote lands on the owner's piece, fire a push (low-priority, batched daily). Highest-converting re-engagement event for a creator app.
+- **Reply to comments** — Threaded replies, 1 level deep. Tap a comment → "Reply." Not urgent for MVP but raises engagement floor on pieces with traction.
+- **Gallery banner / customization** — Owner picks one of their pieces as the "cover" for their gallery's web URL preview, instead of always-most-recent. Small but high-control polish.
+- **Vote streak** — In Discover, show "🔥 3 in a row" when the same gallery has multiple top-voted pieces. Light gamification for the discovery side.
+
+### P4 — Visual & micro-polish
+
+- **Empty state for gallery with 0 pieces** — Audit didn't read the file but it exists; verify it matches the warmth of other empty states.
+- **Loading state for `useSubscriberCount`** — Currently shows nothing while fetching, then pops in. Render `… following` placeholder while loading.
+- **Haptics on locked Read Aloud** — Already wired to `Haptics.selectionAsync()`. Verify it fires on iPhone (Expo Go ignores).
+- **Friendly transform error icon variety** — Currently all errors show the same UI shell. Tiny icon per category (camera-off for "not a drawing", wifi-off for network) would humanize the failure.
+
+### P5 — Future bets (don't pull forward, just track)
+
+- **Android build** — EAS Build supports it; currently iOS-only. Wait until iOS App Store launch + 100 signups before pulling.
+- **iPad layout** — Currently scales poorly. Easy win after iOS phone launch.
+- **Spanish localization** — Big hispanophone parent market for kids' creative apps.
+- **Print fulfillment** — Hidden pending Printful variant verification. See `## What we've tried and rejected`.
+- **Co-parent gallery access** — Divorced/separated parents both wanting to manage one kid's gallery. Real demand once the app scales.
+
+### What we're not thinking about (but should before launch)
+
+- **App Store Optimization (ASO)** — Screenshots, video preview, keywords, description copy. None polished beyond the TestFlight build. Free organic install lift if done well.
+- **Account recovery without email** — A parent loses their email account (e.g. school address closed). Currently no path to recover the gallery.
+- **Image moderation of generated worlds** — fal.ai Flux can occasionally produce something off-tone. No human-in-loop review of *outputs* (only inputs). Risk = small but reputationally large if a parent shares a weird AI-generated scene to family.
+- **AI-generated description tone for sensitive drawings** — Kid draws something dark (which kids do). Claude's description should be empathetic, not pathologizing. Worth a system prompt audit.
+- **Backup / export for parents** — When this matters, it'll be too late. Even a "download all my originals" zip would soothe a lot of long-term anxiety. (Save All to Photos partially solves this.)
+- **Reviews/ratings prompt** — `expo-store-review` after the 3rd successful publish, not before. Currently never asked.
+- **Accessibility** — VoiceOver labels, dynamic type. Not a P0 but every screen needs at least an audit pass before scale.
+- **Co-watching the read-aloud moment** — Currently the parent triggers Read Aloud, audio plays from speaker. Consider AirPlay-friendly playback so a grandparent watching over FaceTime can hear it too. Niche but emotionally huge.
+- **Gallery handoff to the kid when they're older** — In ~10 years a Draw Up kid will be 13 and may want to take ownership of their own gallery. No mechanism. Worth thinking about now even if not building.
 
 ---
 
@@ -398,11 +463,16 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Digital download CTA for non-owners — `piece/[id].tsx` shows purchase section to visitors
 - ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
-**Pending:**
-- [ ] Subscription notifications — edge function on `pieces.insert` published=true, fan-out email via Resend (debounce 1/gallery/6h, exclude owner from recipients); push later
-- [ ] Grandparent guest checkout — buy from gallery without login
-- [ ] Web gallery deployment — drawup.ink domain + public routes
-- [ ] OG meta tags for piece/gallery public URLs
+**Pending (sorted by leverage — see `## Tomorrow's polish & feature plan` for full P0–P5 plan):**
+- [ ] **P0** — Account deletion flow (App Store mandatory)
+- [ ] **P0** — Privacy Policy + Terms in app (App Store mandatory)
+- [ ] **P0** — Push notifications: ship a trigger or remove the prompt
+- [ ] **P1** — Subscription email notifications via Resend (the dopamine loop)
+- [ ] **P1** — Web gallery rendering at drawup.ink/gallery/<slug>
+- [ ] **P1** — Share→signup attribution (UTM ref param)
+- [ ] **P1** — Auto-MP4 before/after reveal export
+- [ ] **P2** — Onboarding context for new users (3 credits explained)
+- [ ] **P2** — Comment author differentiation + delete own comment
 
 ---
 
@@ -410,6 +480,8 @@ The most dangerous bugs look like success but do nothing:
 
 *(One line per run, newest first)*
 
+- [2026-05-01 Human] Forensic audit of the app — captured P0–P5 plan in `## Tomorrow's polish & feature plan`. Top blockers: account deletion + privacy links (App Store mandatory), notification fan-out (loop activation), web gallery rendering (share→signup conversion). Push token wiring exists but is unused — must ship a trigger or stop asking permission.
+- [2026-05-01 Human] Locked Read Aloud teaser shipped — owner-only active button; non-owner viewers see locked pill that branches: viewer-with-gallery → "Open my galleries" / viewer-without-gallery → "Create a gallery." Subscriber count fix: SECURITY DEFINER RPC (`subscriber_count`) so non-owner visitors see the public follower count without leaking subscriber identities. Migration 019 applied.
 - [2026-05-01 Human] User-selectable TTS voice shipped — migration 018 (`tts_voice_id` on profiles), 5-voice curated catalog, on-demand sample preview cached client-side, profile picker section. Files: `supabase/migrations/018_profiles_tts_voice.sql`, `supabase/functions/tts/index.ts`, `app/lib/voices.ts`, `app/components/VoicePicker.tsx`, `app/components/ReadAloudButton.tsx`, `app/app/(tabs)/profile.tsx`.
 - [2026-05-01 Human] Owners auto-follow own gallery — migration 017 + backfill applied. Comment rate limit 5min → 30s, edge function deployed. Gallery cover flicker bug root-caused (queryKey shape collision) and fixed.
 - [2026-04-30 Human] Gallery subscriptions shipped (schema + Follow + Discover segmented control). Migration applied to remote Supabase. Notifications deferred. Files: `supabase/migrations/016_subscriptions.sql`, `app/lib/subscriptions.ts`, `app/app/gallery/[slug].tsx`, `app/app/(tabs)/discover.tsx`, `app/lib/analytics.ts`.
