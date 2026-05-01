@@ -65,10 +65,12 @@ export default function PieceScreen() {
   
     const isOwner = !!session && !!piece && session.user.id === piece.stores?.owner_id
 
-    // Whether the viewer has at least one of their own galleries — gates
-    // Read Aloud for non-owners. If true, they're already a Draw Up
-    // creator and shouldn't be teased; if false, the Read Aloud button
-    // becomes a creation nudge.
+    // Whether the viewer has at least one of their own galleries —
+    // changes the locked Read Aloud CTA from "create your first
+    // gallery" to "open your galleries" so existing creators are
+    // pushed toward using Read Aloud on their own pieces (where it's
+    // actually meant to live), not toward billing us for TTS on every
+    // stranger's piece they browse.
     const { data: viewerGalleryCount = 0 } = useQuery({
       queryKey: ['my-gallery-count', session?.user.id],
       enabled: !!session && !isOwner,
@@ -80,7 +82,7 @@ export default function PieceScreen() {
         return count ?? 0
       },
     })
-    const isCreator = isOwner || viewerGalleryCount > 0
+    const viewerHasGallery = viewerGalleryCount > 0
 
     const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
   
@@ -278,9 +280,9 @@ export default function PieceScreen() {
         {piece.ai_description ? (
           <View style={styles.descriptionBlock}>
             <Text style={styles.descriptionText}>{piece.ai_description}</Text>
-            {isCreator
+            {isOwner
               ? <ReadAloudButton text={piece.ai_description} compact />
-              : <LockedReadAloudButton compact />}
+              : <LockedReadAloudButton compact viewerHasGallery={viewerHasGallery} />}
           </View>
         ) : null}
 
