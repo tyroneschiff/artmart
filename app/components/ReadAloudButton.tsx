@@ -3,11 +3,30 @@ import { TouchableOpacity, Text, StyleSheet, Alert, ActivityIndicator } from 're
 import { Audio } from 'expo-av'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Ionicons } from '@expo/vector-icons'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../hooks/useAuthStore'
+import { DEFAULT_VOICE_ID } from '../lib/voices'
 import { colors, radius } from '../lib/theme'
 
 export default function ReadAloudButton({ text, compact }: { text: string; compact?: boolean }) {
   const [state, setState] = useState<'idle' | 'loading' | 'playing'>('idle')
   const soundRef = useRef<Audio.Sound | null>(null)
+  const session = useAuthStore((s) => s.session)
+  const { data: voicePref } = useQuery({
+    queryKey: ['profile-voice', session?.user.id],
+    enabled: !!session,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('tts_voice_id')
+        .eq('id', session!.user.id)
+        .maybeSingle()
+      if (error) throw error
+      return data?.tts_voice_id as string | null | undefined
+    },
+  })
+  const voiceId = voicePref || DEFAULT_VOICE_ID
 
   useEffect(() => {
     Audio.setAudioModeAsync({ playsInSilentModeIOS: true })
@@ -37,7 +56,7 @@ export default function ReadAloudButton({ text, compact }: { text: string; compa
             'apikey': anonKey,
             'Authorization': `Bearer ${anonKey}`,
           },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, voice_id: voiceId }),
         }
       )
       if (!res.ok) {

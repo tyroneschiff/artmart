@@ -380,6 +380,10 @@ The most dangerous bugs look like success but do nothing:
 ## Current task queue
 
 **Done (recent):**
+- ✅ User-selectable Read Aloud voice — migration `018_profiles_tts_voice.sql` (`tts_voice_id` on profiles); `app/lib/voices.ts` curated 5-voice catalog (Charlotte default + Bella, Adam, Rachel, Antoni); `tts` edge function accepts `voice_id` with allowlist; `VoicePicker` component with on-demand sample preview cached in `FileSystem.cacheDirectory`; profile screen "Read aloud voice" section; `ReadAloudButton` reads user pref + falls back to default.
+- ✅ Owners auto-follow own gallery — migration `017_subscriptions_allow_self.sql` (drop self-block + backfill existing owners); auto-insert subscription on gallery create; Follow button visible to owners too.
+- ✅ Comment rate limit 5min → 30s — softer copy, AI moderation handles abuse.
+- ✅ Gallery cover flicker bug fixed — Create and My Galleries shared `['mystores', userId]` queryKey but fetched different SELECT shapes; gave Create its own `['stores-picker', userId]` key. Logged in `## Known gotchas → React Query`.
 - ✅ Gallery subscriptions (Follow + Following feed) — migration `016_subscriptions.sql` (RLS-gated, self-subscription blocked); `app/lib/subscriptions.ts` hooks; Follow/Following pill on gallery page (auth-gated, auto-follows after login via `?follow=1` returnTo); follower count rendered inline; segmented control on Discover (Following | Discover, defaults to Following when subscribed); `gallery_followed` / `gallery_unfollowed` events. Notifications (email/push) deferred to next pass.
 - ✅ Operator metrics dashboard — `/metrics?key=...` (token-gated, multi-`excludeUser` support) renders kill-criteria KPIs, funnel, share channels, sparklines, recent activity. `web/api/metrics.js` reads via service-role key from Vercel env.
 - ✅ Read Aloud → owner-only on piece detail — gates `<ReadAloudButton>` behind `isOwner`. Family viewers no longer see it; cuts ElevenLabs cost; description is written *to* the child so it's a parent+kid moment by design.
@@ -395,8 +399,7 @@ The most dangerous bugs look like success but do nothing:
 - ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
 **Pending:**
-- [ ] Subscription notifications — edge function on `pieces.insert` published=true, fan-out email via Resend (debounce 1/gallery/6h); push later
-- [ ] User-selectable TTS voice (profile settings, 4–6 curated voices, pre-rendered samples)
+- [ ] Subscription notifications — edge function on `pieces.insert` published=true, fan-out email via Resend (debounce 1/gallery/6h, exclude owner from recipients); push later
 - [ ] Grandparent guest checkout — buy from gallery without login
 - [ ] Web gallery deployment — drawup.ink domain + public routes
 - [ ] OG meta tags for piece/gallery public URLs
@@ -407,6 +410,8 @@ The most dangerous bugs look like success but do nothing:
 
 *(One line per run, newest first)*
 
+- [2026-05-01 Human] User-selectable TTS voice shipped — migration 018 (`tts_voice_id` on profiles), 5-voice curated catalog, on-demand sample preview cached client-side, profile picker section. Files: `supabase/migrations/018_profiles_tts_voice.sql`, `supabase/functions/tts/index.ts`, `app/lib/voices.ts`, `app/components/VoicePicker.tsx`, `app/components/ReadAloudButton.tsx`, `app/app/(tabs)/profile.tsx`.
+- [2026-05-01 Human] Owners auto-follow own gallery — migration 017 + backfill applied. Comment rate limit 5min → 30s, edge function deployed. Gallery cover flicker bug root-caused (queryKey shape collision) and fixed.
 - [2026-04-30 Human] Gallery subscriptions shipped (schema + Follow + Discover segmented control). Migration applied to remote Supabase. Notifications deferred. Files: `supabase/migrations/016_subscriptions.sql`, `app/lib/subscriptions.ts`, `app/app/gallery/[slug].tsx`, `app/app/(tabs)/discover.tsx`, `app/lib/analytics.ts`.
 - [2026-04-30 Human] Operator metrics dashboard at `/metrics` shipped — token-gated, server-rendered, multi-user exclude. Files: `web/api/metrics.js`, `web/vercel.json`.
 - [2026-04-30 Human] Read Aloud gated to owner only on piece detail — visitors no longer see it (cost + product alignment, description is written *to* the child). File: `app/app/piece/[id].tsx`. Added voice-picker backlog item for v1.2.
