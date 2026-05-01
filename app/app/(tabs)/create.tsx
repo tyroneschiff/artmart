@@ -86,7 +86,7 @@ export default function CreateScreen() {
   const [creatingStore, setCreatingStore] = useState(false)
 
   const { data: stores, refetch: refetchStores } = useQuery({
-    queryKey: ['mystores', session?.user.id],
+    queryKey: ['stores-picker', session?.user.id],
     queryFn: () => fetchMyStores(session!.user.id),
     enabled: !!session,
   })
@@ -185,6 +185,7 @@ export default function CreateScreen() {
       }
       setNewStoreName('')
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
+      queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
     } catch (e: any) {
       Alert.alert('Error', e.message)
     } finally {
@@ -270,6 +271,7 @@ export default function CreateScreen() {
       queryClient.invalidateQueries({ queryKey: ['discover'] })
       queryClient.invalidateQueries({ queryKey: ['store', slug] })
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
+      queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
       setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
       setStep('success')
       track('piece_published', { pieceId, storeId: selectedStore?.id })
