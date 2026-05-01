@@ -26,10 +26,10 @@ export default function LockedReadAloudButton({ compact, viewerHasGallery }: { c
 
     if (viewerHasGallery) {
       Alert.alert(
-        'Read Aloud is the parent-and-child moment',
-        "It belongs to the artist whose drawing this is. Use it on your own kid's pieces — that's where the magic lands.",
+        'Read aloud lives in your own worlds',
+        "Open one of your kid's worlds — it'll read itself back to you.",
         [
-          { text: 'Maybe later', style: 'cancel' },
+          { text: 'Not now', style: 'cancel' },
           { text: 'Open my galleries', onPress: () => router.push('/(tabs)/mystores') },
         ]
       )
@@ -37,11 +37,11 @@ export default function LockedReadAloudButton({ compact, viewerHasGallery }: { c
     }
 
     Alert.alert(
-      'Read Aloud is yours when you have a gallery',
-      "Each child gets their own gallery on Draw Up. Create yours and the magic — Read Aloud included — unlocks for every world inside.",
+      'Read aloud opens with your first gallery',
+      'Make a gallery for your child. Every world inside reads itself back to you.',
       [
-        { text: 'Maybe later', style: 'cancel' },
-        { text: 'Create my gallery', onPress: () => router.push('/(tabs)/create') },
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Create a gallery', onPress: () => router.push('/(tabs)/create') },
       ]
     )
   }
