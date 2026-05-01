@@ -38,7 +38,7 @@ export const handler = async (req: Request) => {
 
     if (content.length > 300) return new Response(JSON.stringify({ error: 'Comment too long' }), { status: 400, headers: corsHeaders })
 
-    // Rate limit check: 1 per 5 mins
+    // Rate limit check: 1 per 30s (anti-flood; AI moderation handles abuse)
     const { data: lastComment } = await supabase
       .from('comments')
       .select('created_at')
@@ -50,8 +50,8 @@ export const handler = async (req: Request) => {
     if (lastComment) {
       const lastTime = new Date(lastComment.created_at).getTime()
       const now = new Date().getTime()
-      if (now - lastTime < 5 * 60 * 1000) {
-        return new Response(JSON.stringify({ error: 'Please wait 5 minutes between comments' }), { status: 429, headers: corsHeaders })
+      if (now - lastTime < 30 * 1000) {
+        return new Response(JSON.stringify({ error: 'Hold on a sec — wait a moment before posting again.' }), { status: 429, headers: corsHeaders })
       }
     }
 
