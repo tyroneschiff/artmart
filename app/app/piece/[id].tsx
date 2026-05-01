@@ -15,6 +15,7 @@ import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
+import LockedReadAloudButton from '../../components/LockedReadAloudButton'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
@@ -63,6 +64,23 @@ export default function PieceScreen() {
     const { data: piece, isLoading, error, refetch } = useQuery({ queryKey: ['piece', id], queryFn: () => fetchPiece(id) })
   
     const isOwner = !!session && !!piece && session.user.id === piece.stores?.owner_id
+
+    // Whether the viewer has at least one of their own galleries — gates
+    // Read Aloud for non-owners. If true, they're already a Draw Up
+    // creator and shouldn't be teased; if false, the Read Aloud button
+    // becomes a creation nudge.
+    const { data: viewerGalleryCount = 0 } = useQuery({
+      queryKey: ['my-gallery-count', session?.user.id],
+      enabled: !!session && !isOwner,
+      queryFn: async () => {
+        const { count } = await supabase
+          .from('stores')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', session!.user.id)
+        return count ?? 0
+      },
+    })
+    const isCreator = isOwner || viewerGalleryCount > 0
 
     const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
   
@@ -260,7 +278,9 @@ export default function PieceScreen() {
         {piece.ai_description ? (
           <View style={styles.descriptionBlock}>
             <Text style={styles.descriptionText}>{piece.ai_description}</Text>
-            {isOwner ? <ReadAloudButton text={piece.ai_description} compact /> : null}
+            {isCreator
+              ? <ReadAloudButton text={piece.ai_description} compact />
+              : <LockedReadAloudButton compact />}
           </View>
         ) : null}
 

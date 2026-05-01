@@ -49,12 +49,12 @@ export function useSubscriberCount(storeId: string | undefined) {
     queryKey: ['subscriberCount', storeId],
     enabled: !!storeId,
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('subscriptions')
-        .select('id', { count: 'exact', head: true })
-        .eq('store_id', storeId!)
+      // SECURITY DEFINER RPC returns the count without leaking subscriber
+      // identities. Direct SELECT on the table is blocked for non-owners
+      // by 016's RLS — see migration 019 for the fix.
+      const { data, error } = await supabase.rpc('subscriber_count', { p_store_id: storeId! })
       if (error) throw error
-      return count ?? 0
+      return (data as number | null) ?? 0
     },
   })
 }
