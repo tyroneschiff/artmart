@@ -171,12 +171,25 @@ export default function CreateScreen() {
     setCreatingStore(true)
     try {
       const slug = newStoreName.trim().toLowerCase().replace(/\s+/g, '-')
-      const { error } = await supabase.from('stores').insert({
-        owner_id: session.user.id,
-        child_name: newStoreName.trim(),
-        slug,
-      })
+      const { data: storeRow, error } = await supabase
+        .from('stores')
+        .insert({
+          owner_id: session.user.id,
+          child_name: newStoreName.trim(),
+          slug,
+        })
+        .select('id')
+        .single()
       if (error) throw error
+      // Auto-follow own gallery (RLS allows self-subscription as of 017).
+      if (storeRow?.id) {
+        await supabase
+          .from('subscriptions')
+          .upsert(
+            { subscriber_id: session.user.id, store_id: storeRow.id },
+            { onConflict: 'subscriber_id,store_id', ignoreDuplicates: true },
+          )
+      }
       const { data } = await refetchStores()
       const created = data?.find((s) => s.slug === slug)
       if (created) {
@@ -186,6 +199,7 @@ export default function CreateScreen() {
       setNewStoreName('')
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
       queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
+      queryClient.invalidateQueries({ queryKey: ['mySubscriptions'] })
     } catch (e: any) {
       Alert.alert('Error', e.message)
     } finally {

@@ -70,7 +70,6 @@ export default function StoreScreen() {
       router.push({ pathname: '/(auth)/login', params: { returnTo } })
       return
     }
-    if (isOwner) return
     const next = !isSubscribed
     Haptics.selectionAsync().catch(() => {})
     toggleSubscription.mutate(next, {
@@ -208,23 +207,21 @@ export default function StoreScreen() {
               )}
             </TouchableOpacity>
           )}
-          {!isOwner && (
-            <TouchableOpacity
-              style={[styles.followBtn, isSubscribed && styles.followBtnActive]}
-              onPress={handleFollow}
-              disabled={toggleSubscription.isPending}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={isSubscribed ? 'notifications' : 'notifications-outline'}
-                size={15}
-                color={isSubscribed ? colors.goldDark : colors.dark}
-              />
-              <Text style={[styles.followBtnText, isSubscribed && styles.followBtnTextActive]}>
-                {isSubscribed ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.followBtn, isSubscribed && styles.followBtnActive]}
+            onPress={handleFollow}
+            disabled={toggleSubscription.isPending}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isSubscribed ? 'notifications' : 'notifications-outline'}
+              size={15}
+              color={isSubscribed ? colors.goldDark : colors.dark}
+            />
+            <Text style={[styles.followBtnText, isSubscribed && styles.followBtnTextActive]}>
+              {isSubscribed ? 'Following' : 'Follow'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
             <Text style={styles.shareBtnText}>Share</Text>
           </TouchableOpacity>

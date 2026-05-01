@@ -169,6 +169,9 @@ Lessons learned from running the app on real devices. Apply these before analyzi
 - Edge Function timeout is 150 seconds. Polling loops must use synchronous endpoints or abort before that limit.
 - RLS policies must explicitly include DELETE — Supabase silently drops deletes with no error if no DELETE policy exists, calling onSuccess as if it worked.
 
+**React Query:**
+- Two `useQuery` calls with the same `queryKey` but different `select(...)` shapes will overwrite each other's cache, producing flicker between fields-present and fields-missing renders. Always namespace the key by data shape (e.g. `['mystores', uid]` for the rich shape vs `['stores-picker', uid]` for the slim shape) and invalidate both keys together when the underlying rows change.
+
 **Platform / third-party:**
 - `Linking.canOpenURL('whatsapp://')` returns false on iOS without `LSApplicationQueriesSchemes`. Use `wa.me/?text=` universal link instead.
 - Stripe idempotency keys lock for 24 hours. A failed payment with the same key returns the same failed intent — user cannot retry.
