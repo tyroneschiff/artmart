@@ -20,6 +20,7 @@ export type EventName =
   | 'original_saved'
   | 'gallery_followed'
   | 'gallery_unfollowed'
+  | 'piece_moved'
 
 type TrackProps = {
   pieceId?: string
