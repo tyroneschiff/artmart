@@ -113,6 +113,8 @@ Deno.serve(async (req) => {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicKey) throw new Error('Missing ANTHROPIC_API_KEY')
 
+    // 45s covers Claude's p99 vision-call latency comfortably. The
+    // edge function envelope is 150s; fal.ai needs the rest.
     const claudeRes = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -184,7 +186,7 @@ Example:
           }]
         }]
       }),
-    }, 20000)
+    }, 45000)
 
     if (!claudeRes.ok) {
       const err = await claudeRes.text()
@@ -195,7 +197,10 @@ Example:
     const rawText = claudeData.content[0].text
     const { description, prompt } = extractJson(rawText)
 
-    // Step 2: fal.ai Flux Kontext → transformed image (synchronous)
+    // Step 2: fal.ai Flux Kontext → transformed image (synchronous).
+    // 75s is generous: fal's p99 for Flux Kontext sits around 35–45s
+    // but spikes to 60s+ under load. Failing fast at 20s was creating
+    // false-negative refunds for users on the wrong side of the bucket.
     const falRes = await fetchWithTimeout('https://fal.run/fal-ai/flux-pro/kontext', {
       method: 'POST',
       headers: {
@@ -207,7 +212,7 @@ Example:
         image_url: 'data:' + mimeType + ';base64,' + imageBase64,
         guidance_scale: 6.0,
       }),
-    }, 20000)
+    }, 75000)
 
     if (!falRes.ok) {
       const err = await falRes.text()
