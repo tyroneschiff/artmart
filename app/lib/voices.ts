@@ -45,6 +45,11 @@ export const VOICES: Voice[] = [
     name: 'Antoni',
     description: 'Friendly uncle reading to the room.',
   },
+  {
+    id: 'keLVje3aBMuRpxuu0bqO',
+    name: 'Crofty',
+    description: 'Bright and characterful — like a favorite picture book.',
+  },
 ]
 
 export const DEFAULT_VOICE_ID = VOICES.find((v) => v.default)!.id

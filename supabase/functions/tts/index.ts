@@ -15,6 +15,7 @@ const ALLOWED_VOICE_IDS = new Set([
   'pNInz6obpgDQGcFmaJgB', // Adam
   '21m00Tcm4TlvDq8ikWAM', // Rachel
   'ErXwobaYiN019PkySvjV', // Antoni
+  'keLVje3aBMuRpxuu0bqO', // Crofty
 ])
 
 function resolveVoiceId(requested: unknown): string {
