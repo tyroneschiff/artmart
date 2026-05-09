@@ -172,6 +172,9 @@ Lessons learned from running the app on real devices. Apply these before analyzi
 **React Query:**
 - Two `useQuery` calls with the same `queryKey` but different `select(...)` shapes will overwrite each other's cache, producing flicker between fields-present and fields-missing renders. Always namespace the key by data shape (e.g. `['mystores', uid]` for the rich shape vs `['stores-picker', uid]` for the slim shape) and invalidate both keys together when the underlying rows change.
 
+**EAS Build:**
+- `eas.json` build profiles do NOT inherit env from each other. The app's `EXPO_PUBLIC_*` env vars (Supabase URL, anon key, Stripe publishable key) must be defined explicitly in EVERY profile that ships an actual build (preview AND production). Missing env on the production profile produced a launch-time SIGSEGV in `convertNSExceptionToJSError` — Stripe's native init throws an NSException when constructed with `undefined`, which propagates through TurboModule and crashes the app on splash. Symptom looks like a native dep regression; cause is one missing config block. **Always diff eas.json profiles before blaming pods.**
+
 **Platform / third-party:**
 - `Linking.canOpenURL('whatsapp://')` returns false on iOS without `LSApplicationQueriesSchemes`. Use `wa.me/?text=` universal link instead.
 - Stripe idempotency keys lock for 24 hours. A failed payment with the same key returns the same failed intent — user cannot retry.
@@ -229,6 +232,12 @@ The most dangerous bugs look like success but do nothing:
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
+**2026-05-08:**
+- Production EAS profile in `eas.json` was missing the three `EXPO_PUBLIC_*` env vars (Supabase URL, anon key, Stripe publishable key) that the preview profile had. Builds 22 and 24 (shipped via `--profile production`) crashed on launch with SIGABRT/SIGSEGV in `convertNSExceptionToJSError` on the TurboModule queue — Stripe's native init throws an NSException when handed `undefined`, and that propagates as the launch crash. Logged in `## Known gotchas → EAS Build`.
+- **Always build via `eas build --platform ios --profile preview`** for now; both profiles work but preview is the user's tested path. Both have the env vars.
+- Recovery sequence: 1.1.4 (22) crashed → 1.1.5 (23, attempted Path B with `newArchEnabled: false`) failed CocoaPods install → 1.1.5 (24, full revert to 1.1.3 baseline) still crashed → diagnosed eas.json env var diff → 1.1.6 (25) shipped via preview profile with all features re-introduced and launches cleanly.
+- **Open question for tomorrow:** when Stripe is moved to live mode, swap `pk_test_…` for `pk_live_…` in BOTH eas.json profiles. Forgetting one will repeat today's crash.
+
 **2026-04-30:**
 - **Email confirmation DISABLED in Supabase Dashboard for the beta.** Authentication → Sign In / Providers → Email → "Confirm email" = OFF. Re-enable before public launch + build a "verify your email" gate in the app at that time. Trade-off accepted: simpler beta UX > spam protection.
 - New users now: signUp → session returned immediately → ensureProfile() runs in `_layout.tsx` auth listener → credits + profile queries invalidated → 3 credits visible on first paint.
@@ -247,11 +256,6 @@ The most dangerous bugs look like success but do nothing:
 - Delete piece added (owner-only). RLS DELETE policy added in `012_pieces_delete_policy.sql`.
 - Digital download CTA added for non-owners/non-buyers on piece detail page.
 - CLAUDE.md had unresolved merge conflicts from Gemini sync — cleaned up 2026-04-24.
-
-**2026-04-23 — BUSINESS MODEL PIVOT:**
-- **Product reframe: "Step inside your child's drawing"** — the drawing IS the vision; the AI is the door. Never say "elevate," "improve," "gallery-worthy," or treat the original as raw material.
-- **Monetization: credits.** 3 free transforms on signup → credit packs ($9.99 / 12 credits). ~92% gross margin after API costs.
-- **Core use case reframed (credit to Evan):** The parent is the buyer, not the grandparent. They're paying to preserve drawings guilt-free before throwing them away. Credits = permission to let go. Print purchases are a secondary bonus.
 
 ---
 
