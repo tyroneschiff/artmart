@@ -2,11 +2,11 @@
   "expo": {
     "name": "Draw Up",
     "slug": "artmart",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -28,7 +28,7 @@
     "ios": {
       "bundleIdentifier": "art.drawup.app",
       "supportsTablet": false,
-      "buildNumber": "22",
+      "buildNumber": "23",
       "associatedDomains": [
         "applinks:drawup.ink",
         "webcredentials:drawup.ink"
