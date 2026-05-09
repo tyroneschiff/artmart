@@ -9,10 +9,8 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card, radius } from '../../lib/theme'
 import CreditsChip from '../../components/CreditsChip'
-import { useMySubscriptions } from '../../lib/subscriptions'
 
 type SortMode = 'top' | 'new' | 'popular'
-type Feed = 'following' | 'discover'
 
 type Piece = {
   id: string
@@ -26,20 +24,15 @@ type Piece = {
   stores: { child_name: string; slug: string }
 }
 
-async function fetchPieces(sort: SortMode, storeIds?: string[]): Promise<Piece[]> {
+async function fetchPieces(sort: SortMode): Promise<Piece[]> {
   const orderCol = sort === 'top' ? 'vote_count' : sort === 'popular' ? 'view_count' : 'created_at'
-  let q = supabase
+  const { data, error } = await supabase
     .from('pieces')
     .select('id, title, transformed_image_url, watermarked_image_url, vote_count, view_count, store_id, created_at, stores(child_name, slug)')
     .eq('published', true)
     .not('transformed_image_url', 'is', null)
     .order(orderCol, { ascending: false })
     .limit(50)
-  if (storeIds) {
-    if (storeIds.length === 0) return []
-    q = q.in('store_id', storeIds)
-  }
-  const { data, error } = await q
   if (error) throw error
   return data as unknown as Piece[]
 }
@@ -68,17 +61,10 @@ export default function DiscoverScreen() {
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set())
   const [sort, setSort] = useState<SortMode>('top')
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [feedOverride, setFeedOverride] = useState<Feed | null>(null)
-
-  const { data: subscribedStoreIds } = useMySubscriptions()
-  const hasSubscriptions = !!subscribedStoreIds && subscribedStoreIds.length > 0
-  const showSegmented = !!session && hasSubscriptions
-  const feed: Feed = feedOverride ?? (showSegmented ? 'following' : 'discover')
 
   const { data: pieces, isLoading, error, refetch } = useQuery({
-    queryKey: ['discover', sort, feed, feed === 'following' ? subscribedStoreIds : null],
-    queryFn: () => fetchPieces(sort, feed === 'following' ? subscribedStoreIds ?? [] : undefined),
-    enabled: feed === 'discover' || subscribedStoreIds !== undefined,
+    queryKey: ['discover', sort],
+    queryFn: () => fetchPieces(sort),
   })
 
   const { data: existingVotes } = useQuery({
@@ -116,12 +102,6 @@ export default function DiscoverScreen() {
 
   const activeOption = SORT_OPTIONS.find(o => o.value === sort)!
 
-  function selectFeed(next: Feed) {
-    if (next === feed) return
-    Haptics.selectionAsync().catch(() => {})
-    setFeedOverride(next)
-  }
-
   if (isLoading) return <DiscoverSkeleton />
 
   if (error) {
@@ -140,28 +120,9 @@ export default function DiscoverScreen() {
     <View style={styles.container}>
       <View style={styles.headerBlock}>
         <View style={styles.headerRow}>
-          <Text style={styles.header}>{feed === 'following' ? 'Following' : 'Discover'}</Text>
+          <Text style={styles.header}>Discover</Text>
           <CreditsChip />
         </View>
-        {showSegmented && (
-          <View style={styles.segmented}>
-            {(['following', 'discover'] as Feed[]).map((f) => {
-              const active = feed === f
-              return (
-                <TouchableOpacity
-                  key={f}
-                  style={[styles.segment, active && styles.segmentActive]}
-                  onPress={() => selectFeed(f)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-                    {f === 'following' ? 'Following' : 'Discover'}
-                  </Text>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
-        )}
         <TouchableOpacity style={styles.sortBtn} onPress={() => setDropdownOpen(true)} activeOpacity={0.7}>
           <Ionicons name={activeOption.icon} size={13} color={colors.dark} />
           <Text style={styles.sortBtnText}>{activeOption.label}</Text>
@@ -227,25 +188,14 @@ export default function DiscoverScreen() {
           )
         }}
         ListEmptyComponent={
-          feed === 'following' ? (
-            <View style={styles.emptyWrap}>
-              <Text style={styles.emptyIcon}>✨</Text>
-              <Text style={styles.emptyTitle}>Nothing new yet</Text>
-              <Text style={styles.emptyBody}>Galleries you follow haven't published anything new. Check back, or browse Discover for new artists.</Text>
-              <TouchableOpacity style={styles.emptyCta} onPress={() => selectFeed('discover')}>
-                <Text style={styles.emptyCtaText}>Browse Discover</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.emptyWrap}>
-              <Text style={styles.emptyIcon}>✨</Text>
-              <Text style={styles.emptyTitle}>Nothing to discover yet</Text>
-              <Text style={styles.emptyBody}>Be the first. Snap a photo of your child's drawing and watch it come to life.</Text>
-              <TouchableOpacity style={styles.emptyCta} onPress={() => router.push('/(tabs)/create')}>
-                <Text style={styles.emptyCtaText}>Create the first one</Text>
-              </TouchableOpacity>
-            </View>
-          )
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyIcon}>✨</Text>
+            <Text style={styles.emptyTitle}>Nothing to discover yet</Text>
+            <Text style={styles.emptyBody}>Be the first. Snap a photo of your child's drawing and watch it come to life.</Text>
+            <TouchableOpacity style={styles.emptyCta} onPress={() => router.push('/(tabs)/create')}>
+              <Text style={styles.emptyCtaText}>Create the first one</Text>
+            </TouchableOpacity>
+          </View>
         }
         contentContainerStyle={{ paddingBottom: 24 }}
       />
@@ -272,33 +222,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   sortBtnText: { fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.1 },
-  segmented: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 3,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-  },
-  segment: {
-    paddingHorizontal: 18,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-  },
-  segmentActive: {
-    backgroundColor: colors.dark,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.mid,
-    letterSpacing: -0.2,
-  },
-  segmentTextActive: {
-    color: colors.cream,
-  },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'flex-start', paddingTop: 140, paddingHorizontal: 20 },
   dropdown: {
     backgroundColor: colors.white,

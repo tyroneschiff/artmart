@@ -17,7 +17,6 @@ import { useAuthStore } from '../../hooks/useAuthStore'
 import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
 import { track } from '../../lib/analytics'
-import { friendlyTransformError } from '../../lib/transformErrors'
 import { colors, btn, type, card, radius, opacity } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
@@ -86,7 +85,7 @@ export default function CreateScreen() {
   const [creatingStore, setCreatingStore] = useState(false)
 
   const { data: stores, refetch: refetchStores } = useQuery({
-    queryKey: ['stores-picker', session?.user.id],
+    queryKey: ['mystores', session?.user.id],
     queryFn: () => fetchMyStores(session!.user.id),
     enabled: !!session,
   })
@@ -171,25 +170,12 @@ export default function CreateScreen() {
     setCreatingStore(true)
     try {
       const slug = newStoreName.trim().toLowerCase().replace(/\s+/g, '-')
-      const { data: storeRow, error } = await supabase
-        .from('stores')
-        .insert({
-          owner_id: session.user.id,
-          child_name: newStoreName.trim(),
-          slug,
-        })
-        .select('id')
-        .single()
+      const { error } = await supabase.from('stores').insert({
+        owner_id: session.user.id,
+        child_name: newStoreName.trim(),
+        slug,
+      })
       if (error) throw error
-      // Auto-follow own gallery (RLS allows self-subscription as of 017).
-      if (storeRow?.id) {
-        await supabase
-          .from('subscriptions')
-          .upsert(
-            { subscriber_id: session.user.id, store_id: storeRow.id },
-            { onConflict: 'subscriber_id,store_id', ignoreDuplicates: true },
-          )
-      }
       const { data } = await refetchStores()
       const created = data?.find((s) => s.slug === slug)
       if (created) {
@@ -198,8 +184,6 @@ export default function CreateScreen() {
       }
       setNewStoreName('')
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
-      queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
-      queryClient.invalidateQueries({ queryKey: ['mySubscriptions'] })
     } catch (e: any) {
       Alert.alert('Error', e.message)
     } finally {
@@ -285,7 +269,6 @@ export default function CreateScreen() {
       queryClient.invalidateQueries({ queryKey: ['discover'] })
       queryClient.invalidateQueries({ queryKey: ['store', slug] })
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
-      queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
       setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
       setStep('success')
       track('piece_published', { pieceId, storeId: selectedStore?.id })
@@ -406,24 +389,13 @@ export default function CreateScreen() {
                       <Text style={[type.label, { color: colors.mid }]}>This takes about 30 seconds</Text>
                     </View>
                   : transformError
-                    ? (() => {
-                        const f = friendlyTransformError(transformError)
-                        return (
-                          <View style={styles.errorBox}>
-                            <Text style={styles.errorTitle}>{f.title}</Text>
-                            <Text style={styles.errorMessage}>{f.body}</Text>
-                            {f.hint ? <Text style={styles.errorHint}>{f.hint}</Text> : null}
-                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                              <TouchableOpacity style={[btn.primary, { flex: 1 }]} onPress={handleTransform}>
-                                <Text style={btn.primaryText}>Try again</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity style={[btn.secondary, { flex: 1 }]} onPress={() => { setStep('pick'); setTransformError(null) }}>
-                                <Text style={btn.secondaryText}>New photo</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        )
-                      })()
+                    ? <View style={styles.errorBox}>
+                        <Text style={styles.errorTitle}>Transform failed</Text>
+                        <Text style={styles.errorMessage}>{transformError}</Text>
+                        <TouchableOpacity style={btn.primary} onPress={handleTransform}>
+                          <Text style={btn.primaryText}>Try again</Text>
+                        </TouchableOpacity>
+                      </View>
                     : <TouchableOpacity style={btn.primary} onPress={handleTransform}>
                         <Text style={btn.primaryText}>✨ Step Inside</Text>
                       </TouchableOpacity>
@@ -598,10 +570,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
-  errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 6 },
-  errorTitle: { fontSize: 16, fontWeight: '800', color: colors.dangerText, letterSpacing: -0.3 },
-  errorMessage: { fontSize: 13, color: colors.dangerText, lineHeight: 18 },
-  errorHint: { fontSize: 12, color: colors.dangerText, opacity: 0.75, fontWeight: '600', marginBottom: 4 },
+  errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 8 },
+  errorTitle: { fontSize: 14, fontWeight: '700', color: colors.dangerText },
+  errorMessage: { fontSize: 13, color: colors.dangerText, lineHeight: 18, marginBottom: 4 },
   webNotice: { backgroundColor: colors.goldLight, borderRadius: radius.sm, padding: 16, borderWidth: 1, borderColor: colors.goldMid },
   webNoticeText: { color: colors.goldDark, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   compareRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },

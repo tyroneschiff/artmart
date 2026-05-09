@@ -18,9 +18,6 @@ export type EventName =
   | 'vote_cast'
   | 'gallery_created'
   | 'original_saved'
-  | 'gallery_followed'
-  | 'gallery_unfollowed'
-  | 'piece_moved'
 
 type TrackProps = {
   pieceId?: string

@@ -15,12 +15,10 @@ import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
-import LockedReadAloudButton from '../../components/LockedReadAloudButton'
-import MoveToGalleryModal from '../../components/MoveToGalleryModal'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
-  vote_count: number; ai_description: string; store_id: string
+  vote_count: number; ai_description: string
   stores: { child_name: string; slug: string; owner_id: string }
 }
 
@@ -61,30 +59,10 @@ export default function PieceScreen() {
     const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
     const [commentText, setCommentText] = useState('')
     const [lightboxUri, setLightboxUri] = useState<string | null>(null)
-    const [moveOpen, setMoveOpen] = useState(false)
   
     const { data: piece, isLoading, error, refetch } = useQuery({ queryKey: ['piece', id], queryFn: () => fetchPiece(id) })
   
     const isOwner = !!session && !!piece && session.user.id === piece.stores?.owner_id
-
-    // Whether the viewer has at least one of their own galleries —
-    // changes the locked Read Aloud CTA from "create your first
-    // gallery" to "open your galleries" so existing creators are
-    // pushed toward using Read Aloud on their own pieces (where it's
-    // actually meant to live), not toward billing us for TTS on every
-    // stranger's piece they browse.
-    const { data: viewerGalleryCount = 0 } = useQuery({
-      queryKey: ['my-gallery-count', session?.user.id],
-      enabled: !!session && !isOwner,
-      queryFn: async () => {
-        const { count } = await supabase
-          .from('stores')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', session!.user.id)
-        return count ?? 0
-      },
-    })
-    const viewerHasGallery = viewerGalleryCount > 0
 
     const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
   
@@ -185,34 +163,6 @@ export default function PieceScreen() {
       )
     }
 
-    const moveMutation = useMutation({
-      mutationFn: async ({ targetStoreId }: { targetStoreId: string; targetChildName: string }) => {
-        const { error } = await supabase.from('pieces').update({ store_id: targetStoreId }).eq('id', id)
-        if (error) throw error
-      },
-      onSuccess: (_, { targetStoreId, targetChildName }) => {
-        track('piece_moved', { pieceId: id, storeId: targetStoreId })
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
-        // Both galleries change shape (cover, count); discover/mystores
-        // covers may need refreshing too. Cheap to invalidate broadly.
-        queryClient.invalidateQueries({ queryKey: ['piece', id] })
-        queryClient.invalidateQueries({ queryKey: ['store', piece!.stores?.slug] })
-        queryClient.invalidateQueries({ queryKey: ['store'] })
-        queryClient.invalidateQueries({ queryKey: ['discover'] })
-        queryClient.invalidateQueries({ queryKey: ['mystores'] })
-        queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
-        queryClient.invalidateQueries({ queryKey: ['owner-collection'] })
-        setMoveOpen(false)
-        Alert.alert('Moved', `This world is now in ${targetChildName}'s gallery.`)
-      },
-      onError: (e: any) => Alert.alert('Could not move', e?.message || 'Try again.'),
-    })
-
-    function handleMove(targetStoreId: string, targetChildName: string) {
-      Haptics.selectionAsync().catch(() => {})
-      moveMutation.mutate({ targetStoreId, targetChildName })
-    }
-
     const reportMutation = useMutation({
       mutationFn: async (commentId: string) => {
         const { error } = await supabase.from('reports').insert({
@@ -310,9 +260,7 @@ export default function PieceScreen() {
         {piece.ai_description ? (
           <View style={styles.descriptionBlock}>
             <Text style={styles.descriptionText}>{piece.ai_description}</Text>
-            {isOwner
-              ? <ReadAloudButton text={piece.ai_description} compact />
-              : <LockedReadAloudButton compact viewerHasGallery={viewerHasGallery} />}
+            <ReadAloudButton text={piece.ai_description} compact />
           </View>
         ) : null}
 
@@ -380,28 +328,16 @@ export default function PieceScreen() {
         />
 
         {isOwner && (
-          <View>
-            <TouchableOpacity
-              style={styles.editLink}
-              onPress={() => setMoveOpen(true)}
-              disabled={moveMutation.isPending}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.editLinkText}>
-                {moveMutation.isPending ? 'Moving…' : 'Move to another gallery'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.dangerZone}
-              onPress={handleDelete}
-              disabled={deleteMutation.isPending}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.dangerZoneText}>
-                {deleteMutation.isPending ? 'Deleting…' : 'Delete this piece'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.dangerZone}
+            onPress={handleDelete}
+            disabled={deleteMutation.isPending}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.dangerZoneText}>
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete this piece'}
+            </Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
 
@@ -425,14 +361,6 @@ export default function PieceScreen() {
         </View>
       </Modal>
 
-      <MoveToGalleryModal
-        visible={moveOpen}
-        currentStoreId={piece?.store_id}
-        onClose={() => setMoveOpen(false)}
-        onMove={handleMove}
-        isMoving={moveMutation.isPending}
-      />
-
       <ShareSheet
         visible={!!sharePayload}
         payload={sharePayload}
@@ -450,8 +378,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
   backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-  editLink: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, alignItems: 'center' },
-  editLinkText: { fontSize: 13, fontWeight: '600', color: colors.mid, textDecorationLine: 'underline' },
   dangerZone: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, alignItems: 'center' },
   dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   mainImage: { width: '100%', aspectRatio: 1 },

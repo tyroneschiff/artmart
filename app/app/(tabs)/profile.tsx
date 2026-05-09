@@ -11,7 +11,6 @@ import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
 import { track } from '../../lib/analytics'
 import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import Constants from 'expo-constants'
-import VoicePicker from '../../components/VoicePicker'
 
 type AllPiece = { id: string; original_image_url: string | null; stores: { child_name: string } | null }
 
@@ -43,11 +42,7 @@ export default function ProfileScreen() {
   const { data: profile } = useQuery({
     queryKey: ['profile', session?.user.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('display_name, tts_voice_id')
-        .eq('id', session!.user.id)
-        .single()
+      const { data, error } = await supabase.from('profiles').select('display_name').eq('id', session!.user.id).single()
       if (error) throw error
       return data
     },
@@ -272,14 +267,6 @@ export default function ProfileScreen() {
               ? <ActivityIndicator color={colors.white} size="small" />
               : <Text style={btn.primaryText}>Save name</Text>}
           </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Read aloud voice */}
-      <View style={styles.section}>
-        <Text style={type.label}>READ ALOUD VOICE</Text>
-        <View style={[card, { overflow: 'hidden' }]}>
-          <VoicePicker currentVoiceId={profile?.tts_voice_id} />
         </View>
       </View>
 
