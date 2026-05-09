@@ -50,15 +50,29 @@ export default function MyStoresScreen() {
 
   const createStore = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('stores').insert({
-        owner_id: session!.user.id,
-        child_name: childName.trim(),
-        slug: slug.trim().toLowerCase().replace(/\s+/g, '-'),
-      })
+      const { data, error } = await supabase
+        .from('stores')
+        .insert({
+          owner_id: session!.user.id,
+          child_name: childName.trim(),
+          slug: slug.trim().toLowerCase().replace(/\s+/g, '-'),
+        })
+        .select('id')
+        .single()
       if (error) throw error
+      // Auto-follow own gallery so the owner's pieces appear in their
+      // own Following feed. RLS allows self-subscription as of 017.
+      await supabase
+        .from('subscriptions')
+        .upsert(
+          { subscriber_id: session!.user.id, store_id: data!.id },
+          { onConflict: 'subscriber_id,store_id', ignoreDuplicates: true },
+        )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
+      queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
+      queryClient.invalidateQueries({ queryKey: ['mySubscriptions'] })
       setModalVisible(false)
       const createdSlug = slug.trim().toLowerCase().replace(/\s+/g, '-')
       const createdName = childName.trim()
