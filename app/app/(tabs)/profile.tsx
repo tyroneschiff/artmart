@@ -161,6 +161,65 @@ export default function ProfileScreen() {
     ])
   }
 
+  const [deleting, setDeleting] = useState(false)
+  async function handleDeleteAccount() {
+    // Two-tap pattern. First confirm explains what's deleted, second
+    // is the point-of-no-return so accidental taps can't take down
+    // a parent's whole gallery.
+    Alert.alert(
+      'Delete your account?',
+      "This permanently deletes every gallery you created, every world inside them, every comment and vote. It can't be undone.",
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Last chance',
+              'Tap Delete to permanently remove your account and everything in it.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setDeleting(true)
+                    try {
+                      const { data: { session: currentSession } } = await supabase.auth.getSession()
+                      if (!currentSession) throw new Error('Session expired. Sign in and try again.')
+                      const res = await fetch(
+                        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
+                        {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${currentSession.access_token}`,
+                          },
+                        },
+                      )
+                      if (!res.ok) {
+                        const body = await res.json().catch(() => ({}))
+                        throw new Error(body?.error || `Delete failed (${res.status})`)
+                      }
+                      await supabase.auth.signOut()
+                      setSession(null)
+                      router.replace('/(auth)/login')
+                    } catch (e: any) {
+                      Alert.alert('Could not delete account', e?.message || 'Try again.')
+                    } finally {
+                      setDeleting(false)
+                    }
+                  },
+                },
+              ],
+            )
+          },
+        },
+      ],
+    )
+  }
+
   // Auth gate: profile is meaningless without a session. If somehow the
   // session lapsed mid-navigation, send the user back to sign-in instead
   // of letting the page render in a half-broken state.
@@ -306,6 +365,20 @@ export default function ProfileScreen() {
             : <Text style={styles.signOutText}>Sign out</Text>}
         </TouchableOpacity>
       </View>
+
+      {/* Delete account — quiet text link. Two-tap confirm in handler. */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          onPress={handleDeleteAccount}
+          disabled={deleting}
+          activeOpacity={0.6}
+        >
+          {deleting
+            ? <ActivityIndicator color={colors.muted} size="small" />
+            : <Text style={styles.deleteAccountText}>Delete account</Text>}
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   )
 }
@@ -347,4 +420,8 @@ const styles = StyleSheet.create({
   // Quieter sign-out — destructive intent is communicated by the Alert, not the button.
   signOutBtn: { backgroundColor: 'transparent', paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill },
   signOutText: { color: colors.muted, fontWeight: '700', fontSize: 14, letterSpacing: -0.1 },
+  // Delete account — text-only link, even quieter than Sign out. The
+  // visual loudness is in the two-tap Alert chain, not the button.
+  deleteAccountBtn: { paddingVertical: 12, alignItems: 'center' },
+  deleteAccountText: { color: colors.muted, fontWeight: '600', fontSize: 13, textDecorationLine: 'underline', letterSpacing: -0.1 },
 })
