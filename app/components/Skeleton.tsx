@@ -110,6 +110,23 @@ export function PieceSkeleton() {
   )
 }
 
+export function CommentsSkeleton() {
+  return (
+    <View style={{ gap: 12 }}>
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={s.commentRow}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Skeleton width={120} height={14} borderRadius={4} />
+            <Skeleton width={48} height={12} borderRadius={4} />
+          </View>
+          <Skeleton width="100%" height={12} borderRadius={4} />
+          <Skeleton width="78%" height={12} borderRadius={4} style={{ marginTop: 6 }} />
+        </View>
+      ))}
+    </View>
+  )
+}
+
 const s = StyleSheet.create({
   discover: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
   discoverHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 14 },
@@ -122,4 +139,5 @@ const s = StyleSheet.create({
   piece: { flex: 1, backgroundColor: colors.cream },
   pieceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
   pieceBody: { paddingHorizontal: 20, paddingTop: 20 },
+  commentRow: { backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: 12 },
 })

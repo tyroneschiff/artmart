@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import ShareSheet from '../../components/ShareSheet'
 import PreservedDrawing from '../../components/PreservedDrawing'
-import { PieceSkeleton } from '../../components/Skeleton'
+import { PieceSkeleton, CommentsSkeleton } from '../../components/Skeleton'
 import ZoomableImage from '../../components/ZoomableImage'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
@@ -86,7 +86,38 @@ export default function PieceScreen() {
     })
     const viewerHasGallery = viewerGalleryCount > 0
 
-    const { data: comments } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
+    const { data: comments, isLoading: commentsLoading } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
+
+    // Delete own comment (long-press → confirm). Owners can also
+    // delete others' comments via the same flow (RLS already allows
+    // gallery owners to clean up their own piece's comment thread).
+    const deleteCommentMutation = useMutation({
+      mutationFn: async (commentId: string) => {
+        const { error } = await supabase.from('comments').delete().eq('id', commentId)
+        if (error) throw error
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['comments', id] })
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      },
+      onError: (e: any) => Alert.alert('Could not delete', e?.message || 'Try again.'),
+    })
+
+    function handleLongPressComment(commentId: string, commentUserId: string) {
+      // Only the comment author can delete their own comment. (Piece
+      // owners can already delete the whole piece, which cascades
+      // through comments.)
+      if (!session || session.user.id !== commentUserId) return
+      Haptics.selectionAsync().catch(() => {})
+      Alert.alert(
+        'Delete this comment?',
+        "This can't be undone.",
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => deleteCommentMutation.mutate(commentId) },
+        ],
+      )
+    }
   
     const { data: myVote } = useQuery({
       queryKey: ['vote', id, session?.user.id],
@@ -348,28 +379,54 @@ export default function PieceScreen() {
           )}
 
           <View style={styles.commentsList}>
-            {comments?.map((c) => (
-              <View key={c.id} style={[card, { padding: 12 }]}>
-                <View style={styles.commentHeader}>
-                  <Text style={styles.commentAuthor}>{c.profiles?.display_name || 'Anonymous'}</Text>
-                  <Text style={[type.label, { fontSize: 12 }]}>{new Date(c.created_at).toLocaleDateString()}</Text>
-                </View>
-                <Text style={[type.body, { fontSize: 14, lineHeight: 20 }]}>{c.content}</Text>
-                <TouchableOpacity onPress={() => {
-                  if (!session) {
-                    router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
-                  } else {
-                    Alert.alert('Report comment', 'Are you sure you want to report this comment?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Report', style: 'destructive', onPress: () => reportMutation.mutate(c.id) }
-                    ])
-                  }
-                }}>
-                  <Text style={[type.label, { fontSize: 11, textTransform: 'uppercase' }]}>Report</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-            {comments?.length === 0 && <Text style={[type.body, { textAlign: 'center', fontSize: 14, paddingVertical: 20 }]}>No comments yet. Be the first to say something kind!</Text>}
+            {commentsLoading ? (
+              <CommentsSkeleton />
+            ) : comments && comments.length > 0 ? (
+              comments.map((c) => {
+                const isMine = !!session && session.user.id === c.user_id
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[card, { padding: 12 }, isMine && styles.commentMine]}
+                    onLongPress={() => handleLongPressComment(c.id, c.user_id)}
+                    activeOpacity={0.85}
+                    delayLongPress={350}
+                  >
+                    <View style={styles.commentHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={styles.commentAuthor}>{c.profiles?.display_name || 'Anonymous'}</Text>
+                        {isMine && (
+                          <View style={styles.youPill}>
+                            <Text style={styles.youPillText}>You</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[type.label, { fontSize: 12 }]}>{new Date(c.created_at).toLocaleDateString()}</Text>
+                    </View>
+                    <Text style={[type.body, { fontSize: 14, lineHeight: 20 }]}>{c.content}</Text>
+                    {!isMine && (
+                      <TouchableOpacity onPress={() => {
+                        if (!session) {
+                          router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
+                        } else {
+                          Alert.alert('Report comment', 'Are you sure you want to report this comment?', [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Report', style: 'destructive', onPress: () => reportMutation.mutate(c.id) }
+                          ])
+                        }
+                      }}>
+                        <Text style={[type.label, { fontSize: 11, textTransform: 'uppercase' }]}>Report</Text>
+                      </TouchableOpacity>
+                    )}
+                    {isMine && (
+                      <Text style={styles.mineHint}>Press and hold to delete</Text>
+                    )}
+                  </TouchableOpacity>
+                )
+              })
+            ) : (
+              <Text style={[type.body, { textAlign: 'center', fontSize: 14, paddingVertical: 20 }]}>No comments yet. Be the first to say something kind!</Text>
+            )}
           </View>
         </View>
 
@@ -477,9 +534,15 @@ const styles = StyleSheet.create({
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
   postBtn: { paddingVertical: 10, paddingHorizontal: 20, alignSelf: 'flex-end', marginTop: 8 },
   postBtnDisabled: { opacity: opacity.disabled },
-  commentsList: { gap: 16 },
-  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  commentsList: { gap: 12 },
+  commentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   commentAuthor: { fontWeight: '700', color: colors.dark, fontSize: 14 },
+  // Your own comments get a subtle gold tint so the thread reads as
+  // a conversation, not a guestbook. The "You" pill makes it explicit.
+  commentMine: { backgroundColor: colors.goldLight, borderColor: colors.goldMid },
+  youPill: { backgroundColor: colors.gold, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
+  youPillText: { color: colors.white, fontSize: 10, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  mineHint: { fontSize: 11, color: colors.muted, marginTop: 8, fontStyle: 'italic' },
   reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
   deleteBtn: { paddingVertical: 8, paddingHorizontal: 12 },
   deleteBtnText: { fontSize: 13, fontWeight: '600', color: colors.muted },
