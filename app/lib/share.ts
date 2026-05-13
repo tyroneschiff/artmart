@@ -37,6 +37,12 @@ export async function shareNative(payload: SharePayload): Promise<void> {
   })
 }
 
+// `?ref=` on share URLs is captured by the og.js web endpoint and
+// written into the og_view event's metadata. This gives us click
+// attribution — which pieces/galleries are getting tapped — without
+// requiring the heavy lift of cross-install signup attribution (which
+// needs Universal Links surviving install or a third-party SDK). Once
+// click volume is meaningful, we can layer install attribution on top.
 export function buildPieceShareMessage(title: string, childName: string, pieceId: string): SharePayload {
   return {
     // Names the relationship explicitly: kid is the author, Draw Up is the renderer.
@@ -44,7 +50,7 @@ export function buildPieceShareMessage(title: string, childName: string, pieceId
     // share artifact tells the story so the parent doesn't have to.
     title: `${childName} drew this — and Draw Up turned it into a world`,
     message: `${childName} drew this — and Draw Up turned it into a world ✨`,
-    url: `https://drawup.ink/piece/${pieceId}`,
+    url: `https://drawup.ink/piece/${pieceId}?ref=piece-${pieceId}`,
   }
 }
 
@@ -52,6 +58,6 @@ export function buildStoreShareMessage(childName: string, slug: string): SharePa
   return {
     title: `${childName}'s drawings, brought to life on Draw Up`,
     message: `${childName}'s drawings, brought to life on Draw Up ✨`,
-    url: `https://drawup.ink/gallery/${slug}`,
+    url: `https://drawup.ink/gallery/${slug}?ref=gallery-${slug}`,
   }
 }

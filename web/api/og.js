@@ -192,9 +192,14 @@ function renderHtml({ title, description, ogImageUrl, originalImageUrl, transfor
 </html>`
 }
 
-async function logOgView(type, id) {
+async function logOgView(type, id, ref, userAgent) {
   if (!SUPABASE_ANON_KEY) return
   try {
+    // Skip obvious bot/preview crawlers so click counts reflect human
+    // attribution. iMessage's previewer announces itself as
+    // facebookexternalhit-style; we want to NOT count that as a click.
+    const ua = (userAgent || "").toLowerCase()
+    const isPreviewer = /bot|crawler|spider|preview|facebookexternalhit|twitterbot|slackbot|whatsapp|telegrambot|imessage|skype|discord/.test(ua)
     await fetch(`${SUPABASE_URL}/rest/v1/events`, {
       method: "POST",
       headers: {
@@ -204,9 +209,14 @@ async function logOgView(type, id) {
         Prefer: "return=minimal",
       },
       body: JSON.stringify({
-        event_type: "og_view",
+        event_type: isPreviewer ? "og_preview" : "og_view",
         piece_id: type === "piece" ? id : null,
-        metadata: { type, slug: type !== "piece" ? id : null },
+        metadata: {
+          type,
+          slug: type !== "piece" ? id : null,
+          ref: ref || null,
+          ua: (userAgent || "").slice(0, 200),
+        },
       }),
     })
   } catch {
@@ -215,9 +225,9 @@ async function logOgView(type, id) {
 }
 
 export default async function handler(req, res) {
-  const { type, id } = req.query
+  const { type, id, ref } = req.query
   if ((type === "piece" || type === "gallery" || type === "store") && id) {
-    logOgView(type, id) // fire and forget
+    logOgView(type, id, typeof ref === "string" ? ref : null, req.headers["user-agent"]) // fire and forget
   }
 
   let payload = {

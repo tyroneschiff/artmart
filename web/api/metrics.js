@@ -82,6 +82,21 @@ function shareChannels(events) {
   return out
 }
 
+// Tally human-attributed clicks by their ?ref= tag, so we can see
+// which pieces/galleries are actually getting taps when shared.
+// Crawlers/previewers are excluded by logOgView writing event_type =
+// 'og_preview' for them instead of 'og_view'.
+function topRefs(events) {
+  const tallies = new Map()
+  for (const e of events) {
+    if (e.event_type !== "og_view") continue
+    const ref = e.metadata?.ref
+    if (!ref) continue
+    tallies.set(ref, (tallies.get(ref) || 0) + 1)
+  }
+  return Array.from(tallies.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10)
+}
+
 function dailySeries(events, type, days) {
   const buckets = new Array(days).fill(0)
   const todayMid = new Date()
@@ -122,6 +137,7 @@ function renderHtml({ events30d, excludeUsers }) {
 
   const channels = shareChannels(d7)
   const totalCh = channels.whatsapp + channels.native + channels.copy + channels.other
+  const refTally = topRefs(d7)
 
   const transformSeries = dailySeries(all, "transform_completed", 14)
   const shareSeries = dailySeries(all, "share_completed", 14)
@@ -294,6 +310,17 @@ function renderHtml({ events30d, excludeUsers }) {
         ${channels.other ? `<div class="channel"><span>Other</span><span>${channels.other}</span></div>` : ""}
       `}
     </div>
+
+    ${refTally.length ? `
+    <h2>Top sharing links (7d, human clicks only)</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Source</th><th class="num">Clicks</th></tr></thead>
+        <tbody>
+          ${refTally.map(([ref, n]) => `<tr><td>${escapeHtml(ref)}</td><td class="num">${n}</td></tr>`).join("")}
+        </tbody>
+      </table>
+    </div>` : ""}
 
     ${failRows.length ? `
     <h2>Transform failures (7d)</h2>
