@@ -43,7 +43,7 @@ async function fetchPiece(id) {
 
 async function fetchStore(slug) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/stores?slug=eq.${encodeURIComponent(slug)}&select=child_name,pieces(id,title,transformed_image_url,watermarked_image_url,original_image_url,created_at,published,vote_count)`,
+    `${SUPABASE_URL}/rest/v1/stores?slug=eq.${encodeURIComponent(slug)}&select=child_name,cover_piece_id,pieces(id,title,transformed_image_url,watermarked_image_url,original_image_url,created_at,published,vote_count)`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -271,7 +271,16 @@ export default async function handler(req, res) {
       const store = await fetchStore(id)
       if (store) {
         const pieces = (store.pieces || []).filter((p) => p.published && (p.transformed_image_url || p.watermarked_image_url))
+        // If the owner chose a specific cover, surface it first in the
+        // tile grid so it leads the visual. Otherwise sort newest-first.
         const sorted = pieces.slice().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
+        if (store.cover_piece_id) {
+          const coverIdx = sorted.findIndex((p) => p.id === store.cover_piece_id)
+          if (coverIdx > 0) {
+            const [cover] = sorted.splice(coverIdx, 1)
+            sorted.unshift(cover)
+          }
+        }
         const count = sorted.length
         payload.title = `${store.child_name}'s gallery on Draw Up`
         payload.description = count > 0

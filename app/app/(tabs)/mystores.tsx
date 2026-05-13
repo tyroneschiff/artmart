@@ -11,24 +11,27 @@ import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
 import { useCredits } from '../../lib/useCredits'
 
-type StorePiece = { transformed_image_url: string | null; watermarked_image_url: string | null; created_at: string; published: boolean }
-type Store = { id: string; child_name: string; slug: string; created_at: string; pieces: StorePiece[] }
+type StorePiece = { id: string; transformed_image_url: string | null; watermarked_image_url: string | null; created_at: string; published: boolean }
+type Store = { id: string; child_name: string; slug: string; created_at: string; cover_piece_id: string | null; pieces: StorePiece[] }
 
 async function fetchMyStores(userId: string): Promise<Store[]> {
   const { data, error } = await supabase
     .from('stores')
-    .select('id, child_name, slug, created_at, pieces(transformed_image_url, watermarked_image_url, created_at, published)')
+    .select('id, child_name, slug, created_at, cover_piece_id, pieces(id, transformed_image_url, watermarked_image_url, created_at, published)')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
   return data as unknown as Store[]
 }
 
-function galleryCover(pieces: StorePiece[]): { coverUrl: string | null; count: number } {
-  const published = (pieces ?? []).filter((p) => p.published && (p.transformed_image_url || p.watermarked_image_url))
+function galleryCover(store: Store): { coverUrl: string | null; count: number } {
+  const published = (store.pieces ?? []).filter((p) => p.published && (p.transformed_image_url || p.watermarked_image_url))
   if (published.length === 0) return { coverUrl: null, count: 0 }
-  const sorted = [...published].sort((a, b) => b.created_at.localeCompare(a.created_at))
-  return { coverUrl: sorted[0].transformed_image_url || sorted[0].watermarked_image_url, count: published.length }
+  // Owner-picked cover wins. Fall back to newest-first if not set or
+  // if the picked piece no longer exists (e.g. deleted).
+  const picked = store.cover_piece_id && published.find((p) => p.id === store.cover_piece_id)
+  const chosen = picked || [...published].sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+  return { coverUrl: chosen.transformed_image_url || chosen.watermarked_image_url, count: published.length }
 }
 
 export default function MyStoresScreen() {
@@ -124,7 +127,7 @@ export default function MyStoresScreen() {
         data={stores}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const { coverUrl, count } = galleryCover(item.pieces)
+          const { coverUrl, count } = galleryCover(item)
           return (
             <TouchableOpacity style={styles.storeCard} onPress={() => router.push(`/gallery/${item.slug}`)}>
               <View style={styles.coverWrap}>

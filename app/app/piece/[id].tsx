@@ -21,7 +21,7 @@ import MoveToGalleryModal from '../../components/MoveToGalleryModal'
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
   vote_count: number; ai_description: string; store_id: string
-  stores: { child_name: string; slug: string; owner_id: string }
+  stores: { child_name: string; slug: string; owner_id: string; cover_piece_id: string | null }
 }
 
 type Comment = {
@@ -35,7 +35,7 @@ type Comment = {
 async function fetchPiece(id: string): Promise<Piece> {
   const { data, error } = await supabase
     .from('pieces')
-    .select('*, stores(child_name, slug, owner_id)')
+    .select('*, stores(child_name, slug, owner_id, cover_piece_id)')
     .eq('id', id)
     .single()
   if (error) throw error
@@ -244,6 +244,30 @@ export default function PieceScreen() {
       moveMutation.mutate({ targetStoreId, targetChildName })
     }
 
+    const isCover = !!piece && piece.stores?.cover_piece_id === piece.id
+
+    const setCoverMutation = useMutation({
+      mutationFn: async () => {
+        if (!piece) throw new Error('no piece')
+        const { error } = await supabase
+          .from('stores')
+          .update({ cover_piece_id: piece.id })
+          .eq('id', piece.store_id)
+        if (error) throw error
+      },
+      onSuccess: () => {
+        if (!piece) return
+        track('cover_changed', { pieceId: piece.id, storeId: piece.store_id })
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+        queryClient.invalidateQueries({ queryKey: ['piece', id] })
+        queryClient.invalidateQueries({ queryKey: ['store', piece.stores?.slug] })
+        queryClient.invalidateQueries({ queryKey: ['mystores'] })
+        queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
+        Alert.alert('Cover updated', "This world is now the cover for the gallery — it's what family will see first.")
+      },
+      onError: (e: any) => Alert.alert('Could not set cover', e?.message || 'Try again.'),
+    })
+
     const reportMutation = useMutation({
       mutationFn: async (commentId: string) => {
         const { error } = await supabase.from('reports').insert({
@@ -438,6 +462,25 @@ export default function PieceScreen() {
 
         {isOwner && (
           <View>
+            {isCover ? (
+              <View style={styles.editLink}>
+                <View style={styles.coverBadgeRow}>
+                  <Ionicons name="star" size={13} color={colors.goldDark} />
+                  <Text style={styles.coverBadgeText}>Gallery cover</Text>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.editLink}
+                onPress={() => setCoverMutation.mutate()}
+                disabled={setCoverMutation.isPending}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.editLinkText}>
+                  {setCoverMutation.isPending ? 'Saving…' : 'Make this the gallery cover'}
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.editLink}
               onPress={() => setMoveOpen(true)}
@@ -509,6 +552,10 @@ const styles = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   editLink: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, alignItems: 'center' },
   editLinkText: { fontSize: 13, fontWeight: '600', color: colors.mid, textDecorationLine: 'underline' },
+  // Inline confirmation badge shown in place of the "Make cover" link
+  // when this piece is already the cover. Less noisy than a toast.
+  coverBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  coverBadgeText: { fontSize: 13, fontWeight: '700', color: colors.goldDark, letterSpacing: -0.1 },
   dangerZone: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32, alignItems: 'center' },
   dangerZoneText: { fontSize: 13, fontWeight: '600', color: colors.muted, textDecorationLine: 'underline' },
   mainImage: { width: '100%', aspectRatio: 1 },

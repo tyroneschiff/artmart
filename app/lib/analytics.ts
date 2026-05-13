@@ -23,6 +23,7 @@ export type EventName =
   | 'piece_moved'
   | 'onboarding_shown'
   | 'onboarding_dismissed'
+  | 'cover_changed'
 
 type TrackProps = {
   pieceId?: string

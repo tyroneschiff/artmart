@@ -43,7 +43,7 @@ export default function StoreScreen() {
   const isOwner = !!session && data?.store && session.user.id === data.store.owner_id
   const storeId = data?.store.id
   const { data: isSubscribed = false } = useIsSubscribed(storeId)
-  const { data: subscriberCount = 0 } = useSubscriberCount(storeId)
+  const { data: subscriberCount, isLoading: subscriberCountLoading } = useSubscriberCount(storeId)
   const toggleSubscription = useToggleSubscription(storeId)
 
   const autoFollowedRef = useRef(false)
@@ -240,7 +240,14 @@ export default function StoreScreen() {
               <Text style={styles.galleryName}>{store.child_name}'s Gallery</Text>
               <Text style={styles.pieceCount}>
                 {data.pieces.length} world{data.pieces.length !== 1 ? 's' : ''}
-                {subscriberCount > 0 ? ` · ${subscriberCount} following` : ''}
+                {/* Subscriber count: render an em-dash placeholder
+                    while the count is loading so the header doesn't
+                    pop/reflow when the number arrives. */}
+                {subscriberCountLoading
+                  ? ' · … following'
+                  : (subscriberCount ?? 0) > 0
+                    ? ` · ${subscriberCount} following`
+                    : ''}
               </Text>
             </View>
             {data.pieces.length > 1 && (
