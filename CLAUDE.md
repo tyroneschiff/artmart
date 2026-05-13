@@ -360,7 +360,7 @@ These prevent public launch, regardless of how good the product feels.
 
 - **Account deletion** — Apple Section 5.1.1(v). Profile → "Delete account" → 2-tap confirm → edge function deletes auth user + cascades. Verify every FK from profiles/stores/pieces is `on delete cascade`. Without this, the next App Store submission gets rejected.
 - **Privacy Policy + Terms in app** — Linked from profile, hosted at drawup.ink/privacy and /terms. Generate via termsfeed.com or similar — no need to author from scratch.
-- **Push notification token unused** — `expo_push_token` is saved in `_layout.tsx:125` but no edge function ever sends to those tokens. Either (a) ship at least one push trigger so the wiring earns its keep, or (b) remove the permission prompt. Asking for push permission and never using it is a trust hit.
+- ~~**Push notification token unused**~~ → Resolved 2026-05-09 by disabling the permission prompt entirely. See `## What we've tried and rejected`. Re-enable when the first push trigger ships.
 
 ### P1 — Activate the acquisition loop
 
@@ -427,6 +427,7 @@ The kill criteria from `## Acquisition strategy` (>0.10 shares/transform, >0.10 
 - **Physical print card visible to any user** — Hidden pending Printful variant ID verification. Showing a purchasable option that can't fulfil is worse than not showing it. Do not re-add for any user until Printful is configured.
 - **Auto-deploy Supabase functions from cron** — Removed from GitHub Actions. A bad edge function deploying automatically breaks production transforms for all users. Manual deploy only.
 - **Reverting "Gallery" back to "Store"** — The rename to "Gallery" is intentional. Route paths use `/store/[slug]` but all UI copy must say "Gallery". Do not revert.
+- **Push permission prompt at launch (re-enabling)** — `registerForPushNotificationsAsync()` was disabled in `app/app/_layout.tsx` on 2026-05-09 because we never sent to the tokens we collected. Asking for permission and never delivering is a trust hit and a likely App Store review flag. The helper function and the commented-out useEffect are kept in place so re-enabling is a one-line change. **Do not re-enable until at least one server-side push trigger is shipping notifications** (e.g. "someone loved your piece" or "new piece in a followed gallery"). Tracked in `## Strategic Backlog` notifications item.
 
 ---
 
@@ -468,10 +469,10 @@ The kill criteria from `## Acquisition strategy` (>0.10 shares/transform, >0.10 
 - ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
 
 **Pending (sorted by leverage — see `## Tomorrow's polish & feature plan` for full P0–P5 plan):**
-- [ ] **P0** — Account deletion flow (App Store mandatory)
-- [ ] **P0** — Privacy Policy + Terms in app (App Store mandatory)
-- [ ] **P0** — Push notifications: ship a trigger or remove the prompt
-- [ ] **P1** — Subscription email notifications via Resend (the dopamine loop)
+- [x] ~~P0 — Account deletion flow~~ (shipped 2026-05-09)
+- [x] ~~P0 — Privacy Policy + Terms in app~~ (shipped 2026-05-09)
+- [x] ~~P0 — Push prompt~~ (disabled 2026-05-09; re-enable when triggers ship)
+- [ ] **P1** — Subscription email notifications via Resend (the dopamine loop) ← *next*
 - [ ] **P1** — Web gallery rendering at drawup.ink/gallery/<slug>
 - [ ] **P1** — Share→signup attribution (UTM ref param)
 - [ ] **P1** — Auto-MP4 before/after reveal export

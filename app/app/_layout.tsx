@@ -116,21 +116,31 @@ export default function RootLayout() {
     }
   }, [])
 
-  useEffect(() => {
-    if (session?.user) {
-      registerForPushNotificationsAsync().then((token) => {
-        if (token) {
-          supabase
-            .from('profiles')
-            .update({ expo_push_token: token })
-            .eq('id', session.user.id)
-            .then(({ error }) => {
-              if (error) console.error('Error saving push token:', error)
-            })
-        }
-      })
-    }
-  }, [session])
+  // Push notification registration is intentionally disabled until at
+  // least one server-side trigger sends to these tokens. Asking for
+  // permission and never delivering a notification is a trust hit and
+  // an App Store review flag. Re-enable when shipping the first push
+  // trigger (e.g. "someone loved your piece" or "new piece in a
+  // gallery you follow"). The `registerForPushNotificationsAsync`
+  // helper above is kept intact so re-enabling is a one-line change.
+  // See CLAUDE.md `## What we've tried and rejected` and the
+  // notifications backlog item.
+  //
+  // useEffect(() => {
+  //   if (session?.user) {
+  //     registerForPushNotificationsAsync().then((token) => {
+  //       if (token) {
+  //         supabase
+  //           .from('profiles')
+  //           .update({ expo_push_token: token })
+  //           .eq('id', session.user.id)
+  //           .then(({ error }) => {
+  //             if (error) console.error('Error saving push token:', error)
+  //           })
+  //       }
+  //     })
+  //   }
+  // }, [session])
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
