@@ -32,7 +32,10 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const FROM_ADDRESS = Deno.env.get('NOTIFY_FROM_ADDRESS') || 'Draw Up <hello@drawup.ink>'
 const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`))
 
-const DEBOUNCE_HOURS = 6
+// 24h debounce: even if a parent publishes 5 pieces in a bedtime
+// burst, followers only get one "new world" email per day per
+// gallery. Less is better — each email should feel earned.
+const DEBOUNCE_HOURS = 24
 
 type Piece = {
   id: string
