@@ -33,8 +33,24 @@ export const handler = async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const { piece_id, content } = await req.json()
+    const { piece_id, content, parent_comment_id } = await req.json()
     if (!piece_id || !content) return new Response(JSON.stringify({ error: 'Missing piece_id or content' }), { status: 400, headers: corsHeaders })
+
+    // Enforce one-level threading: if a parent is supplied, it must
+    // be a top-level comment on the same piece. Stops Reddit-style
+    // unbounded nesting before it starts.
+    let parentId: string | null = null
+    if (parent_comment_id && typeof parent_comment_id === 'string') {
+      const { data: parent } = await supabase
+        .from('comments')
+        .select('id, piece_id, parent_comment_id')
+        .eq('id', parent_comment_id)
+        .maybeSingle()
+      if (!parent || parent.piece_id !== piece_id || parent.parent_comment_id !== null) {
+        return new Response(JSON.stringify({ error: 'Invalid reply target' }), { status: 400, headers: corsHeaders })
+      }
+      parentId = parent.id
+    }
 
     if (content.length > 300) return new Response(JSON.stringify({ error: 'Comment too long' }), { status: 400, headers: corsHeaders })
 
@@ -100,6 +116,7 @@ Respond with ONLY a raw JSON object:
         piece_id,
         user_id: userId,
         content: content.trim(),
+        parent_comment_id: parentId,
       })
       .select('*, profiles(display_name)')
       .single()

@@ -29,6 +29,7 @@ type Comment = {
   content: string
   created_at: string
   user_id: string
+  parent_comment_id: string | null
   profiles: { display_name: string }
 }
 
@@ -184,7 +185,7 @@ export default function PieceScreen() {
     }, [vote, session])
 
     const commentMutation = useMutation({
-      mutationFn: async (content: string) => {
+      mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string | null }) => {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
         const promise = fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/moderate-comment`, {
           method: 'POST',
@@ -192,7 +193,7 @@ export default function PieceScreen() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${currentSession!.access_token}`,
           },
-          body: JSON.stringify({ piece_id: id, content }),
+          body: JSON.stringify({ piece_id: id, content, parent_comment_id: parentCommentId ?? null }),
         })
         const res = await withTimeout(promise, 15000, 'Request timed out. Please check your connection.')
         if (!res.ok) {
@@ -201,12 +202,20 @@ export default function PieceScreen() {
         }
         return res.json()
       },
-      onSuccess: () => {
-        setCommentText('')
+      onSuccess: (_data, vars) => {
+        if (!vars.parentCommentId) setCommentText('')
+        setReplyText('')
+        setReplyingTo(null)
         queryClient.invalidateQueries({ queryKey: ['comments', id] })
       },
       onError: (e: any) => Alert.alert('Error', e.message),
     })
+
+    // Reply state: which top-level comment is being replied to and
+    // what's been typed so far. One inline reply input is shown at a
+    // time directly beneath the targeted comment.
+    const [replyingTo, setReplyingTo] = useState<string | null>(null)
+    const [replyText, setReplyText] = useState('')
   
     const deleteMutation = useMutation({
       mutationFn: async () => {
@@ -404,7 +413,7 @@ export default function PieceScreen() {
               />
               <TouchableOpacity 
                 style={[btn.primary, styles.postBtn, (!commentText.trim() || commentMutation.isPending) && styles.postBtnDisabled]}
-                onPress={() => commentMutation.mutate(commentText.trim())}
+                onPress={() => commentMutation.mutate({ content: commentText.trim() })}
                 disabled={!commentText.trim() || commentMutation.isPending}
               >
                 {commentMutation.isPending ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={[btn.primaryText, { fontSize: 14 }]}>Post</Text>}
@@ -423,48 +432,118 @@ export default function PieceScreen() {
             {commentsLoading ? (
               <CommentsSkeleton />
             ) : comments && comments.length > 0 ? (
-              comments.map((c) => {
-                const isMine = !!session && session.user.id === c.user_id
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={[card, { padding: 12 }, isMine && styles.commentMine]}
-                    onLongPress={() => handleLongPressComment(c.id, c.user_id)}
-                    activeOpacity={0.85}
-                    delayLongPress={350}
-                  >
-                    <View style={styles.commentHeader}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={styles.commentAuthor}>{c.profiles?.display_name || 'Anonymous'}</Text>
-                        {isMine && (
-                          <View style={styles.youPill}>
-                            <Text style={styles.youPillText}>You</Text>
-                          </View>
-                        )}
+              (() => {
+                // Group: top-level first (newest), each followed by its
+                // replies (oldest-first, so conversations read top-down).
+                const tops = comments.filter((c) => !c.parent_comment_id)
+                const repliesByParent = new Map<string, Comment[]>()
+                for (const c of comments) {
+                  if (!c.parent_comment_id) continue
+                  const list = repliesByParent.get(c.parent_comment_id) || []
+                  list.push(c)
+                  repliesByParent.set(c.parent_comment_id, list)
+                }
+                for (const list of repliesByParent.values()) {
+                  list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                }
+
+                const renderComment = (c: Comment, isReply: boolean) => {
+                  const isMine = !!session && session.user.id === c.user_id
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={[card, { padding: 12 }, isMine && styles.commentMine, isReply && styles.commentReply]}
+                      onLongPress={() => handleLongPressComment(c.id, c.user_id)}
+                      activeOpacity={0.85}
+                      delayLongPress={350}
+                    >
+                      <View style={styles.commentHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={styles.commentAuthor}>{c.profiles?.display_name || 'Anonymous'}</Text>
+                          {isMine && (
+                            <View style={styles.youPill}>
+                              <Text style={styles.youPillText}>You</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[type.label, { fontSize: 12 }]}>{new Date(c.created_at).toLocaleDateString()}</Text>
                       </View>
-                      <Text style={[type.label, { fontSize: 12 }]}>{new Date(c.created_at).toLocaleDateString()}</Text>
+                      <Text style={[type.body, { fontSize: 14, lineHeight: 20 }]}>{c.content}</Text>
+                      <View style={styles.commentActions}>
+                        {!isReply && (
+                          <TouchableOpacity onPress={() => {
+                            if (!session) {
+                              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
+                              return
+                            }
+                            setReplyingTo(replyingTo === c.id ? null : c.id)
+                            setReplyText('')
+                          }}>
+                            <Text style={styles.actionLabel}>{replyingTo === c.id ? 'Cancel' : 'Reply'}</Text>
+                          </TouchableOpacity>
+                        )}
+                        {!isMine && (
+                          <TouchableOpacity onPress={() => {
+                            if (!session) {
+                              router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
+                            } else {
+                              Alert.alert('Report comment', 'Are you sure you want to report this comment?', [
+                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Report', style: 'destructive', onPress: () => reportMutation.mutate(c.id) }
+                              ])
+                            }
+                          }}>
+                            <Text style={styles.actionLabel}>Report</Text>
+                          </TouchableOpacity>
+                        )}
+                        {isMine && <Text style={styles.mineHint}>Hold to delete</Text>}
+                      </View>
+                    </TouchableOpacity>
+                  )
+                }
+
+                return tops.map((top) => {
+                  const replies = repliesByParent.get(top.id) || []
+                  const isReplying = replyingTo === top.id
+                  return (
+                    <View key={top.id} style={{ gap: 8 }}>
+                      {renderComment(top, false)}
+                      {replies.map((r) => renderComment(r, true))}
+                      {isReplying && session && (
+                        <View style={styles.replyInputWrap}>
+                          <TextInput
+                            style={[card, styles.replyInput]}
+                            placeholder={`Reply to ${top.profiles?.display_name || 'this comment'}…`}
+                            placeholderTextColor={colors.muted}
+                            value={replyText}
+                            onChangeText={setReplyText}
+                            maxLength={300}
+                            multiline
+                            autoFocus
+                          />
+                          <View style={styles.replyBtnRow}>
+                            <TouchableOpacity
+                              style={styles.replyCancel}
+                              onPress={() => { setReplyingTo(null); setReplyText('') }}
+                            >
+                              <Text style={styles.replyCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={[btn.primary, styles.replyPostBtn, (!replyText.trim() || commentMutation.isPending) && styles.postBtnDisabled]}
+                              onPress={() => commentMutation.mutate({ content: replyText.trim(), parentCommentId: top.id })}
+                              disabled={!replyText.trim() || commentMutation.isPending}
+                            >
+                              {commentMutation.isPending
+                                ? <ActivityIndicator size="small" color={colors.white} />
+                                : <Text style={[btn.primaryText, { fontSize: 14 }]}>Post reply</Text>}
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
                     </View>
-                    <Text style={[type.body, { fontSize: 14, lineHeight: 20 }]}>{c.content}</Text>
-                    {!isMine && (
-                      <TouchableOpacity onPress={() => {
-                        if (!session) {
-                          router.push({ pathname: '/(auth)/login', params: { returnTo: `/piece/${id}` } })
-                        } else {
-                          Alert.alert('Report comment', 'Are you sure you want to report this comment?', [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Report', style: 'destructive', onPress: () => reportMutation.mutate(c.id) }
-                          ])
-                        }
-                      }}>
-                        <Text style={[type.label, { fontSize: 11, textTransform: 'uppercase' }]}>Report</Text>
-                      </TouchableOpacity>
-                    )}
-                    {isMine && (
-                      <Text style={styles.mineHint}>Press and hold to delete</Text>
-                    )}
-                  </TouchableOpacity>
-                )
-              })
+                  )
+                })
+              })()
             ) : (
               <Text style={[type.body, { textAlign: 'center', fontSize: 14, paddingVertical: 20 }]}>No comments yet. Be the first to say something kind!</Text>
             )}
@@ -604,9 +683,22 @@ const styles = StyleSheet.create({
   // Your own comments get a subtle gold tint so the thread reads as
   // a conversation, not a guestbook. The "You" pill makes it explicit.
   commentMine: { backgroundColor: colors.goldLight, borderColor: colors.goldMid },
+  // Replies are indented to show their relationship to the parent.
+  // Subtle left margin + thinner border, no full re-styling.
+  commentReply: { marginLeft: 28 },
+  commentActions: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 8 },
+  actionLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
   youPill: { backgroundColor: colors.gold, paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.pill },
   youPillText: { color: colors.white, fontSize: 10, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
-  mineHint: { fontSize: 11, color: colors.muted, marginTop: 8, fontStyle: 'italic' },
+  mineHint: { fontSize: 11, color: colors.muted, fontStyle: 'italic' },
+  // Reply input slots beneath a top-level comment when "Reply" is
+  // tapped. Indented to match its parent's nested reply alignment.
+  replyInputWrap: { marginLeft: 28 },
+  replyInput: { paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.dark, minHeight: 48, marginBottom: 8 },
+  replyBtnRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8 },
+  replyCancel: { paddingHorizontal: 12, paddingVertical: 8 },
+  replyCancelText: { color: colors.muted, fontWeight: '600', fontSize: 13 },
+  replyPostBtn: { paddingVertical: 8, paddingHorizontal: 16 },
   reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
   deleteBtn: { paddingVertical: 8, paddingHorizontal: 12 },
   deleteBtnText: { fontSize: 13, fontWeight: '600', color: colors.muted },
