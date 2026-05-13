@@ -232,6 +232,12 @@ The most dangerous bugs look like success but do nothing:
 
 *(Maintained by Claude at end of each conversation — newest first. Ground truth from real device use.)*
 
+**2026-05-09 (marathon):**
+- All P0 cleared (account deletion, privacy/terms, push prompt deferred). P1 email notification loop activated end-to-end: `notify-new-piece` fires on publish, `notify-vote` fires on vote, both debounced and authored against Resend (key in Supabase secrets, drawup.ink verified). P1 real gallery rendering at `drawup.ink/gallery/<slug>` live (grid of 24 pieces). P1 share→signup click attribution via `?ref=` + crawler split into `og_preview` event type. P2 onboarding sheet + comment polish (author diff + delete-own + skeleton). P3 gallery cover customization, vote notification email, threaded replies. P4 follower count loading state + per-category transform error icons.
+- All shipped on `main` but NOT yet in a TestFlight build — current live TestFlight is 1.1.7 build 26 from earlier today (lightbox + sort fix). Next build should be 1.1.8 build 27, includes everything above.
+- Resend API key was pasted in plaintext in conversation — rotate after testing.
+- DNS hold on drawup.ink resolved earlier today (WHOIS verification email).
+
 **2026-05-08:**
 - Production EAS profile in `eas.json` was missing the three `EXPO_PUBLIC_*` env vars (Supabase URL, anon key, Stripe publishable key) that the preview profile had. Builds 22 and 24 (shipped via `--profile production`) crashed on launch with SIGABRT/SIGSEGV in `convertNSExceptionToJSError` on the TurboModule queue — Stripe's native init throws an NSException when handed `undefined`, and that propagates as the launch crash. Logged in `## Known gotchas → EAS Build`.
 - **Always build via `eas build --platform ios --profile preview`** for now; both profiles work but preview is the user's tested path. Both have the env vars.
@@ -245,17 +251,6 @@ The most dangerous bugs look like success but do nothing:
 - Profile screen has a hard auth gate now — redirects to /(auth)/login if session is null. Stops the old "Cannot read property user of null" crash on save name.
 - `web/auth/confirmed.html` exists for the email-confirm flow (when re-enabled). Auto-deep-links to drawup:// on iPhone, shows Email-confirmed messaging + TestFlight CTA on desktop. Vercel needs `cleanUrls: true` in vercel.json.
 - TestFlight build 20 stuck "Waiting for Review" >3 days at session end. Build 21 needed for splash-screen-on-cream fix; do not extend wait.
-
-**2026-04-24:**
-- Physical print flow hidden from ALL users pending Printful account verification. Do not re-add print cards for any user — see `## What we've tried and rejected`.
-- "Store" renamed to "Gallery" throughout UI. Route paths (`/store/[slug]`) unchanged in code. Do not revert copy back to "Store" — the rename is intentional.
-- Sort labels: "Most loved" / "Newest" — not "Top worlds" / "New worlds".
-- Vote badge moved to image overlay (consistent across Discover and Gallery pages).
-- Gallery page bottom nav added (Discover / Create / My Galleries / Profile).
-- Autonomous crons migrated from Gemini to Claude Code CLI. Supabase auto-deploy removed. Migrations and edge functions off-limits for CRON B.
-- Delete piece added (owner-only). RLS DELETE policy added in `012_pieces_delete_policy.sql`.
-- Digital download CTA added for non-owners/non-buyers on piece detail page.
-- CLAUDE.md had unresolved merge conflicts from Gemini sync — cleaned up 2026-04-24.
 
 ---
 
@@ -449,35 +444,35 @@ The kill criteria from `## Acquisition strategy` (>0.10 shares/transform, >0.10 
 
 ## Current task queue
 
-**Done (recent):**
-- ✅ User-selectable Read Aloud voice — migration `018_profiles_tts_voice.sql` (`tts_voice_id` on profiles); `app/lib/voices.ts` curated 5-voice catalog (Charlotte default + Bella, Adam, Rachel, Antoni); `tts` edge function accepts `voice_id` with allowlist; `VoicePicker` component with on-demand sample preview cached in `FileSystem.cacheDirectory`; profile screen "Read aloud voice" section; `ReadAloudButton` reads user pref + falls back to default.
-- ✅ Owners auto-follow own gallery — migration `017_subscriptions_allow_self.sql` (drop self-block + backfill existing owners); auto-insert subscription on gallery create; Follow button visible to owners too.
-- ✅ Comment rate limit 5min → 30s — softer copy, AI moderation handles abuse.
-- ✅ Gallery cover flicker bug fixed — Create and My Galleries shared `['mystores', userId]` queryKey but fetched different SELECT shapes; gave Create its own `['stores-picker', userId]` key. Logged in `## Known gotchas → React Query`.
-- ✅ Gallery subscriptions (Follow + Following feed) — migration `016_subscriptions.sql` (RLS-gated, self-subscription blocked); `app/lib/subscriptions.ts` hooks; Follow/Following pill on gallery page (auth-gated, auto-follows after login via `?follow=1` returnTo); follower count rendered inline; segmented control on Discover (Following | Discover, defaults to Following when subscribed); `gallery_followed` / `gallery_unfollowed` events. Notifications (email/push) deferred to next pass.
-- ✅ Operator metrics dashboard — `/metrics?key=...` (token-gated, multi-`excludeUser` support) renders kill-criteria KPIs, funnel, share channels, sparklines, recent activity. `web/api/metrics.js` reads via service-role key from Vercel env.
-- ✅ Read Aloud → owner-only on piece detail — gates `<ReadAloudButton>` behind `isOwner`. Family viewers no longer see it; cuts ElevenLabs cost; description is written *to* the child so it's a parent+kid moment by design.
-- ✅ Vote-after-login fixed — `?vote=1` encoded into returnTo in discover.tsx and piece/[id].tsx
-- ✅ Credits system — spend_credit RPC, refund on failure, balance returned to client
-- ✅ Read Aloud — ElevenLabs Charlotte voice via edge function, expo-av playback
-- ✅ Delete piece — owner-only, confirmation alert, RLS DELETE policy migration
-- ✅ Gallery rename — "Store" → "Gallery" throughout UI
-- ✅ Gallery bottom nav — Discover / Create / My Galleries / Profile
-- ✅ Vote badge overlay — consistent image overlay on Discover and Gallery pages
-- ✅ Physical print hidden — removed from piece detail pending Printful verification
-- ✅ Digital download CTA for non-owners — `piece/[id].tsx` shows purchase section to visitors
-- ✅ Vote button "already voted" state — `myVote` query disables + dims button; no more error alert on re-tap
+**Done (recent — through 2026-05-09 marathon):**
+- ✅ P0 Account deletion (Apple Section 5.1.1(v)) — new `delete-account` edge function (JWT-verified, service-role admin.deleteUser), two-tap Alert confirm in Profile. FK cascades already correct.
+- ✅ P0 Privacy Policy + Terms in app — `web/privacy.html` + `web/terms.html` (boilerplate, brand-styled), link rows in Profile → App section.
+- ✅ P0 Push prompt disabled — `_layout.tsx` useEffect commented out; helper kept for one-line re-enable when first trigger ships. Logged in `## What we've tried and rejected`.
+- ✅ P1 Subscription email notifications — `notify-new-piece` edge function (JWT-verified, owner-check, 6h debounce per gallery, excludes owner). Sends styled "{Child} drew a new world ✨" via Resend. Fire-and-forget from `create.tsx` publish flow.
+- ✅ P1 Real gallery view at drawup.ink/gallery/<slug> — `web/api/og.js` now renders a real grid of up to 24 pieces for human visitors (preview crawlers still get OG card via head meta).
+- ✅ P1 Share→signup click attribution — `?ref=piece-<id>` / `?ref=gallery-<slug>` on share URLs; `og_view` events capture ref; crawler/previewer hits routed to `og_preview` event_type so human clicks aren't drowned; metrics dash shows "Top sharing links."
+- ✅ P2 Onboarding sheet — first-run welcome modal explains 3 free credits, gated on `hasSeenOnboarding()` AsyncStorage flag + 0 galleries. Tracks `onboarding_shown` / `onboarding_dismissed`.
+- ✅ P2 Comment polish — "You" pill + gold-tint own comments; long-press own comment → confirm Alert → delete; `CommentsSkeleton` while loading; Report hidden on own comments.
+- ✅ P3 Gallery cover customization — migration `022_stores_cover_piece.sql` (nullable, on delete set null). Owner can "Make this the gallery cover" from piece footer. Used by mystores list + og.js gallery grid.
+- ✅ P3 "Someone loved your piece" email — `notify-vote` edge function (24h debounce per piece). Wired fire-and-forget from both vote callsites.
+- ✅ P3 Threaded replies (1 level deep) — migration `023_comments_parent_id.sql` (self FK, on delete cascade); `moderate-comment` validates parent on same piece; inline reply input under top-level comments. Replies indented; Reply hidden on replies.
+- ✅ P4 Follower count loading placeholder — `… following` while subscriberCount fetches, no header reflow.
+- ✅ P4 Friendly transform error icons — per-category Ionicons in gold bubble above error title (camera-reverse, hourglass, cloud-offline, refresh-circle, color-palette, alert-circle).
+- ✅ Lightbox crash fix — `runOnJS` wrap in `ZoomableImage` singleTap.
+- ✅ Most visited sort tiebreaker — secondary sort by view_count/vote_count/created_at; migration `021_view_count_skip_owner.sql` excludes owner self-views.
+- ✅ User-selectable Read Aloud voice — migration `018` (`tts_voice_id` on profiles); `app/lib/voices.ts` curated 6-voice catalog (Charlotte default + Bella, Adam, Rachel, Antoni, Crofty); `tts` edge function accepts `voice_id` with allowlist; `VoicePicker` component with sample preview.
+- ✅ Owners auto-follow own gallery — migration `017_subscriptions_allow_self.sql` (drop self-block + backfill).
+- ✅ Comment rate limit 5min → 30s.
+- ✅ Gallery cover flicker bug fixed — queryKey shape collision. Logged in `## Known gotchas → React Query`.
+- ✅ Gallery subscriptions (Follow + Following feed) — migration `016_subscriptions.sql`.
+- ✅ Operator metrics dashboard — `/metrics?key=...`.
 
-**Pending (sorted by leverage — see `## Tomorrow's polish & feature plan` for full P0–P5 plan):**
-- [x] ~~P0 — Account deletion flow~~ (shipped 2026-05-09)
-- [x] ~~P0 — Privacy Policy + Terms in app~~ (shipped 2026-05-09)
-- [x] ~~P0 — Push prompt~~ (disabled 2026-05-09; re-enable when triggers ship)
-- [ ] **P1** — Subscription email notifications via Resend (the dopamine loop) ← *next*
-- [ ] **P1** — Web gallery rendering at drawup.ink/gallery/<slug>
-- [ ] **P1** — Share→signup attribution (UTM ref param)
-- [ ] **P1** — Auto-MP4 before/after reveal export
-- [ ] **P2** — Onboarding context for new users (3 credits explained)
-- [ ] **P2** — Comment author differentiation + delete own comment
+**Pending (sorted by leverage):**
+- [ ] **P1** — Auto-MP4 before/after reveal export (multi-day; biggest remaining acquisition feature)
+- [ ] **P3** — Vote streak indicator on Discover (light gamification)
+- [ ] **P5** — Android build, iPad layout, Spanish localization, Printful, co-parent access (defer until iOS App Store launch + 100 signups)
+- [ ] **App Store metadata** — screenshots, video preview, description, keywords, age rating, App Privacy declarations (App Store Connect dashboard work, not code)
+- [ ] **Resend domain verification** — done (drawup.ink verified). API key set in Supabase secrets. Rotate the key once tested.
 
 ---
 
