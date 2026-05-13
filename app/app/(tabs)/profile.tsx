@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView, ActivityIndicator, Linking } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { router } from 'expo-router'
@@ -354,6 +354,22 @@ export default function ProfileScreen() {
             <Text style={styles.rowLabel}>Support</Text>
             <Text style={styles.rowValue}>hello@drawup.ink</Text>
           </View>
+          <TouchableOpacity
+            style={[styles.row, styles.rowBorder]}
+            onPress={() => Linking.openURL('https://drawup.ink/privacy').catch(() => {})}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.rowLabel}>Privacy Policy</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.row, styles.rowBorder]}
+            onPress={() => Linking.openURL('https://drawup.ink/terms').catch(() => {})}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.rowLabel}>Terms of Service</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </TouchableOpacity>
         </View>
       </View>
 
