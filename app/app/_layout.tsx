@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Platform, Linking } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Stack } from 'expo-router'
@@ -9,7 +9,10 @@ import Constants from 'expo-constants'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../hooks/useAuthStore'
 import { ensureProfile } from '../lib/ensureProfile'
+import { hasSeenOnboarding, markOnboardingDismissed } from '../lib/onboarding'
+import { track } from '../lib/analytics'
 import StripeWrapper from '../components/StripeWrapper'
+import OnboardingSheet from '../components/OnboardingSheet'
 
 const queryClient = new QueryClient()
 
@@ -66,6 +69,7 @@ export default function RootLayout() {
   const setSession = useAuthStore((s) => s.setSession)
   const setHydrated = useAuthStore((s) => s.setHydrated)
   const session = useAuthStore((s) => s.session)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -116,6 +120,44 @@ export default function RootLayout() {
     }
   }, [])
 
+  // First-run onboarding: show the welcome sheet for users who haven't
+  // dismissed it AND have no galleries yet. Returning users (with at
+  // least one gallery) never see this, even on a fresh install — the
+  // gallery count gates it harder than the AsyncStorage flag alone.
+  useEffect(() => {
+    if (!session?.user?.id) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const seen = await hasSeenOnboarding()
+        if (seen || cancelled) return
+        const { count } = await supabase
+          .from('stores')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', session.user.id)
+        if (cancelled) return
+        if ((count ?? 0) === 0) {
+          setShowOnboarding(true)
+          track('onboarding_shown')
+        } else {
+          // Returning user without the flag set (e.g. cleared
+          // AsyncStorage); silently mark as seen so we don't pop up
+          // later by accident.
+          markOnboardingDismissed()
+        }
+      } catch {
+        // Silent — never let onboarding logic break app launch.
+      }
+    })()
+    return () => { cancelled = true }
+  }, [session?.user?.id])
+
+  async function dismissOnboarding() {
+    setShowOnboarding(false)
+    await markOnboardingDismissed()
+    track('onboarding_dismissed')
+  }
+
   // Push notification registration is intentionally disabled until at
   // least one server-side trigger sends to these tokens. Asking for
   // permission and never delivering a notification is a trust hit and
@@ -154,6 +196,7 @@ export default function RootLayout() {
           }}>
             <Stack.Screen name="credits" options={{ presentation: 'modal' }} />
           </Stack>
+          <OnboardingSheet visible={showOnboarding} onDismiss={dismissOnboarding} />
         </QueryClientProvider>
       </StripeWrapper>
     </GestureHandlerRootView>
