@@ -150,6 +150,23 @@ export default function PieceScreen() {
         queryClient.invalidateQueries({ queryKey: ['vote', id, session?.user.id] })
         track('vote_cast', { pieceId: id })
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+        // Fire-and-forget owner notification email. Debounced per
+        // piece per 24h server-side; owner won't get spammed if their
+        // piece goes viral.
+        ;(async () => {
+          try {
+            const { data: { session: cs } } = await supabase.auth.getSession()
+            if (!cs) return
+            await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/notify-vote`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${cs.access_token}`,
+              },
+              body: JSON.stringify({ piece_id: id }),
+            })
+          } catch { /* silent */ }
+        })()
       },
       onError: (e: any) => Alert.alert('Vote failed', e.message === 'Request timed out. Please check your connection.' ? e.message : 'You already voted for this piece.'),
     })

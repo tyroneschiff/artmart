@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.notify-new-piece]
 verify_jwt = false
+
+[functions.notify-vote]
+verify_jwt = false

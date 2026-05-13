@@ -114,6 +114,22 @@ export default function DiscoverScreen() {
       setVotingIds((prev) => { const next = new Set(prev); next.delete(pieceId); return next })
       queryClient.invalidateQueries({ queryKey: ['discover'] })
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {})
+      // Fire-and-forget owner notification. Debounced per piece per
+      // 24h server-side so a hot piece doesn't spam the parent.
+      ;(async () => {
+        try {
+          const { data: { session: cs } } = await supabase.auth.getSession()
+          if (!cs) return
+          await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/notify-vote`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${cs.access_token}`,
+            },
+            body: JSON.stringify({ piece_id: pieceId }),
+          })
+        } catch { /* silent */ }
+      })()
     },
     onError: (_, pieceId) => {
       setVotingIds((prev) => { const next = new Set(prev); next.delete(pieceId); return next })
