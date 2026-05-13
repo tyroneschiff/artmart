@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
+  runOnJS,
 } from 'react-native-reanimated'
 
 const MIN_SCALE = 1
@@ -87,9 +88,12 @@ export default function ZoomableImage({ uri, style, onSingleTap }: Props) {
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
     .onEnd(() => {
-      // Only dismiss when not zoomed
+      // Only dismiss when not zoomed. This callback runs as a worklet
+      // (Gesture API auto-tags it because we access savedScale.value),
+      // so calling the JS onSingleTap directly would crash on the New
+      // Architecture. runOnJS schedules it on the JS thread.
       if (savedScale.value <= 1 && onSingleTap) {
-        onSingleTap()
+        runOnJS(onSingleTap)()
       }
     })
     // Only fire after double-tap resolution window passes

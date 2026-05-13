@@ -28,12 +28,19 @@ type Piece = {
 
 async function fetchPieces(sort: SortMode, storeIds?: string[]): Promise<Piece[]> {
   const orderCol = sort === 'top' ? 'vote_count' : sort === 'popular' ? 'view_count' : 'created_at'
+  // Secondary sort makes ties surface meaningfully — without it, when
+  // many pieces share the same view_count (or vote_count), the order
+  // is arbitrary and the sort looks broken. Always tie-break to the
+  // other social signal, then to recency.
+  const tieBreaker = sort === 'top' ? 'view_count' : sort === 'popular' ? 'vote_count' : 'vote_count'
   let q = supabase
     .from('pieces')
     .select('id, title, transformed_image_url, watermarked_image_url, vote_count, view_count, store_id, created_at, stores(child_name, slug)')
     .eq('published', true)
     .not('transformed_image_url', 'is', null)
     .order(orderCol, { ascending: false })
+    .order(tieBreaker, { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(50)
   if (storeIds) {
     if (storeIds.length === 0) return []
