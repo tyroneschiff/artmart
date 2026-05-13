@@ -6,10 +6,18 @@
 // refunds the spent credit when Claude or fal.ai rejects, so we can
 // confidently say "no credit used."
 
+import type { ComponentProps } from 'react'
+import type { Ionicons } from '@expo/vector-icons'
+
 export type FriendlyError = {
   title: string
   body: string
   hint?: string
+  // Ionicon glyph name. The create screen renders this in a gold
+  // bubble above the title so failures look intentional instead of
+  // alarming. Each category gets a distinct icon so a parent who
+  // hits the same kind of failure twice immediately recognizes it.
+  icon: ComponentProps<typeof Ionicons>['name']
 }
 
 export function friendlyTransformError(raw: string | undefined | null): FriendlyError {
@@ -33,6 +41,7 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
       title: "That doesn't look like a drawing",
       body: "Draw Up only transforms children's artwork. Photos of documents, IDs, or other sensitive things are skipped.",
       hint: 'No credit used — try a drawing instead.',
+      icon: 'color-palette-outline',
     }
   }
 
@@ -49,6 +58,7 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
       title: 'Couldn\'t read that image',
       body: 'The photo was unclear or in a format the AI couldn\'t open.',
       hint: 'No credit used — try retaking it in better light.',
+      icon: 'camera-reverse-outline',
     }
   }
 
@@ -58,6 +68,7 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
       title: 'Slow down a sec',
       body: "We've hit our AI rate limit for the moment.",
       hint: 'No credit used — try again in a minute.',
+      icon: 'hourglass-outline',
     }
   }
 
@@ -67,12 +78,14 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
     msg.includes('timed out') ||
     msg.includes('network') ||
     msg.includes('aborted') ||
-    msg.includes('failed to fetch')
+    msg.includes('failed to fetch') ||
+    msg.includes('taking a little longer')
   ) {
     return {
       title: 'Connection hiccup',
       body: "The AI took too long or your connection dropped.",
       hint: 'No credit used — check your signal and try again.',
+      icon: 'cloud-offline-outline',
     }
   }
 
@@ -82,6 +95,7 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
       title: 'Image generation hiccuped',
       body: "The AI didn't finish rendering that one.",
       hint: 'No credit used — try again, or try a different drawing.',
+      icon: 'refresh-circle-outline',
     }
   }
 
@@ -90,5 +104,6 @@ export function friendlyTransformError(raw: string | undefined | null): Friendly
     title: 'That didn\'t transform',
     body: 'Something went sideways with the AI.',
     hint: 'No credit used — try again.',
+    icon: 'alert-circle-outline',
   }
 }

@@ -431,6 +431,9 @@ export default function CreateScreen() {
                         const f = friendlyTransformError(transformError)
                         return (
                           <View style={styles.errorBox}>
+                            <View style={styles.errorIconBubble}>
+                              <Ionicons name={f.icon} size={24} color={colors.goldDark} />
+                            </View>
                             <Text style={styles.errorTitle}>{f.title}</Text>
                             <Text style={styles.errorMessage}>{f.body}</Text>
                             {f.hint ? <Text style={styles.errorHint}>{f.hint}</Text> : null}
@@ -619,7 +622,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
-  errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 6 },
+  errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 6, alignItems: 'flex-start' },
+  // Gold-bubble icon that signals the failure category without
+  // looking alarming. Soft amber on a danger-tinted card reads as
+  // "the AI has a thought" rather than "everything is broken."
+  errorIconBubble: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1.5, borderColor: colors.goldMid, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   errorTitle: { fontSize: 16, fontWeight: '800', color: colors.dangerText, letterSpacing: -0.3 },
   errorMessage: { fontSize: 13, color: colors.dangerText, lineHeight: 18 },
   errorHint: { fontSize: 12, color: colors.dangerText, opacity: 0.75, fontWeight: '600', marginBottom: 4 },
