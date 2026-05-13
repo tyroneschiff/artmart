@@ -295,6 +295,27 @@ export default function CreateScreen() {
       // Fire both endpoints; both get CDN-cached at the edge for a year.
       fetch(`https://drawup.ink/api/og-card?type=piece&id=${encodeURIComponent(pieceId)}`).catch(() => {})
       fetch(`https://drawup.ink/piece/${encodeURIComponent(pieceId)}`).catch(() => {})
+      // Fire-and-forget notification fanout: emails followers of this
+      // gallery. Function debounces 1/gallery/6h, excludes owner,
+      // soft-fails if RESEND_API_KEY isn't configured. Never blocks
+      // the publish flow on the network — if it errors, we still got
+      // the piece live and the parent saw the success screen.
+      ;(async () => {
+        try {
+          const { data: { session: cs } } = await supabase.auth.getSession()
+          if (!cs) return
+          await fetch(`${supabaseUrl}/functions/v1/notify-new-piece`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${cs.access_token}`,
+            },
+            body: JSON.stringify({ piece_id: pieceId }),
+          })
+        } catch {
+          // Silent — telemetry must never disrupt the magic moment.
+        }
+      })()
     },
     onError: (e: any) => Alert.alert('Error', e.message),
   })
