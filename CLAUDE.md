@@ -172,6 +172,9 @@ Lessons learned from running the app on real devices. Apply these before analyzi
 **React Query:**
 - Two `useQuery` calls with the same `queryKey` but different `select(...)` shapes will overwrite each other's cache, producing flicker between fields-present and fields-missing renders. Always namespace the key by data shape (e.g. `['mystores', uid]` for the rich shape vs `['stores-picker', uid]` for the slim shape) and invalidate both keys together when the underlying rows change.
 
+**PostgREST embedding ambiguity:**
+- Adding a SECOND foreign key between two tables silently breaks every existing `parent.select('child(...)')` embedding query with PGRST201 ("more than one relationship was found"). Migration 022 added `stores.cover_piece_id → pieces.id` alongside the existing `pieces.store_id → stores.id`; suddenly Discover, Gallery, Piece detail, and og.js all 500'd. Two ways out: (a) drop the second FK and live with no cascade (we did this in migration 024 — the app's cover-pick lookup is defensive), or (b) update every embedding query to disambiguate via `stores!pieces_store_id_fkey(...)` syntax. Prefer (a) when the cascade isn't load-bearing. **Always test a `pieces+stores` embedding query immediately after applying any migration that adds a column referencing pieces from stores or vice versa.**
+
 **EAS Build:**
 - `eas.json` build profiles do NOT inherit env from each other. The app's `EXPO_PUBLIC_*` env vars (Supabase URL, anon key, Stripe publishable key) must be defined explicitly in EVERY profile that ships an actual build (preview AND production). Missing env on the production profile produced a launch-time SIGSEGV in `convertNSExceptionToJSError` — Stripe's native init throws an NSException when constructed with `undefined`, which propagates through TurboModule and crashes the app on splash. Symptom looks like a native dep regression; cause is one missing config block. **Always diff eas.json profiles before blaming pods.**
 
