@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["REPLACE_WITH_TEAM_ID.art.drawup.app"],
+        "appIDs": ["EG87MHQ7EB.art.drawup.app"],
         "components": [
           { "/": "/piece/*" },
           { "/": "/gallery/*" },
@@ -12,6 +12,6 @@
     ]
   },
   "webcredentials": {
-    "apps": ["REPLACE_WITH_TEAM_ID.art.drawup.app"]
+    "apps": ["EG87MHQ7EB.art.drawup.app"]
   }
 }

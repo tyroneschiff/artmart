@@ -2,7 +2,7 @@
   "expo": {
     "name": "Draw Up",
     "slug": "artmart",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,7 +28,7 @@
     "ios": {
       "bundleIdentifier": "art.drawup.app",
       "supportsTablet": false,
-      "buildNumber": "26",
+      "buildNumber": "27",
       "associatedDomains": [
         "applinks:drawup.ink",
         "webcredentials:drawup.ink"
@@ -50,6 +50,13 @@
         {
           "photosPermission": "Draw Up needs access to your photos to upload your child's artwork.",
           "cameraPermission": "Draw Up needs your camera to photograph your child's artwork."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "Draw Up saves your child's original drawings to your Photos so you always have them.",
+          "isAccessMediaLocationEnabled": false
         }
       ],
       [
