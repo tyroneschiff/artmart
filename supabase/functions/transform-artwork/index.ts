@@ -65,6 +65,22 @@ function extractJson(text: string): { description: string; prompt: string } {
   throw new Error(`Claude did not return valid JSON. Response: ${text.slice(0, 300)}`)
 }
 
+// Rotating description "lens" injected per request. Banning crutch
+// words isn't enough on its own — the model re-converges on a single
+// favorite move ("I wonder…") unless each call is nudged toward a
+// different shape. Picking one at random per transform is the cheap,
+// effective lever for variety across a gallery.
+const DESCRIPTION_LENSES = [
+  'a surprised exclamation about the wildest detail',
+  'a direct question to the child about their world',
+  'a tiny made-up fact about the main character',
+  'a sound or a motion you can almost hear or see',
+  'the feeling this whole scene gives off',
+  'a guess about what just happened, or what happens next',
+  'a quiet noticing of one small detail most people would miss',
+  'what the main character might be thinking right now',
+]
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -88,6 +104,7 @@ Deno.serve(async (req) => {
     const { imageBase64, mimeType, childName } = await req.json()
     if (!imageBase64 || !mimeType) throw new Error('imageBase64 and mimeType required')
     const artistName = childName ? childName : null
+    const lens = DESCRIPTION_LENSES[Math.floor(Math.random() * DESCRIPTION_LENSES.length)]
 
     const falKey = Deno.env.get('FAL_API_KEY')
     if (!falKey) throw new Error('Missing server-side API keys')
@@ -138,25 +155,25 @@ The "description" is READ ALOUD to the child who drew this — 4–10 years old 
 Hard rules for the description:
 - 2 sentences, max 30 words total.
 - Kid-friendly vocabulary only. NEVER use: exuberance, kinetic, masterpiece, magnificent, fearless, bristling, rhythmic, extraordinary, vivid, dynamic, captivating, imaginative, delightful, composition, palette.
-- NEVER start with "You painted", "You drew", "You made", "You created". Vary openings — surprise, wonder, observation, imagination.
-- Name 1–2 specific things from the drawing (a color, a creature, a shape, a detail).
-- Spark imagination — what's happening, where they might be, what it feels like.
-- End with warmth, but make it feel earned, not formulaic.
-- Speak TO them when natural ("I wonder if you...") but don't force "your" everywhere.
+- NEVER start with "You painted", "You drew", "You made", "You created".
+- ANTI-REPETITION — CRITICAL. These phrases have become crutches and now appear in almost every description. Do NOT use any of them: "I wonder", "secret", "adventure", "portal", "magical". Also do not lean on a "like a ___" simile every time — most descriptions should have none.
+- Name 1–2 specific things actually in the drawing (a color, a creature, a shape, a number, a detail). This anchor is what makes the child feel seen — never skip it.
+- Vary the SHAPE of the two sentences every single time. Rotate among these moves and never repeat the same move twice: a surprised exclamation; a direct question to the child; a tiny made-up fact about the character; a sound or motion you can almost hear or see; the feeling the scene gives off; a guess about what just happened or happens next; a quiet noticing of one small detail; what the character might be thinking.
+- End with warmth, but earned and specific — never a formula.
 - Plain text only, no quotes, no emoji.
 
-GOOD EXAMPLES:
-"Wow — that purple dragon looks like he's about to take off into the clouds! And those tiny flowers down by his feet? Such a sweet detail."
-
-"A whole rainbow city! I keep finding new windows in those blue towers — I bet the people who live there are happy all day long."
-
-"Look at that brave little fox tiptoeing through the orange leaves. Something about his pointy ears makes me feel like he's about to find an adventure."
+GOOD EXAMPLES (notice each is built on a DIFFERENT move — none reuses a formula, none says "I wonder" or "secret"):
+"That purple dragon is leaning way back, like he's about to spring right off the page! The little flowers by his feet are my favorite part."
+"How did you fit a whole city onto one page? Those blue towers have so many tiny windows I keep losing count."
+"The brave little fox is tiptoeing so carefully — I can almost hear the orange leaves crunching under his paws."
+"Three whole eyes on that orange fellow, and every one of them is looking right at me. He seems pretty pleased about something."
+"It's the middle of the night and somebody is still wide awake in that cozy bed. Those droopy red eyes tell the whole story."
 
 The "prompt" goes to a high-end AI image model (Flux) that will render this world. The model sees the original drawing as input, so be vivid and push hard or the output looks like the input. Treat the child's drawing as the blueprint for a real place — the characters, composition, and color choices are the source of truth. Show what it looks like to stand inside that place.
 
 Your prompt MUST:
 1. Be extremely descriptive, evocative, and visually rich (at least 60–100 words). Use strong adjectives and explicitly specify lighting, texture, camera angle, and atmosphere.
-2. Describe the scene as a living world, not a drawing being redone. What's happening right now? Who's there? What time of day, what's the light like, what's the feeling in the air?
+2. Describe the scene as a living world, not a drawing being redone. What's happening right now? Who's there? What time of day, what's the light like, what's the feeling in the air? Give it real depth — a clear foreground, a middle ground, and a far distance — so it feels like a place you could walk into, while keeping the child's original layout and where they placed things.
 3. Honor the child's hand. The output should still feel made by — or at least true to — a child. Keep wobbly lines, naive proportions, irregular shapes, and slightly off geometry visible. Do NOT over-perfect anatomy, foreshortening, or symmetry. The result should feel hand-rendered, not polished commercial art. Avoid: perfect circles, hyper-detailed faces, technical accuracy, sterile gradients.
 4. Pick ONE specific warm illustration style that fits the scene's spirit — e.g.
    - "soft dreamlike watercolor with glowing light and atmospheric haze, slightly bleeding pigments"
@@ -167,7 +184,7 @@ Your prompt MUST:
    - "sun-bleached pastel painted on warm paper, hand-drawn linework with imperfect edges"
    - "vintage paperback illustration, soft halftone, muted yet glowing, slightly faded ink"
    Commit to it.
-5. Keep the child's key choices central and recognizable — the characters stay in the same places, the colors stay as the dominant palette, the sun or moon or landmarks stay where placed.
+5. Keep the child's key choices central and recognizable — the characters stay in the same places, the colors stay as the dominant palette, the sun or moon or landmarks stay where placed. Render the SAME COUNT of characters and objects the child drew: never add an extra creature, never duplicate something, never quietly drop one. If they drew three eyes, render exactly three eyes; if there is one tree, keep it one tree.
 6. Full bleed edge-to-edge composition filling the frame, no paper edges, no borders, no scan artifacts, creases removed, smooth clean surface.
 7. End exactly with: "warm hand-rendered storybook illustration, naive charm preserved, vivid color, soft texture, 8k resolution, ready for full-screen viewing on phone."
 
@@ -182,7 +199,7 @@ Example:
             source: { type: 'base64', media_type: mimeType, data: imageBase64 }
           }, {
             type: 'text',
-            text: `Look at this child's drawing${artistName ? ` by ${artistName}` : ''}. Write your 2-sentence reaction to ${artistName ? artistName : 'the child'} — surprise them, spark wonder, name something specific. Don't start with "You painted/drew/made/created". Then write a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
+            text: `Look at this child's drawing${artistName ? ` by ${artistName}` : ''}. Write your 2-sentence reaction to ${artistName ? artistName : 'the child'} — name something specific you actually see, and make them feel seen. For THIS description, build the first sentence around: ${lens}. Do not use "I wonder", "secret", "adventure", "portal", or "magical", and don't start with "You painted/drew/made/created". Then write a vivid Flux prompt that renders the world as a real place. Reply with only the JSON object.`
           }]
         }]
       }),
