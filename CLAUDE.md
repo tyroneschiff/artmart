@@ -98,7 +98,7 @@ Aesthetic: ucals.com layout discipline + tincan.kids warmth. Premium but approac
 - Stripe webhooks must verify signature; Supabase RLS must be set before any table goes live
 - Prompt caching headers on all Claude API calls
 - Physical print flow exists in code but is hidden from all users — Printful variant ID and API key must be verified before enabling
-- Comments are built with Claude Haiku moderation — auth-only, 300 char limit, 1-per-5min rate limit
+- Comments are moderated by Google Gemini (gemini-2.5-flash in `moderate-comment`) — auth-only, 300 char limit, 1-per-30s rate limit
 - "Gallery" is the correct term for a child's collection — not "Store". Route paths use `/store/[slug]` but all UI copy says "Gallery"
 
 ## Coding conventions
@@ -120,7 +120,7 @@ Aesthetic: ucals.com layout discipline + tincan.kids warmth. Premium but approac
 - [x] Visitor can purchase digital download (Stripe + signed URL)
 - [x] Top-voted pieces discoverable in browse screen
 - [x] Credits system — spend on transform, refund on failure
-- [x] Comments with Claude Haiku moderation
+- [x] Comments with Gemini moderation
 - [ ] Gallery accessible via public shareable URL (web routes not deployed)
 - [ ] Landing page live on drawup.ink
 - [ ] Physical print flow verified end-to-end (Printful account + variant ID)
