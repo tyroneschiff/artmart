@@ -19,9 +19,9 @@ type Pack = {
 }
 
 const PACKS: Pack[] = [
-  { id: 'starter', name: 'Starter',  amount: 4,  price: '$2.99',  perPiece: '2 videos or 4 images' },
-  { id: 'creator', name: 'Creator',  amount: 12, price: '$9.99',  perPiece: '6 videos or 12 images', badge: 'Most popular', featured: true },
-  { id: 'family',  name: 'Family',   amount: 26, price: '$19.99', perPiece: '13 videos or 26 images' },
+  { id: 'starter', name: 'Starter',  amount: 4,  price: '$8.99',  perPiece: '2 videos or 4 images' },
+  { id: 'creator', name: 'Creator',  amount: 10, price: '$19.99', perPiece: '5 videos or 10 images', badge: 'Most popular', featured: true },
+  { id: 'family',  name: 'Family',   amount: 20, price: '$39.99', perPiece: '10 videos or 20 images' },
 ]
 
 export default function CreditsScreen() {

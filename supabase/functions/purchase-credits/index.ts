@@ -64,19 +64,19 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Create step: returns a PaymentIntent client_secret
-    let priceCents = 999
-    let creditAmount = 12
-
-    if (body.amount === 3) {
-      priceCents = 299
-      creditAmount = 3
-    } else if (body.amount === 12) {
-      priceCents = 999
-      creditAmount = 12
-    } else if (body.amount === 25) {
-      priceCents = 1999
-      creditAmount = 25
+    // Create step: returns a PaymentIntent client_secret.
+    // Server-decided price map (client cannot set the price — it only sends
+    // the credit `amount`). Must match app/app/credits.tsx PACKS.
+    //   Starter 4cr → $8.99 · Creator 10cr → $19.99 · Family 20cr → $39.99
+    const PRICE_MAP: Record<number, number> = { 4: 899, 10: 1999, 20: 3999 }
+    const creditAmount = body.amount
+    const priceCents = PRICE_MAP[creditAmount]
+    if (!priceCents) {
+      // Reject unknown packs rather than silently charging a default —
+      // prevents mispriced purchases if the client ever sends a stale amount.
+      return new Response(JSON.stringify({ error: 'Unknown credit pack' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
     const paymentIntent = await stripe.paymentIntents.create(
