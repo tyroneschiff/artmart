@@ -430,7 +430,7 @@ The kill criteria from `## Acquisition strategy` (>0.10 shares/transform, >0.10 
 
 *(Maintained by Claude — log any revert or deliberate decision not to implement, with reason. Prevents re-suggesting the same ideas.)*
 
-- **Subscription model (monthly)** — Rejected in favour of credit packs. Not enough usage data to price a subscription. Revisit after month 2.
+- **Subscription model (monthly)** — Stay on credits. Re-analyzed 2026-06-25 (`growth/subscription-vs-credits.md`): high video COGS (~$1.26/clip) + bursty, novelty-churn usage structurally favor pay-as-you-go credits. Unlimited subs are financially impossible (one power user = −$29/mo); a metered sub is just "credits that expire," a worse deal than non-expiring credits. Only revisit as an ANNUAL keepsake/hybrid plan, and only once data shows steady ≥3–4 videos/active-user/month. Not just "need data" — the cost structure favors credits.
 - **"Imagination Credits" as label** — Replaced with plain "Credits". "Imagination" felt decorative on transactional UI; reserved for emotional moments (descriptions, share messages, empty states).
 - **"Top worlds / New worlds" sort labels** — Replaced with "Most loved / Newest". Less forced; "worlds" earns its place as the noun for pieces, not as a sort filter.
 - **Compare labels ("The Drawing" / "The World")** — Removed entirely. Two images side by side is self-explanatory; any label risked implying the drawing isn't a world too.
