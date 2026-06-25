@@ -5,4 +5,4 @@
 // Each generation costs real money, so the "Make a video" UI stays hidden
 // until we flip this on AND set CLIPS_ENABLED=true on the generate-clip
 // edge function. Both gates must be true for the feature to work end to end.
-export const CLIPS_ENABLED = false
+export const CLIPS_ENABLED = true

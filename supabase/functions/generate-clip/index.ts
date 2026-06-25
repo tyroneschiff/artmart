@@ -39,7 +39,11 @@ const GLOBAL_MONTHLY_CAP = Number(Deno.env.get('CLIP_MONTHLY_CAP') || '500')
 // fal.ai Kling 2.1 image-to-video (standard tier for cost; swap to /pro
 // for hero clips). Kept in one place so it's trivial to change/A-B.
 const FAL_MODEL = Deno.env.get('FAL_VIDEO_MODEL') || 'fal-ai/kling-video/v2.1/standard/image-to-video'
-const CLIP_DURATION = '5' // seconds; Kling supports 5 or 10
+const CLIP_DURATION = '5' // seconds; Kling accepts "5" or "10"
+// NOTE: Kling image-to-video does NOT accept an aspect_ratio param — the
+// output ratio is derived from the input image. Our transformed images are
+// square (1:1), so v1 clips are square. 9:16 framing (pre-padding the
+// keyframe) is a fast-follow.
 
 type Piece = {
   id: string
@@ -181,7 +185,7 @@ export const handler = async (req: Request) => {
       const falRes = await fetch(`https://queue.fal.run/${FAL_MODEL}?fal_webhook=${encodeURIComponent(webhook)}`, {
         method: 'POST',
         headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: motionPrompt, image_url: imageUrl, duration: CLIP_DURATION, aspect_ratio: '9:16' }),
+        body: JSON.stringify({ prompt: motionPrompt, image_url: imageUrl, duration: CLIP_DURATION }),
       })
       if (!falRes.ok) throw new Error(`fal queue error: ${falRes.status} ${await falRes.text()}`)
 
