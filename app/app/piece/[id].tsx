@@ -17,10 +17,12 @@ import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
 import LockedReadAloudButton from '../../components/LockedReadAloudButton'
 import MoveToGalleryModal from '../../components/MoveToGalleryModal'
+import ClipSection from '../../components/ClipSection'
 
 type Piece = {
   id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string
   vote_count: number; ai_description: string; store_id: string
+  clip_status?: 'none' | 'queued' | 'processing' | 'ready' | 'failed'; clip_url?: string | null
   stores: { child_name: string; slug: string; owner_id: string; cover_piece_id: string | null }
 }
 
@@ -396,6 +398,15 @@ export default function PieceScreen() {
               : <LockedReadAloudButton compact viewerHasGallery={viewerHasGallery} />}
           </View>
         ) : null}
+
+        <ClipSection
+          pieceId={piece.id}
+          clipStatus={piece.clip_status ?? 'none'}
+          clipUrl={piece.clip_url ?? null}
+          isOwner={isOwner}
+          childName={piece.stores?.child_name}
+          onRefetch={refetch}
+        />
 
         <View style={styles.commentSection}>
           <Text style={[type.h3, { marginBottom: 16 }]}>Comments</Text>

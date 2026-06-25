@@ -24,6 +24,10 @@ export type EventName =
   | 'onboarding_shown'
   | 'onboarding_dismissed'
   | 'cover_changed'
+  | 'clip_requested'
+  | 'clip_ready'
+  | 'clip_failed'
+  | 'clip_shared'
 
 type TrackProps = {
   pieceId?: string
