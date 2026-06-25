@@ -13,6 +13,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CLIP_WEBHOOK_SECRET = Deno.env.get('CLIP_WEBHOOK_SECRET') || ''
 const CLOUDINARY_CLOUD = Deno.env.get('CLOUDINARY_CLOUD_NAME') || ''
+const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '2') // refunded on failure
 
 async function rpc(fn: string, body: Record<string, unknown>) {
   await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
       })
     } else {
       await admin.from('pieces').update({ clip_status: 'failed' }).eq('id', pieceId)
-      if (ownerId) await rpc('refund_credit', { p_user_id: ownerId, p_reason: 'clip_refund' })
+      if (ownerId) await rpc('refund_credits', { p_user_id: ownerId, p_amount: CLIP_CREDITS, p_reason: 'video_refund' })
       await admin.from('events').insert({
         event_type: 'clip_failed', user_id: ownerId, piece_id: pieceId,
         store_id: (piece as any)?.store_id ?? null,

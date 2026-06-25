@@ -36,14 +36,15 @@ const CLIP_WEBHOOK_SECRET = Deno.env.get('CLIP_WEBHOOK_SECRET') || ''
 const PER_USER_DAILY_LIMIT = Number(Deno.env.get('CLIP_USER_DAILY_LIMIT') || '5')
 const GLOBAL_MONTHLY_CAP = Number(Deno.env.get('CLIP_MONTHLY_CAP') || '500')
 
-// fal.ai Kling 2.1 image-to-video (standard tier for cost; swap to /pro
-// for hero clips). Kept in one place so it's trivial to change/A-B.
-const FAL_MODEL = Deno.env.get('FAL_VIDEO_MODEL') || 'fal-ai/kling-video/v2.1/standard/image-to-video'
-const CLIP_DURATION = '5' // seconds; Kling accepts "5" or "10"
-// NOTE: Kling image-to-video does NOT accept an aspect_ratio param — the
-// output ratio is derived from the input image. Our transformed images are
-// square (1:1), so v1 clips are square. 9:16 framing (pre-padding the
-// keyframe) is a fast-follow.
+// fal.ai Veo 3 Fast image-to-video — generates the clip WITH synced native
+// audio (generate_audio defaults true). $0.15/s with audio; 8s ≈ $1.20.
+// Kept in env-overridable constants so duration/model are easy to dial.
+const FAL_MODEL = Deno.env.get('FAL_VIDEO_MODEL') || 'fal-ai/veo3/fast/image-to-video'
+const CLIP_DURATION = Deno.env.get('FAL_VIDEO_DURATION') || '8s' // Veo accepts "4s" | "6s" | "8s"
+const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '2')  // a video costs 2 credits
+// NOTE: we send aspect_ratio "auto" → Veo keeps the source ratio. Our
+// keyframes are square (1:1), so v1 clips are square. Forcing "9:16" risks
+// cropping the child's art, so portrait framing stays a flagged fast-follow.
 
 type Piece = {
   id: string
@@ -92,12 +93,12 @@ async function buildMotionPrompt(imageUrl: string, description: string | null): 
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 300,
-      system: `You write a single short image-to-video motion prompt for a children's storybook illustration that will be animated into a 5-second clip. Rules:
-- Choose ONE primary action for the main character/element: small, gentle, in-character (blink, breathe, slow head tilt, one slow step, tail swish, wings settle). Never a full traversal across the frame.
-- Add ambient secondary motion: drifting light, floating motes, swaying foliage, rippling water, or a very slow push-in.
+      system: `You write a single prompt for an image-to-video model (Veo) that animates a children's storybook illustration into an ~8-second clip WITH SOUND. Cover both motion and audio. Rules:
+- MOTION: choose ONE primary action for the main character/element — small, gentle, in-character (blink, breathe, slow head tilt, one slow step, tail swish, wings settle). Never a full traversal across the frame. Add ambient secondary motion: drifting light, floating motes, swaying foliage, rippling water, or a very slow push-in.
+- AUDIO: describe a gentle, magical soundscape that fits the scene — soft ambient atmosphere and 1–2 fitting sounds (e.g. warm wind, distant chimes, a soft friendly creature sound, gentle water). Keep it cozy and storybook, never harsh or scary. Do NOT request spoken dialogue or narration — ambient/musical only.
 - PROTECT THE SUBJECT: explicitly say to keep the character's shape, face, count, and colors stable — no morphing, melting, adding, or removing features. Children's art is fragile.
 - Match the mood (cozy = slow/warm; wild = a touch more energy, still controlled).
-- Output ONLY the motion prompt as plain text, 2–4 sentences, no preamble, no quotes.`,
+- Output ONLY the prompt as plain text, 2–4 sentences, no preamble, no quotes.`,
       messages: [{
         role: 'user',
         content: [
@@ -165,9 +166,9 @@ export const handler = async (req: Request) => {
     if ((userCount ?? 0) >= PER_USER_DAILY_LIMIT) return json({ error: 'rate_limited', message: 'You can make a few videos a day — try again tomorrow.' }, 429)
     if ((globalCount ?? 0) >= GLOBAL_MONTHLY_CAP) return json({ error: 'capacity', message: 'Video creation is at capacity for now. Try again later.' }, 503)
 
-    // Spend a credit up front; refund on any failure before/at submit.
-    const balance = await rpc('spend_credit', { p_user_id: userId, p_reason: 'clip' })
-    if (balance === -1) return json({ error: 'out_of_credits', message: "You're out of credits." }, 402)
+    // Spend the video's credits up front; refund on any failure before/at submit.
+    const balance = await rpc('spend_credits', { p_user_id: userId, p_amount: CLIP_CREDITS, p_reason: 'video' })
+    if (balance === -1) return json({ error: 'out_of_credits', message: `A video costs ${CLIP_CREDITS} credits. You can still keep the image free.` }, 402)
 
     try {
       const motionPrompt = await buildMotionPrompt(imageUrl, p.ai_description)
@@ -185,7 +186,15 @@ export const handler = async (req: Request) => {
       const falRes = await fetch(`https://queue.fal.run/${FAL_MODEL}?fal_webhook=${encodeURIComponent(webhook)}`, {
         method: 'POST',
         headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: motionPrompt, image_url: imageUrl, duration: CLIP_DURATION }),
+        body: JSON.stringify({
+          prompt: motionPrompt,
+          image_url: imageUrl,
+          duration: CLIP_DURATION,
+          generate_audio: true,
+          resolution: '720p',
+          aspect_ratio: 'auto',
+          negative_prompt: 'morphing, distortion, melting, extra limbs, deformed, text, watermark, logo, scary, harsh audio',
+        }),
       })
       if (!falRes.ok) throw new Error(`fal queue error: ${falRes.status} ${await falRes.text()}`)
 
@@ -196,8 +205,8 @@ export const handler = async (req: Request) => {
 
       return json({ ok: true, status: 'queued' })
     } catch (e) {
-      // Roll back: refund the credit and reset status so they can retry.
-      try { await rpc('refund_credit', { p_user_id: userId, p_reason: 'clip_refund' }) } catch {}
+      // Roll back: refund the credits and reset status so they can retry.
+      try { await rpc('refund_credits', { p_user_id: userId, p_amount: CLIP_CREDITS, p_reason: 'video_refund' }) } catch {}
       await admin.from('pieces').update({ clip_status: 'failed' }).eq('id', p.id)
       throw e
     }
