@@ -41,7 +41,11 @@ const GLOBAL_MONTHLY_CAP = Number(Deno.env.get('CLIP_MONTHLY_CAP') || '500')
 // Kept in env-overridable constants so duration/model are easy to dial.
 const FAL_MODEL = Deno.env.get('FAL_VIDEO_MODEL') || 'fal-ai/veo3/fast/image-to-video'
 const CLIP_DURATION = Deno.env.get('FAL_VIDEO_DURATION') || '8s' // Veo accepts "4s" | "6s" | "8s"
-const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '2')  // a video costs 2 credits
+// Marginal cost to ANIMATE an image into a video. The image keyframe
+// already cost 1 credit (transform-artwork), so animate(1) makes a
+// from-scratch video total 2 credits, and "animate an existing image"
+// is a clean +1. Env-overridable.
+const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '1')
 // NOTE: we send aspect_ratio "auto" → Veo keeps the source ratio. Our
 // keyframes are square (1:1), so v1 clips are square. Forcing "9:16" risks
 // cropping the child's art, so portrait framing stays a flagged fast-follow.
@@ -168,7 +172,7 @@ export const handler = async (req: Request) => {
 
     // Spend the video's credits up front; refund on any failure before/at submit.
     const balance = await rpc('spend_credits', { p_user_id: userId, p_amount: CLIP_CREDITS, p_reason: 'video' })
-    if (balance === -1) return json({ error: 'out_of_credits', message: `A video costs ${CLIP_CREDITS} credits. You can still keep the image free.` }, 402)
+    if (balance === -1) return json({ error: 'out_of_credits', message: 'You need 1 more credit to animate this into a video.' }, 402)
 
     try {
       const motionPrompt = await buildMotionPrompt(imageUrl, p.ai_description)

@@ -23,6 +23,7 @@ type Piece = {
   view_count: number
   store_id: string
   created_at: string
+  clip_status?: string
   stores: { child_name: string; slug: string }
 }
 
@@ -35,7 +36,7 @@ async function fetchPieces(sort: SortMode, storeIds?: string[]): Promise<Piece[]
   const tieBreaker = sort === 'top' ? 'view_count' : sort === 'popular' ? 'vote_count' : 'vote_count'
   let q = supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, view_count, store_id, created_at, stores(child_name, slug)')
+    .select('id, title, transformed_image_url, watermarked_image_url, vote_count, view_count, store_id, created_at, clip_status, stores(child_name, slug)')
     .eq('published', true)
     .not('transformed_image_url', 'is', null)
     .order(orderCol, { ascending: false })
@@ -227,6 +228,11 @@ export default function DiscoverScreen() {
             <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
               <View style={styles.imageWrap}>
                 <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
+                {item.clip_status === 'ready' && (
+                  <View style={styles.playBadge}>
+                    <Ionicons name="play" size={13} color={colors.white} />
+                  </View>
+                )}
                 <TouchableOpacity
                   style={[styles.voteBadge, !canVote && styles.voteBadgeDone]}
                   onPress={() => {
@@ -338,6 +344,7 @@ const styles = StyleSheet.create({
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
+  playBadge: { position: 'absolute', top: 8, left: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: colors.scrim, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeDone: { opacity: 0.92 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },

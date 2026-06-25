@@ -14,8 +14,6 @@ import ZoomableImage from '../../components/ZoomableImage'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { colors, type, btn, card, radius, opacity, layout } from '../../lib/theme'
-import ReadAloudButton from '../../components/ReadAloudButton'
-import LockedReadAloudButton from '../../components/LockedReadAloudButton'
 import MoveToGalleryModal from '../../components/MoveToGalleryModal'
 import ClipSection from '../../components/ClipSection'
 
@@ -69,25 +67,6 @@ export default function PieceScreen() {
     const { data: piece, isLoading, error, refetch } = useQuery({ queryKey: ['piece', id], queryFn: () => fetchPiece(id) })
   
     const isOwner = !!session && !!piece && session.user.id === piece.stores?.owner_id
-
-    // Whether the viewer has at least one of their own galleries —
-    // changes the locked Read Aloud CTA from "create your first
-    // gallery" to "open your galleries" so existing creators are
-    // pushed toward using Read Aloud on their own pieces (where it's
-    // actually meant to live), not toward billing us for TTS on every
-    // stranger's piece they browse.
-    const { data: viewerGalleryCount = 0 } = useQuery({
-      queryKey: ['my-gallery-count', session?.user.id],
-      enabled: !!session && !isOwner,
-      queryFn: async () => {
-        const { count } = await supabase
-          .from('stores')
-          .select('id', { count: 'exact', head: true })
-          .eq('owner_id', session!.user.id)
-        return count ?? 0
-      },
-    })
-    const viewerHasGallery = viewerGalleryCount > 0
 
     const { data: comments, isLoading: commentsLoading } = useQuery({ queryKey: ['comments', id], queryFn: () => fetchComments(id) })
 
@@ -389,15 +368,6 @@ export default function PieceScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {piece.ai_description ? (
-          <View style={styles.descriptionBlock}>
-            <Text style={styles.descriptionText}>{piece.ai_description}</Text>
-            {isOwner
-              ? <ReadAloudButton text={piece.ai_description} compact />
-              : <LockedReadAloudButton compact viewerHasGallery={viewerHasGallery} />}
-          </View>
-        ) : null}
 
         <ClipSection
           pieceId={piece.id}

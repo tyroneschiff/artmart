@@ -14,7 +14,7 @@ import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
 import { track } from '../../lib/analytics'
 import { useIsSubscribed, useSubscriberCount, useToggleSubscription } from '../../lib/subscriptions'
 
-type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string; vote_count: number; created_at: string }
+type Piece = { id: string; title: string; transformed_image_url: string; watermarked_image_url?: string; original_image_url: string; vote_count: number; created_at: string; clip_status?: string }
 type Store = { id: string; child_name: string; slug: string; description: string; owner_id: string }
 type SortMode = 'top' | 'new'
 
@@ -23,7 +23,7 @@ async function fetchStore(slug: string) {
   if (error) throw error
   const { data: pieces, error: e2 } = await supabase
     .from('pieces')
-    .select('id, title, transformed_image_url, watermarked_image_url, original_image_url, vote_count, created_at')
+    .select('id, title, transformed_image_url, watermarked_image_url, original_image_url, vote_count, created_at, clip_status')
     .eq('store_id', store.id)
     .eq('published', true)
   if (e2) throw e2
@@ -265,6 +265,11 @@ export default function StoreScreen() {
           <TouchableOpacity style={styles.card} onPress={() => router.push(`/piece/${item.id}`)}>
             <View style={styles.imageWrap}>
               <Image source={{ uri: item.watermarked_image_url || item.transformed_image_url }} style={styles.image} />
+              {item.clip_status === 'ready' && (
+                <View style={styles.playBadge}>
+                  <Ionicons name="play" size={13} color={colors.white} />
+                </View>
+              )}
               {item.vote_count > 0 && (
                 <View style={styles.voteBadge}>
                   <Ionicons name="heart" size={12} color={colors.white} />
@@ -370,6 +375,7 @@ const styles = StyleSheet.create({
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
+  playBadge: { position: 'absolute', top: 8, left: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: colors.scrim, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },

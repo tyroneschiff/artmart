@@ -22,7 +22,6 @@ import { colors, btn, type, card, radius, opacity, layout, goldCard } from '../.
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
 import CreditsChip from '../../components/CreditsChip'
-import ReadAloudButton from '../../components/ReadAloudButton'
 
 const isWeb = Platform.OS === 'web'
 
@@ -63,6 +62,9 @@ export default function CreateScreen() {
   const [selectedStore, setSelectedStore] = useState<Store | null>(null)
   const [storePickerVisible, setStorePickerVisible] = useState(false)
   const [step, setStep] = useState<'pick' | 'transform' | 'publish' | 'success'>('pick')
+  // Video is the default output; the user can opt down to image-only.
+  // image = 1 credit (transform), video = 2 credits (transform + animate).
+  const [createMode, setCreateMode] = useState<'video' | 'image'>('video')
   const [transforming, setTransforming] = useState(false)
   const [tipIndex, setTipIndex] = useState(0)
   const [transformError, setTransformError] = useState<string | null>(null)
@@ -80,6 +82,7 @@ export default function CreateScreen() {
   const [showCreditsUpsell, setShowCreditsUpsell] = useState(false)
   const [aiDescription, setAiDescription] = useState('')
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
+  const [publishedPieceId, setPublishedPieceId] = useState<string | null>(null)
 
   // Inline store creation state
   const [newStoreName, setNewStoreName] = useState('')
@@ -101,6 +104,8 @@ export default function CreateScreen() {
     setTransformError(null)
     setShowCreditsUpsell(false)
     setSharePayload(null)
+    setPublishedPieceId(null)
+    setCreateMode('video')
   }
 
   async function pickImage() {
@@ -287,10 +292,29 @@ export default function CreateScreen() {
       queryClient.invalidateQueries({ queryKey: ['mystores'] })
       queryClient.invalidateQueries({ queryKey: ['stores-picker'] })
       setSharePayload(buildPieceShareMessage(pieceTitle, childName, pieceId))
+      setPublishedPieceId(pieceId)
       setStep('success')
       track('piece_published', { pieceId, storeId: selectedStore?.id })
       // Reward the magic moment with a soft physical pulse.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      // Video is the default output: auto-animate the published piece.
+      // Fire-and-forget — spends the +1 animate credit, renders async via
+      // webhook, and appears on the piece page when ready. Image-only
+      // mode skips this. Soft-fails (e.g. not enough credits for the
+      // video) without disrupting the publish.
+      if (createMode === 'video') {
+        ;(async () => {
+          try {
+            const { data: { session: cs } } = await supabase.auth.getSession()
+            if (!cs) return
+            await fetch(`${supabaseUrl}/functions/v1/generate-clip`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cs.access_token}` },
+              body: JSON.stringify({ piece_id: pieceId }),
+            })
+          } catch { /* silent — piece is published; video can be retried from its page */ }
+        })()
+      }
       // Pre-warm OG card + page so the first share lands instantly in iMessage.
       // Fire both endpoints; both get CDN-cached at the edge for a year.
       fetch(`https://drawup.ink/api/og-card?type=piece&id=${encodeURIComponent(pieceId)}`).catch(() => {})
@@ -339,23 +363,37 @@ export default function CreateScreen() {
             <Text style={[type.body, { textAlign: 'center', marginBottom: 16, color: colors.mid }]}>
               "{title}" is now live in {selectedStore?.child_name}'s gallery.
             </Text>
-            {aiDescription ? (
-              <View style={{ ...goldCard, width: '100%', marginBottom: 24, padding: 16 }}>
-                <Text style={{ fontSize: 14, color: colors.dark, lineHeight: 22, marginBottom: 12 }}>{aiDescription}</Text>
-                <ReadAloudButton text={aiDescription} compact />
+            {createMode === 'video' ? (
+              <View style={{ ...goldCard, width: '100%', marginBottom: 24, padding: 16, alignItems: 'center' }}>
+                <Text style={{ fontSize: 14, color: colors.goldDark, lineHeight: 21, textAlign: 'center', fontWeight: '600' }}>
+                  🎬 Bringing it to life with sound — your video lands in about a minute. Tap below to watch.
+                </Text>
               </View>
             ) : null}
-            
+
             <View style={{ width: '100%', gap: 10, marginTop: 8, alignItems: 'center' }}>
-              <TouchableOpacity
-                style={[btn.primary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
-                onPress={() => {
-                  resetCreate()
-                  router.push(`/gallery/${selectedStore?.slug}`)
-                }}
-              >
-                <Text style={btn.primaryText}>{selectedStore?.child_name}'s Gallery</Text>
-              </TouchableOpacity>
+              {createMode === 'video' && publishedPieceId ? (
+                <TouchableOpacity
+                  style={[btn.primary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
+                  onPress={() => {
+                    const id = publishedPieceId
+                    resetCreate()
+                    router.push(`/piece/${id}`)
+                  }}
+                >
+                  <Text style={btn.primaryText}>Watch it come alive</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[btn.primary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
+                  onPress={() => {
+                    resetCreate()
+                    router.push(`/gallery/${selectedStore?.slug}`)
+                  }}
+                >
+                  <Text style={btn.primaryText}>{selectedStore?.child_name}'s Gallery</Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={[btn.secondary, { width: '100%', paddingVertical: 16, alignItems: 'center' }]}
@@ -417,7 +455,7 @@ export default function CreateScreen() {
             </View>
           ) : (
             <>
-              <Text style={[type.body, { marginBottom: 16, textAlign: 'center', color: colors.mid }]}>Ready to step inside this drawing?</Text>
+              <Text style={[type.body, { marginBottom: 16, textAlign: 'center', color: colors.mid }]}>Bring this drawing to life.</Text>
               {isWeb
                 ? <View style={styles.webNotice}><Text style={styles.webNoticeText}>📱 AI transformation works on the mobile app.</Text></View>
                 : transforming
@@ -448,9 +486,31 @@ export default function CreateScreen() {
                           </View>
                         )
                       })()
-                    : <TouchableOpacity style={btn.primary} onPress={handleTransform}>
-                        <Text style={btn.primaryText}>✨ Step Inside</Text>
-                      </TouchableOpacity>
+                    : (
+                      <View style={{ gap: 10 }}>
+                        {/* Video is the default; image-only is the cheaper opt-down.
+                            Gate each on credits so we never promise a video the
+                            user can't afford (video needs 2, image needs 1). */}
+                        <TouchableOpacity
+                          style={[btn.primary, { paddingVertical: 16 }]}
+                          onPress={() => {
+                            if ((credits ?? 0) < 2) { router.push('/credits'); return }
+                            setCreateMode('video'); handleTransform()
+                          }}
+                        >
+                          <Text style={btn.primaryText}>✨ Bring it to life · video · 2 credits</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[btn.secondary, { paddingVertical: 16 }]}
+                          onPress={() => {
+                            if ((credits ?? 0) < 1) { router.push('/credits'); return }
+                            setCreateMode('image'); handleTransform()
+                          }}
+                        >
+                          <Text style={btn.secondaryText}>Just the image · 1 credit</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )
               }
             </>
           )}

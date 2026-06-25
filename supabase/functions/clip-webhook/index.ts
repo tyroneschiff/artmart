@@ -13,7 +13,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CLIP_WEBHOOK_SECRET = Deno.env.get('CLIP_WEBHOOK_SECRET') || ''
 const CLOUDINARY_CLOUD = Deno.env.get('CLOUDINARY_CLOUD_NAME') || ''
-const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '2') // refunded on failure
+const CLIP_CREDITS = Number(Deno.env.get('CLIP_CREDITS') || '1') // marginal animate cost, refunded on failure
 
 async function rpc(fn: string, body: Record<string, unknown>) {
   await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
