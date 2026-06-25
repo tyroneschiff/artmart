@@ -32,6 +32,11 @@ const JWKS = createRemoteJWKSet(new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwk
 
 // Feature + cost controls.
 const CLIPS_ENABLED = Deno.env.get('CLIPS_ENABLED') === 'true'
+// When on, clip-webhook dubs our ElevenLabs narration onto the clip, so we
+// ask Veo for a SILENT video (cheaper too); otherwise Veo provides a music
+// bed. Off by default — narration ships dormant until verified with a real
+// render + a compose path (fal ffmpeg). See clip-webhook.
+const NARRATION_ENABLED = Deno.env.get('NARRATION_ENABLED') === 'true'
 const CLIP_WEBHOOK_SECRET = Deno.env.get('CLIP_WEBHOOK_SECRET') || ''
 const PER_USER_DAILY_LIMIT = Number(Deno.env.get('CLIP_USER_DAILY_LIMIT') || '5')
 const GLOBAL_MONTHLY_CAP = Number(Deno.env.get('CLIP_MONTHLY_CAP') || '500')
@@ -194,7 +199,7 @@ export const handler = async (req: Request) => {
           prompt: motionPrompt,
           image_url: imageUrl,
           duration: CLIP_DURATION,
-          generate_audio: true,
+          generate_audio: !NARRATION_ENABLED,
           resolution: '720p',
           aspect_ratio: 'auto',
           negative_prompt: 'morphing, distortion, melting, extra limbs, deformed, text, watermark, logo, scary, harsh audio',
