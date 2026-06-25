@@ -368,11 +368,11 @@ export default function CreateScreen() {
             <TouchableOpacity
               style={{ paddingVertical: 14, width: '100%', alignItems: 'center' }}
               onPress={() => {
-                const grandmaMessage = `Look what ${selectedStore?.child_name || 'Artist'} just created! ✨ I stepped inside their drawing and found this: ${sharePayload.url}`
-                shareToWhatsApp(grandmaMessage)
+                const whatsappMessage = `Look what ${selectedStore?.child_name || 'Artist'} just created! ✨ I stepped inside their drawing and found this: ${sharePayload.url}`
+                shareToWhatsApp(whatsappMessage)
               }}
             >
-              <Text style={[type.label, { color: colors.muted, fontWeight: '600' }]}>Send to Grandma via WhatsApp</Text>
+              <Text style={[type.label, { color: colors.muted, fontWeight: '600' }]}>Share via WhatsApp</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

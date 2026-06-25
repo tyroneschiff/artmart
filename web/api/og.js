@@ -73,8 +73,8 @@ function renderHtml({ title, description, ogImageUrl, originalImageUrl, transfor
   }
 
   // For gallery pages, render a real grid of the child's pieces so a
-  // grandparent tapping the WhatsApp link from a parent actually sees
-  // the kid's worlds. For piece pages, keep the existing hero+inset
+  // visitor tapping the shared link from a parent actually sees the
+  // kid's worlds. For piece pages, keep the existing hero+inset
   // composition. For everything else, fall back to a single hero.
   const isGalleryView = Array.isArray(galleryPieces) && galleryPieces.length > 0
   const heroBlock = isGalleryView

@@ -69,7 +69,7 @@ export default function OnboardingSheet({
             </View>
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>Share with family</Text>
-              <Text style={styles.rowSub}>Every gallery has a link you can send to grandparents, aunts, and friends.</Text>
+              <Text style={styles.rowSub}>Every gallery has a private link you can share with the people who love them most.</Text>
             </View>
           </View>
 
