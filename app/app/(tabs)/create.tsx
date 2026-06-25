@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, Image, StyleSheet, Alert,
-  TextInput, ScrollView, ActivityIndicator, Modal, FlatList, Platform
+  TextInput, ScrollView, ActivityIndicator, Modal, FlatList, Platform, StatusBar
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import ZoomableImage from '../../components/ZoomableImage'
 import ConfettiCannon from 'react-native-confetti-cannon'
 import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
@@ -27,10 +29,18 @@ const isWeb = Platform.OS === 'web'
 
 
 const TRANSFORM_TIPS = [
-  "Analyzing every brushstroke...",
-  "Building a world from this imagination...",
-  "Rendering magical lighting...",
-  "Preparing your portal...",
+  "Looking closely at every line they drew…",
+  "Mixing the exact colors your child imagined…",
+  "Finding the world hiding inside this drawing…",
+  "Teaching the characters how to stand…",
+  "Letting the light pour into the scene…",
+  "Keeping every wobbly, wonderful detail…",
+  "Coaxing the sky into the right shade…",
+  "Painting in the little things you'd almost miss…",
+  "Giving the whole world some depth…",
+  "Holding onto exactly what makes it theirs…",
+  "Almost there — adding the last bit of magic…",
+  "Stepping inside the drawing with you…",
 ]
 
 type Store = { id: string; child_name: string; slug: string }
@@ -72,10 +82,12 @@ export default function CreateScreen() {
   useEffect(() => {
     let interval: any
     if (transforming) {
-      setTipIndex(0)
+      // Start at a random tip so back-to-back creates don't open the same,
+      // then advance — feels varied across the ~30s wait.
+      setTipIndex(Math.floor(Math.random() * TRANSFORM_TIPS.length))
       interval = setInterval(() => {
         setTipIndex((prev) => (prev + 1) % TRANSFORM_TIPS.length)
-      }, 5000)
+      }, 3500)
     }
     return () => clearInterval(interval)
   }, [transforming])
@@ -83,6 +95,8 @@ export default function CreateScreen() {
   const [aiDescription, setAiDescription] = useState('')
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null)
   const [publishedPieceId, setPublishedPieceId] = useState<string | null>(null)
+  const [lightboxUri, setLightboxUri] = useState<string | null>(null)
+  const insets = useSafeAreaInsets()
 
   // Inline store creation state
   const [newStoreName, setNewStoreName] = useState('')
@@ -523,11 +537,15 @@ export default function CreateScreen() {
           <View style={styles.compareRow}>
             <View style={styles.compareItem}>
               <Text style={styles.compareLabel}>The drawing</Text>
-              <Image source={{ uri: imageUri! }} style={styles.compareImage} />
+              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(imageUri!)}>
+                <Image source={{ uri: imageUri! }} style={styles.compareImage} />
+              </TouchableOpacity>
             </View>
             <View style={styles.compareItem}>
               <Text style={[styles.compareLabel, { color: colors.goldDark }]}>The world</Text>
-              <Image source={{ uri: transformedUri }} style={styles.compareImage} />
+              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(transformedUri)}>
+                <Image source={{ uri: transformedUri }} style={styles.compareImage} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -598,6 +616,20 @@ export default function CreateScreen() {
             )}
           />
           <TouchableOpacity onPress={() => setStorePickerVisible(false)}><Text style={styles.cancel}>Cancel</Text></TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Full-screen lightbox for the before/after compare images — same
+          pinch/zoom + tap-to-dismiss effect as the piece page. */}
+      <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)} statusBarTranslucent>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.lightboxBackdrop}>
+          {lightboxUri && (
+            <ZoomableImage uri={lightboxUri} style={styles.lightboxImage} onSingleTap={() => setLightboxUri(null)} />
+          )}
+          <TouchableOpacity style={[styles.lightboxClose, { top: insets.top + 12 }]} onPress={() => setLightboxUri(null)} hitSlop={12}>
+            <Ionicons name="close" size={22} color={colors.white} />
+          </TouchableOpacity>
         </View>
       </Modal>
     </ScrollView>
@@ -675,6 +707,9 @@ const styles = StyleSheet.create({
   compareItem: { flex: 1 },
   compareLabel: { fontSize: 11, color: colors.muted, marginBottom: 8, textAlign: 'center', fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
   compareImage: { width: '100%', aspectRatio: 1, borderRadius: radius.sm },
+  lightboxBackdrop: { flex: 1, backgroundColor: colors.scrimStrong, justifyContent: 'center', alignItems: 'center' },
+  lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
+  lightboxClose: { position: 'absolute', right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.scrimWhite, alignItems: 'center', justifyContent: 'center' },
   input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 12, fontSize: 16, color: colors.dark, backgroundColor: colors.white },
   storePicker: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 16, backgroundColor: colors.white },
   inlineStoreCreate: { ...goldCard, padding: 16, marginBottom: 16 },

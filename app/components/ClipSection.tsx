@@ -7,8 +7,9 @@
 // costs real money, so this stays hidden until we flip it on.
 
 import { useEffect, useRef, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share, Modal, StatusBar } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Audio, Video, ResizeMode } from 'expo-av'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
@@ -19,6 +20,14 @@ import { CLIPS_ENABLED } from '../lib/flags'
 import { colors, type, btn, radius } from '../lib/theme'
 
 type ClipStatus = 'none' | 'queued' | 'processing' | 'ready' | 'failed'
+
+// A little variety while the clip renders so it doesn't read as one frozen line.
+const GENERATING_LINES = [
+  'Bringing this world to life… about a minute.',
+  'Teaching it how to move and sound… about a minute.',
+  'Adding motion and a little magic… about a minute.',
+  'Almost there — animating the scene… about a minute.',
+]
 
 export default function ClipSection({
   pieceId,
@@ -37,7 +46,11 @@ export default function ClipSection({
 }) {
   const [requesting, setRequesting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const insets = useSafeAreaInsets()
+  // Pick one generating line per mount so it's stable but varied across pieces.
+  const generatingLine = useRef(GENERATING_LINES[Math.floor(Math.random() * GENERATING_LINES.length)]).current
 
   const inProgress = clipStatus === 'queued' || clipStatus === 'processing'
 
@@ -100,7 +113,7 @@ export default function ClipSection({
       const { uri } = await FileSystem.downloadAsync(clipUrl, path)
       await MediaLibrary.saveToLibraryAsync(uri)
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
-      Alert.alert('Saved to Photos ✨', `${childName ? childName + "'s" : 'Your'} video is in your camera roll — ready to post to Shorts, TikTok, or anywhere.`)
+      Alert.alert('Saved to Photos ✨', `${childName ? childName + "'s" : 'Your'} video is saved to your camera roll.`)
     } catch (e: any) {
       Alert.alert('Could not save', e?.message || 'Try again.')
     } finally {
@@ -120,15 +133,22 @@ export default function ClipSection({
   if (clipStatus === 'ready' && clipUrl) {
     return (
       <View style={styles.wrap}>
-        <Video
-          source={{ uri: clipUrl }}
-          style={styles.video}
-          resizeMode={ResizeMode.COVER}
-          isLooping
-          shouldPlay
-          isMuted
-          useNativeControls={false}
-        />
+        {/* Tap to expand full-screen with sound + controls, mirroring the
+            image lightbox. The inline preview stays muted + looping. */}
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setFullscreen(true)}>
+          <Video
+            source={{ uri: clipUrl }}
+            style={styles.video}
+            resizeMode={ResizeMode.COVER}
+            isLooping
+            shouldPlay
+            isMuted
+            useNativeControls={false}
+          />
+          <View style={styles.expandBadge}>
+            <Ionicons name="expand" size={15} color={colors.white} />
+          </View>
+        </TouchableOpacity>
         {isOwner && (
           <View style={styles.actionRow}>
             <TouchableOpacity style={[btn.primary, styles.actionBtn]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
@@ -141,6 +161,27 @@ export default function ClipSection({
             </TouchableOpacity>
           </View>
         )}
+
+        <Modal visible={fullscreen} transparent animationType="fade" onRequestClose={() => setFullscreen(false)} statusBarTranslucent>
+          <StatusBar barStyle="light-content" />
+          <View style={styles.fsBackdrop}>
+            <Video
+              source={{ uri: clipUrl }}
+              style={styles.fsVideo}
+              resizeMode={ResizeMode.CONTAIN}
+              isLooping
+              shouldPlay
+              useNativeControls
+            />
+            <TouchableOpacity
+              style={[styles.fsClose, { top: insets.top + 12 }]}
+              onPress={() => setFullscreen(false)}
+              hitSlop={12}
+            >
+              <Ionicons name="close" size={22} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
       </View>
     )
   }
@@ -152,7 +193,7 @@ export default function ClipSection({
     return (
       <View style={[styles.wrap, styles.statusCard]}>
         <ActivityIndicator color={colors.goldDark} />
-        <Text style={styles.statusText}>Bringing this world to life… about a minute.</Text>
+        <Text style={styles.statusText}>{generatingLine}</Text>
       </View>
     )
   }
@@ -174,7 +215,12 @@ export default function ClipSection({
 
 const styles = StyleSheet.create({
   wrap: { marginHorizontal: 16, marginBottom: 16 },
-  video: { width: '100%', aspectRatio: 9 / 16, borderRadius: radius.lg, backgroundColor: colors.creamDark, overflow: 'hidden' },
+  // Clips are square (1:1) in v1 — match the box so there's no letterboxing.
+  video: { width: '100%', aspectRatio: 1, borderRadius: radius.lg, backgroundColor: colors.creamDark, overflow: 'hidden' },
+  expandBadge: { position: 'absolute', top: 10, right: 10, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
+  fsBackdrop: { flex: 1, backgroundColor: colors.scrimStrong, justifyContent: 'center', alignItems: 'center' },
+  fsVideo: { width: '100%', height: '100%' },
+  fsClose: { position: 'absolute', right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.scrimWhite, alignItems: 'center', justifyContent: 'center' },
   actionRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   actionBtn: { flex: 1, paddingVertical: 13 },
   statusCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18, backgroundColor: colors.goldLight, borderRadius: radius.md, borderWidth: 1, borderColor: colors.goldMid },

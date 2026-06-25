@@ -19,9 +19,9 @@ type Pack = {
 }
 
 const PACKS: Pack[] = [
-  { id: 'starter', name: 'Starter',  amount: 3,  price: '$2.99',  perPiece: '$1.00 per drawing' },
-  { id: 'creator', name: 'Creator',  amount: 12, price: '$9.99',  perPiece: '$0.83 per drawing', badge: 'Most popular', featured: true },
-  { id: 'family',  name: 'Family',   amount: 25, price: '$19.99', perPiece: '$0.80 per drawing' },
+  { id: 'starter', name: 'Starter',  amount: 4,  price: '$2.99',  perPiece: '2 videos or 4 images' },
+  { id: 'creator', name: 'Creator',  amount: 12, price: '$9.99',  perPiece: '6 videos or 12 images', badge: 'Most popular', featured: true },
+  { id: 'family',  name: 'Family',   amount: 26, price: '$19.99', perPiece: '13 videos or 26 images' },
 ]
 
 export default function CreditsScreen() {
@@ -65,7 +65,7 @@ export default function CreditsScreen() {
         </View>
 
         <Text style={styles.subhead}>
-          Each credit turns one drawing into a world.
+          1 credit makes an image · 2 credits make a video with sound.
         </Text>
 
         <View style={styles.packs}>
