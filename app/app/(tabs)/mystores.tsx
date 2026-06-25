@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
+import { colors, type, btn, card, radius, opacity, layout, goldCard } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { MyStoresSkeleton } from '../../components/Skeleton'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
@@ -211,7 +211,7 @@ export default function MyStoresScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
+  container: { flex: 1, backgroundColor: colors.cream, paddingTop: layout.screenTop },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerBlock: { paddingHorizontal: 20, marginBottom: 20 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -229,13 +229,10 @@ const styles = StyleSheet.create({
   storeMeta: { ...type.label, marginTop: 3, fontSize: 12 },
   storeSlug: { ...type.label, marginTop: 2, fontSize: 12 },
   upsellCard: {
-    backgroundColor: colors.goldLight,
-    borderRadius: radius.md,
+    ...goldCard,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.goldMid,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,

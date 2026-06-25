@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { GallerySkeleton } from '../../components/Skeleton'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card, radius } from '../../lib/theme'
+import { colors, type, btn, card, radius, layout } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 import { saveOriginalsToPhotos, SaveProgress } from '../../lib/preservation'
@@ -345,7 +345,7 @@ export default function StoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
+  container: { flex: 1, backgroundColor: colors.cream, paddingTop: layout.screenTop },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },

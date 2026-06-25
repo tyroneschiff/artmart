@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
-import { colors, type, btn, card, radius } from '../../lib/theme'
+import { colors, type, btn, card, radius, layout } from '../../lib/theme'
 import CreditsChip from '../../components/CreditsChip'
 import { useMySubscriptions } from '../../lib/subscriptions'
 
@@ -277,7 +277,7 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.cream, paddingTop: 56 },
+  container: { flex: 1, backgroundColor: colors.cream, paddingTop: layout.screenTop },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
   headerBlock: { paddingHorizontal: 20, marginBottom: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },

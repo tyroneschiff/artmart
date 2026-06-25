@@ -13,7 +13,7 @@ import { PieceSkeleton, CommentsSkeleton } from '../../components/Skeleton'
 import ZoomableImage from '../../components/ZoomableImage'
 import { track } from '../../lib/analytics'
 import { buildPieceShareMessage, SharePayload } from '../../lib/share'
-import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
+import { colors, type, btn, card, radius, opacity, layout } from '../../lib/theme'
 import ReadAloudButton from '../../components/ReadAloudButton'
 import LockedReadAloudButton from '../../components/LockedReadAloudButton'
 import MoveToGalleryModal from '../../components/MoveToGalleryModal'
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
   content: { paddingBottom: 48 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.cream },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: layout.screenTop, paddingBottom: 12 },
   backBtn: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   editLink: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, alignItems: 'center' },
   editLinkText: { fontSize: 13, fontWeight: '600', color: colors.mid, textDecorationLine: 'underline' },
@@ -673,7 +673,6 @@ const styles = StyleSheet.create({
   galleryAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, alignItems: 'center', justifyContent: 'center' },
   galleryAvatarText: { fontSize: 12, fontWeight: '900', color: colors.goldDark },
   galleryChipText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
-  galleryChipArrow: { fontSize: 18, color: colors.muted, marginLeft: 4 },
   // Un-voted = quiet white chip with a dark outline heart → reads "tap me."
   // Voted = filled gold chip → reads "you loved this." (Previously both
   // states were gold and the voted state just faded, which read backwards.)
@@ -713,7 +712,4 @@ const styles = StyleSheet.create({
   replyCancel: { paddingHorizontal: 12, paddingVertical: 8 },
   replyCancelText: { color: colors.muted, fontWeight: '600', fontSize: 13 },
   replyPostBtn: { paddingVertical: 8, paddingHorizontal: 16 },
-  reportLabel: { ...type.label, fontSize: 11, textTransform: 'uppercase' },
-  deleteBtn: { paddingVertical: 8, paddingHorizontal: 12 },
-  deleteBtnText: { fontSize: 13, fontWeight: '600', color: colors.muted },
 })

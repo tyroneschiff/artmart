@@ -18,7 +18,7 @@ import { transformArtwork, OutOfCreditsError } from '../../lib/transformArtwork'
 import { useCredits } from '../../lib/useCredits'
 import { track } from '../../lib/analytics'
 import { friendlyTransformError } from '../../lib/transformErrors'
-import { colors, btn, type, card, radius, opacity } from '../../lib/theme'
+import { colors, btn, type, card, radius, opacity, layout, goldCard } from '../../lib/theme'
 import { shareToWhatsApp, shareNative, buildPieceShareMessage, SharePayload } from '../../lib/share'
 import { exportStoryCard } from '../../lib/export'
 import CreditsChip from '../../components/CreditsChip'
@@ -340,7 +340,7 @@ export default function CreateScreen() {
               "{title}" is now live in {selectedStore?.child_name}'s gallery.
             </Text>
             {aiDescription ? (
-              <View style={{ width: '100%', marginBottom: 24, backgroundColor: colors.goldLight, borderRadius: radius.md, padding: 16, borderWidth: 1, borderColor: colors.goldMid }}>
+              <View style={{ ...goldCard, width: '100%', marginBottom: 24, padding: 16 }}>
                 <Text style={{ fontSize: 14, color: colors.dark, lineHeight: 22, marginBottom: 12 }}>{aiDescription}</Text>
                 <ReadAloudButton text={aiDescription} compact />
               </View>
@@ -546,8 +546,7 @@ export default function CreateScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.cream },
-  content: { padding: 20, paddingTop: 56 },
-  header: { fontSize: 32, fontWeight: '900', color: colors.dark, letterSpacing: -1 },
+  content: { padding: 20, paddingTop: layout.screenTop },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   pickArea: { paddingTop: 24, alignItems: 'center' },
   pickHeading: { fontSize: 22, fontWeight: '800', color: colors.dark, letterSpacing: -0.6, textAlign: 'center', marginBottom: 6 },
@@ -576,19 +575,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   libraryLabel: { color: colors.mid, fontSize: 14, fontWeight: '600' },
-  prompt: { fontSize: 15, color: colors.mid, marginBottom: 16, textAlign: 'center' },
-  bigBtn: { backgroundColor: colors.dark, borderRadius: radius.lg, padding: 24, alignItems: 'center', gap: 8 },
-  bigBtnSecondary: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
-  bigBtnIcon: { fontSize: 32 },
-  bigBtnText: { fontSize: 16, fontWeight: '700', color: colors.white },
   preview: { width: '100%', aspectRatio: 1, borderRadius: radius.md, marginBottom: 16 },
-  button: { backgroundColor: colors.dark, borderRadius: radius.pill, padding: 16, alignItems: 'center', marginBottom: 12 },
   buttonDisabled: { opacity: opacity.disabled },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
   cancel: { color: colors.muted, textAlign: 'center', fontSize: 14, marginTop: 8, marginBottom: 8 },
   center: { alignItems: 'center', gap: 12, marginVertical: 16 },
-  transformingText: { color: colors.dark, fontSize: 16, fontWeight: '700', textAlign: 'center' },
-  transformingSubtext: { color: colors.mid, fontSize: 13, textAlign: 'center' },
   upsellCard: {
     backgroundColor: colors.dangerBg,
     borderRadius: radius.md,
@@ -611,17 +601,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  upsellBtn: {
-    backgroundColor: colors.dark,
-    borderRadius: radius.pill,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  upsellBtnText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 15,
-  },
   errorBox: { backgroundColor: colors.dangerBg, borderRadius: radius.md, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.dangerBorder, gap: 6, alignItems: 'flex-start' },
   // Gold-bubble icon that signals the failure category without
   // looking alarming. Soft amber on a danger-tinted card reads as
@@ -638,13 +617,10 @@ const styles = StyleSheet.create({
   compareImage: { width: '100%', aspectRatio: 1, borderRadius: radius.sm },
   input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 12, fontSize: 16, color: colors.dark, backgroundColor: colors.white },
   storePicker: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md, padding: 16, marginBottom: 16, backgroundColor: colors.white },
-  storePickerText: { fontSize: 16, color: colors.muted },
-  inlineStoreCreate: { backgroundColor: colors.goldLight, borderRadius: radius.md, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.goldMid },
+  inlineStoreCreate: { ...goldCard, padding: 16, marginBottom: 16 },
   inlineStoreLabel: { fontSize: 13, fontWeight: '700', color: colors.goldDark, marginBottom: 10 },
   inlineStoreRow: { flexDirection: 'row', gap: 8 },
   inlineStoreInput: { flex: 1, backgroundColor: colors.white, borderRadius: radius.sm, padding: 12, fontSize: 15, color: colors.dark, borderWidth: 1, borderColor: colors.border },
-  inlineStoreBtn: { backgroundColor: colors.dark, borderRadius: radius.sm, paddingHorizontal: 16, justifyContent: 'center' },
-  inlineStoreBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   inlineStoreSuccess: { color: colors.goldDark, fontSize: 13, fontWeight: '600', marginTop: 8 },
   modal: { flex: 1, padding: 32, paddingTop: 60, backgroundColor: colors.cream },
   modalTitle: { fontSize: 26, fontWeight: '900', marginBottom: 24, color: colors.dark },
@@ -667,36 +643,4 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   successImage: { width: '100%', aspectRatio: 1, borderRadius: radius.md, marginBottom: 24 },
-  successTitle: { fontSize: 28, fontWeight: '900', color: colors.dark, marginBottom: 8, letterSpacing: -1 },
-  successSubtitle: { fontSize: 16, color: colors.mid, textAlign: 'center', marginBottom: 32, lineHeight: 22 },
-  whatsappBtn: { 
-    backgroundColor: colors.gold, 
-    borderRadius: radius.pill, 
-    paddingVertical: 18, 
-    paddingHorizontal: 32, 
-    width: '100%', 
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  whatsappBtnText: { color: colors.white, fontSize: 16, fontWeight: '800' },
-  instagramBtn: {
-    backgroundColor: colors.white,
-    borderRadius: radius.pill,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  instagramBtnText: { color: colors.dark, fontSize: 16, fontWeight: '800' },
-  nativeShareBtn: { 
-    paddingVertical: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  nativeShareBtnText: { color: colors.muted, fontSize: 14, fontWeight: '600' },
-  startOverBtn: { marginTop: 40 },
-  startOverBtnText: { color: colors.goldDark, fontSize: 16, fontWeight: '700' },
 })
