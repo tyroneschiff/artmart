@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.notify-vote]
 verify_jwt = false
+
+[functions.generate-clip]
+verify_jwt = false
+
+[functions.clip-webhook]
+verify_jwt = false
