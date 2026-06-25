@@ -18,6 +18,14 @@ export type Voice = {
 
 export const SAMPLE_TEXT = "Hi! I'd love to read your story to you."
 
+// Curated 2026-05-10 down to the four voices best suited to reading a
+// warm, storybook description aloud to a 4–10 year old. We cut Adam
+// (neutral narration, redundant with Antoni's warmer male read) and
+// Rachel (clear but newsreader-neutral — too flat for storytelling).
+// The four kept give female/male variety + one characterful option,
+// without choice paralysis. NOTE: pick is reasoned, not ear-tested —
+// audition before public launch and re-order if needed. Keep this
+// list in sync with ALLOWED_VOICE_IDS in supabase/functions/tts.
 export const VOICES: Voice[] = [
   {
     id: 'XB0fDUnXU5powFXDhCwa',
@@ -28,27 +36,17 @@ export const VOICES: Voice[] = [
   {
     id: 'EXAVITQu4vr4xnSDxMaL',
     name: 'Bella',
-    description: 'Soft and sweet — feels like a lullaby.',
-  },
-  {
-    id: 'pNInz6obpgDQGcFmaJgB',
-    name: 'Adam',
-    description: 'A warm dad voice with depth.',
-  },
-  {
-    id: '21m00Tcm4TlvDq8ikWAM',
-    name: 'Rachel',
-    description: 'Calm and steady — perfect for bedtime.',
-  },
-  {
-    id: 'ErXwobaYiN019PkySvjV',
-    name: 'Antoni',
-    description: 'Friendly uncle reading to the room.',
+    description: 'Soft and gentle — like a bedtime story.',
   },
   {
     id: 'keLVje3aBMuRpxuu0bqO',
     name: 'Crofty',
     description: 'Bright and characterful — like a favorite picture book.',
+  },
+  {
+    id: 'ErXwobaYiN019PkySvjV',
+    name: 'Antoni',
+    description: 'A warm, friendly voice with a little depth.',
   },
 ]
 

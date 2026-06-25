@@ -9,13 +9,14 @@ const MODEL_ID = 'eleven_multilingual_v2'
 // Mirror of the curated voices in app/lib/voices.ts. We allowlist the
 // ids here so a stray voice_id from the wire can't make us bill a
 // random ElevenLabs voice. Update both files together when adding voices.
+// Keep in sync with app/lib/voices.ts. Curated 2026-05-10: dropped
+// Adam + Rachel (too neutral for storybook read-aloud). A user who
+// previously selected one of those falls back to the default voice.
 const ALLOWED_VOICE_IDS = new Set([
-  'XB0fDUnXU5powFXDhCwa', // Charlotte
+  'XB0fDUnXU5powFXDhCwa', // Charlotte (default)
   'EXAVITQu4vr4xnSDxMaL', // Bella
-  'pNInz6obpgDQGcFmaJgB', // Adam
-  '21m00Tcm4TlvDq8ikWAM', // Rachel
-  'ErXwobaYiN019PkySvjV', // Antoni
   'keLVje3aBMuRpxuu0bqO', // Crofty
+  'ErXwobaYiN019PkySvjV', // Antoni
 ])
 
 function resolveVoiceId(requested: unknown): string {
