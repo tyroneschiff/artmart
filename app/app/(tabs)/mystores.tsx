@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../hooks/useAuthStore'
 import { colors, type, btn, card, radius, opacity } from '../../lib/theme'
 import ShareSheet from '../../components/ShareSheet'
+import { MyStoresSkeleton } from '../../components/Skeleton'
 import { buildStoreShareMessage, SharePayload } from '../../lib/share'
 
 import { useCredits } from '../../lib/useCredits'
@@ -86,7 +87,7 @@ export default function MyStoresScreen() {
     onError: (e: any) => Alert.alert('Error', e.message),
   })
 
-  if (isLoading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.gold} /></View>
+  if (isLoading) return <MyStoresSkeleton />
 
   if (error) {
     return (
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
   modalSub: { ...type.body, marginBottom: 32 },
   inputLabel: { ...type.label, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 },
   input: { ...card, padding: 16, fontSize: 16, color: colors.dark, marginBottom: 16, borderWidth: 1.5 },
-  slugPreview: { fontSize: 13, color: colors.gold, fontWeight: '600', marginBottom: 16, marginTop: -8, marginLeft: 4 },
+  slugPreview: { fontSize: 13, color: colors.goldDark, fontWeight: '600', marginBottom: 16, marginTop: -8, marginLeft: 4 },
   button: { ...btn.primary, marginBottom: 12 },
   buttonDisabled: { opacity: opacity.disabled },
   buttonText: { ...btn.primaryText },

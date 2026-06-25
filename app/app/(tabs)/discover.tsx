@@ -338,12 +338,14 @@ const styles = StyleSheet.create({
   card: { flex: 1, ...card, overflow: 'hidden' },
   imageWrap: { position: 'relative' },
   image: { width: '100%', aspectRatio: 1 },
-  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  voteBadge: { position: 'absolute', bottom: 8, right: 8, backgroundColor: colors.scrim, borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   voteBadgeDone: { opacity: 0.92 },
   voteBadgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   cardBody: { padding: 12 },
-  title: { ...type.h3, fontSize: 13, letterSpacing: -0.2 },
-  childName: { ...type.label, marginTop: 2 },
+  title: { ...type.cardTitle },
+  // The child's name is the emotional payload of the card — give it real
+  // presence (mid, not muted; weight 600) so "this is Emma's world" reads.
+  childName: { fontSize: 12, fontWeight: '600', color: colors.mid, marginTop: 3 },
   emptyWrap: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTitle: { ...type.h2, fontSize: 20, marginBottom: 8, textAlign: 'center' },

@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../hooks/useAuthStore'
 import { useCredits } from '../lib/useCredits'
 import { purchaseCredits } from '../lib/checkout'
-import { colors, type, btn, card, radius } from '../lib/theme'
+import { colors, type, btn, card, radius, opacity } from '../lib/theme'
 
 type Pack = {
   id: string
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   packPerPiece: { fontSize: 13, fontWeight: '700', color: colors.goldDark },
 
   buyBtn: { paddingVertical: 14 },
-  buyBtnFaded: { opacity: 0.4 },
+  buyBtnFaded: { opacity: opacity.disabled },
 
   fineprint: {
     textAlign: 'center', fontSize: 13, color: colors.muted,

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Clipboard, Alert, Platform, Share } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
-import { colors } from '../lib/theme'
+import { colors, radius, type } from '../lib/theme'
 import { SharePayload, shareToWhatsApp } from '../lib/share'
 import { track } from '../lib/analytics'
 
@@ -102,7 +102,7 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
 
           <TouchableOpacity style={styles.action} onPress={handleWhatsApp} activeOpacity={0.7}>
             <View style={styles.actionIcon}>
-              <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
+              <Ionicons name="logo-whatsapp" size={28} color={colors.whatsapp} />
             </View>
             <Text style={styles.actionLabel}>WhatsApp</Text>
           </TouchableOpacity>
@@ -126,12 +126,12 @@ export default function ShareSheet({ visible, payload, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.scrimSoft,
   },
   sheet: {
     backgroundColor: colors.cream,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     padding: 24,
     paddingBottom: 40,
   },
@@ -144,10 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.dark,
-    letterSpacing: -0.3,
+    ...type.h3,
     marginBottom: 4,
     textAlign: 'center',
   },
@@ -170,7 +167,7 @@ const styles = StyleSheet.create({
   actionIcon: {
     width: 60,
     height: 60,
-    borderRadius: 18,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.white,
@@ -185,7 +182,7 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     backgroundColor: colors.white,
-    borderRadius: 14,
+    borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: 'center',
     borderWidth: 1,

@@ -425,11 +425,13 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 15, color: colors.dark, fontWeight: '500' },
   rowValue: { fontSize: 15, color: colors.mid, flex: 1, textAlign: 'right' },
 
-  creditsValue: { fontSize: 18, fontWeight: '800', color: colors.gold },
+  creditsValue: { fontSize: 18, fontWeight: '800', color: colors.goldDark },
   buyBtn: { margin: 12, marginTop: 4, backgroundColor: colors.goldLight, borderRadius: radius.sm, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.goldMid },
   buyBtnText: { color: colors.goldDark, fontWeight: '700', fontSize: 14 },
 
-  input: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: colors.dark, borderBottomWidth: 1, borderBottomColor: colors.border },
+  // Bordered box to match every other text input in the app (login,
+  // create, comments) — was a lone Material-style underline before.
+  input: { margin: 12, marginBottom: 0, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: colors.dark, borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.md },
   saveBtn: { margin: 12, paddingVertical: 12 },
   saveBtnDisabled: { opacity: opacity.disabled },
 

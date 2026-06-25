@@ -378,7 +378,7 @@ export default function PieceScreen() {
               <Ionicons
                 name={hasVoted ? 'heart' : 'heart-outline'}
                 size={14}
-                color={colors.goldDark}
+                color={hasVoted ? colors.gold : colors.mid}
                 style={{ marginRight: 6 }}
               />
               <Text style={[styles.voteChipText, hasVoted && styles.voteChipTextDone]}>
@@ -663,15 +663,18 @@ const styles = StyleSheet.create({
   galleryAvatarText: { fontSize: 12, fontWeight: '900', color: colors.goldDark },
   galleryChipText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.dark, letterSpacing: -0.2 },
   galleryChipArrow: { fontSize: 18, color: colors.muted, marginLeft: 4 },
-  voteChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.goldLight, borderWidth: 1, borderColor: colors.goldMid, minWidth: 60, justifyContent: 'center' },
-  voteChipDone: { opacity: 0.55 },
-  voteChipText: { fontSize: 13, fontWeight: '800', color: colors.goldDark, letterSpacing: -0.1 },
+  // Un-voted = quiet white chip with a dark outline heart → reads "tap me."
+  // Voted = filled gold chip → reads "you loved this." (Previously both
+  // states were gold and the voted state just faded, which read backwards.)
+  voteChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, minWidth: 60, justifyContent: 'center' },
+  voteChipDone: { backgroundColor: colors.goldLight, borderColor: colors.goldMid },
+  voteChipText: { fontSize: 13, fontWeight: '800', color: colors.dark, letterSpacing: -0.1 },
   voteChipTextDone: { color: colors.goldDark },
   descriptionBlock: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
   descriptionText: { fontSize: 15, color: colors.mid, lineHeight: 23, marginBottom: 14, fontWeight: '500' },
-  lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  lightboxBackdrop: { flex: 1, backgroundColor: colors.scrimStrong, justifyContent: 'center', alignItems: 'center' },
   lightboxImage: { width: Dimensions.get('window').width, height: Dimensions.get('window').height },
-  lightboxClose: { position: 'absolute', right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
+  lightboxClose: { position: 'absolute', right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: colors.scrimWhite, alignItems: 'center', justifyContent: 'center' },
   commentSection: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 0 },
   commentInputWrap: { marginBottom: 24 },
   commentInput: { padding: 12, fontSize: 15, color: colors.dark, minHeight: 80, textAlignVertical: 'top' },
