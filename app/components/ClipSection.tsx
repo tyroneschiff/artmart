@@ -22,6 +22,11 @@ import { colors, type, btn, radius } from '../lib/theme'
 type ClipStatus = 'none' | 'queued' | 'processing' | 'ready' | 'failed'
 
 // A little variety while the clip renders so it doesn't read as one frozen line.
+// Animating an existing image costs 1 credit (the image already cost 1;
+// image 1 + animate 1 = the 2-credit video total). Single source so the
+// confirm copy and any future change stay in sync.
+const VIDEO_ANIMATE_CREDITS = 1
+
 const GENERATING_LINES = [
   'Bringing this world to life… about a minute.',
   'Teaching it how to move and sound… about a minute.',
@@ -76,6 +81,21 @@ export default function ClipSection({
   // ready clip (never the generate affordance).
   if (!CLIPS_ENABLED) return null
   if (!isOwner && clipStatus !== 'ready') return null
+
+  // Confirm the credit spend before generating — users shouldn't lose
+  // credits by accident on a tap.
+  function confirmGenerate() {
+    if (requesting) return
+    const n = VIDEO_ANIMATE_CREDITS
+    Alert.alert(
+      'Bring it to life?',
+      `This uses ${n} more credit${n === 1 ? '' : 's'} to animate it into a video with sound.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Make video', onPress: handleGenerate },
+      ],
+    )
+  }
 
   async function handleGenerate() {
     if (requesting) return
@@ -200,7 +220,7 @@ export default function ClipSection({
 
   // none / failed → offer to (re)generate.
   return (
-    <TouchableOpacity style={[styles.wrap, styles.makeBtn]} onPress={handleGenerate} disabled={requesting} activeOpacity={0.8}>
+    <TouchableOpacity style={[styles.wrap, styles.makeBtn]} onPress={confirmGenerate} disabled={requesting} activeOpacity={0.8}>
       {requesting ? (
         <ActivityIndicator color={colors.goldDark} />
       ) : (
